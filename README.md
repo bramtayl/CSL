@@ -1,0 +1,1 @@
+`download_data.R` will scrape the data, and `CSY.Rmd` will run the analyses and generate tables and graphs. The CSY data is included in `data/countries`, and the GHED database is also in the `data` folder.
