@@ -5,9 +5,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 
-# the last ratio index assigned is 34466
-# so if we go through 34500 we will get them all
-NUMBER_OF_CHUNKS = 345
+# the last ratio index assigned is 42414 as of May 10, 2024
+# so if we go through 42500 we will get them all
+NUMBER_OF_CHUNKS = 42500
 KIND = "ratios"
 
 # kind is a ratio, method, or weight

@@ -1,6 +1,6 @@
 ---
 title: "Do governments of high-life-expectancy countries have a duty to spend more money on healthcare in low-life-expectancy countries?"
-output: html_document
+output: word_document
 ---
 
 ```{r, echo = FALSE}
@@ -712,7 +712,6 @@ So, if one country has a low life expectancy, citizens in the country will die a
 **Healthcare treatment**: as any action one could take to increase a subject's lifespan.
 This is a broad definition.
 By this definition, public health measures, such as nutrition programs, exercise programs, and water sanitation, are healthcare treatments.
-[TODO: add citation: Zimmerman?]
 
 **Quality-adjusted life year (QALY)**: a health improvement that one judges to have the same value as an extra year of life for a subject who is fully healthy.
 This measure is necessarily subjective.
@@ -1231,9 +1230,7 @@ tibble(
   ) %>%
   select(
     Name = name,
-    `Variable code` = variable_code,
     Description = description,
-    `From database` = from_database,
     `From organization` = from_organization,
     `Percent missing` = percent_missing
   ) %>%
@@ -1284,6 +1281,8 @@ ratios %>%
 ## Number of ratios by country
 
 There is an extreme imbalance in the data, with many more ratio observations for some countries than others.
+In fact, for many countries, there are no ratio observations at all.
+In general, there are more observations for developed than for developing countries.
 
 ```{r, echo = FALSE}
 mergable_ratios %>%
