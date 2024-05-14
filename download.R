@@ -11,7 +11,7 @@ library(tidyr)
 library(WDI)
     
 FRED_START_DATE = as.Date("1947-01-01")
-FRED_END_DATE = as.Date("2022-12-31")
+FRED_END_DATE = as.Date("2023-12-31")
 
 CPI_data = 
     fredr(
@@ -54,30 +54,3 @@ map_data =
     st_transform(crs = "EPSG:4326")
 
 st_write(map_data, "data/map_data.gpkg")
-
-# optional
-# download and extract
-# http://databank.worldbank.org/data/download/WDI_csv.zip
-
-WDI_path = "C:\\Users\\brand\\WDI_csv"
-
-download.file(
-    "https://climatedata.worldbank.org/thredds/fileServer/CRM/cru/cru-ts4.06-timeseries/tas/mean/annual/timeseries-tas-annual-mean/1901-2021/timeseries-tas-annual-mean_cru_annual_cru-ts4.06-timeseries_mean_1901-2021.nc",
-    "data/average_temperature_by_year.nc"
-)
-download.file(
-    "https://climatedata.worldbank.org/thredds/fileServer/CRM/cru/cru-ts4.06-timeseries/pr/mean/annual/timeseries-pr-annual-mean/1901-2021/timeseries-pr-annual-mean_cru_annual_cru-ts4.06-timeseries_mean_1901-2021.nc",
-    "data/yearly_precipitation.nc"
-)
-
-read_csv(file.path(WDI_path, "WDIData.csv"), guess_max = Inf) %>%
-    select(`Indicator Name`, `1960`:`2021`) %>%
-    pivot_longer(
-        `1960`:`2021`,
-        names_to = "Year",
-        values_to = "Value"
-    ) %>%
-    group_by(`Indicator Name`) %>%
-    summarize(number_of_values = sum(!is.na(Value))) %>%
-    arrange(desc(number_of_values)) %>%
-    write_csv(file.path(WDI_path, "variable_info.csv"))

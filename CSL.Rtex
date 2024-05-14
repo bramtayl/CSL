@@ -1,0 +1,1785 @@
+\documentclass[]{article}
+
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{appendix}
+\usepackage{csquotes}
+\usepackage{bookmark}
+\usepackage[
+backend=biber,
+style=apa
+]{biblatex}
+\addbibresource{cost_of_life.bib}
+
+\title{Effective altruism and the marginal cost of life}
+\author{Brandon Taylor}
+
+%% begin.rcode setup, include=FALSE
+% library(knitr)
+% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
+%% end.rcode
+
+\begin{document}
+
+\maketitle
+
+%% begin.rcode, echo=FALSE
+% # needed for lubridate
+% library(timechange)
+
+% library(dplyr, warn.conflicts = FALSE)
+% library(ggplot2)
+% library(ivreg)
+% library(lubridate, warn.conflicts = FALSE)
+% library(pander)
+% library(plm, warn.conflicts = FALSE)
+% library(purrr)
+% library(readr)
+% suppressPackageStartupMessages(library(sf))
+% library(stringi)
+% library(tidyr)
+
+% # dont split tables
+% panderOptions("table.split.table", Inf)
+
+% RECENT_YEAR = 2019
+% DISPLAY_FIGURES = 3
+
+% # Throughout, set na to "", not "NA", when reading csvs
+% # because "NA" is Namibia's country code.
+
+% raw_WDI_data <-
+%   read_csv("data/WDI_data.csv", show_col_types = FALSE, na = "") %>%
+%   rename(
+%     country_code = iso2c,
+%     world_bank_country = country
+%   ) %>%
+%   # don't need this
+%   select(-iso3c)
+
+% raw_map_data <-
+%   st_read("data/map_data.gpkg", quiet = TRUE) %>%
+%   select(map_country = name_long, country_code = iso_a2) %>%
+%   # with no country code, we can't match anyway
+%   # countries without a code: Northern Cyprus, Kosovo, and Somaliland
+%   filter(!is.na(country_code))
+
+% shortest <- function(string_1, string_2) {
+%   ifelse(
+%     is.na(string_1) | is.na(string_2),
+%     coalesce(string_1, string_2),
+%     ifelse(
+%       stri_length(string_1) < stri_length(string_2) &
+%         # try to avoid country names with commas in them
+%         !stri_detect_fixed(string_1, ","),
+%       string_1,
+%       string_2
+%     )
+%   )
+% }
+
+% # all countries from all 3 datasets
+% # the WDI data includes a "euro area" country which I need currency data for
+% country_data <-
+%   read_csv("data/countries.csv", show_col_types = FALSE, na = "") %>%
+%   select(
+%     countrycode_country = country.name.en,
+%     country_code = iso2c
+%   ) %>%
+%   # with no country code, we can't match
+%   filter(!is.na(country_code)) %>%
+%   # add in world bank countries
+%   full_join(
+%     raw_WDI_data %>%
+%       select(country_code, world_bank_country) %>%
+%       distinct(),
+%     by = "country_code"
+%   ) %>%
+%   # add in map countries
+%   full_join(
+%     tibble(raw_map_data) %>%
+%     select(country_code, map_country),
+%     by = "country_code"
+%   ) %>%
+%   mutate(country = coalesce(countrycode_country, world_bank_country, map_country)) %>%
+%   select(
+%     -countrycode_country,
+%     -world_bank_country,
+%     -map_country
+%   )
+
+% write_csv(country_data, "country_data.csv")
+
+% all_countries = country_data$country
+
+% # sanity checks
+% if (any(duplicated(all_countries))) {
+%   stop("Repeated countries")
+% }
+
+% if (any(is.na(all_countries))) {
+%   stop("Missing countries")
+% }
+
+% if (any(stri_detect_fixed(all_countries, ","))) {
+%   stop("Country with commas")
+% }
+
+% GDP_deflator_data <-
+%   read_csv("data/GDP_deflators.csv", na = "", show_col_types = FALSE) %>%
+%   # average by year
+%   mutate(year = year(date)) %>%
+%   group_by(year) %>%
+%   summarize(GDP_deflator = mean(value))
+
+% CPI_data <-
+%   read_csv("data/CPIs.csv", na = "", show_col_types = FALSE) %>%
+%   # average by year
+%   mutate(year = year(date)) %>%
+%   group_by(year) %>%
+%   summarize(CPI = mean(value))
+
+% recent_CPI <- 
+%   CPI_data %>%
+%   filter(year == RECENT_YEAR) %>%
+%   .$CPI
+
+% recent_GDP_deflator <-
+%   GDP_deflator_data %>%
+%   filter(year == RECENT_YEAR) %>%
+%   .$GDP_deflator
+
+% # replace country names
+% map_data <-
+%   raw_map_data %>%
+%   left_join(
+%     country_data %>% select(country, country_code),
+%     by = "country_code"
+%   ) %>%
+%   select(-map_country, -country_code)
+
+% WDI_variables <-
+%   read_csv("data/selected_WDI_variables.csv", show_col_types = FALSE, na = "") %>%
+%   left_join(
+%     read_csv("data/all_WDI_variables.csv", show_col_types = FALSE, na = ""),
+%     by = "name"
+%   ) %>%
+%   rename(
+%     variable = Variable,
+%     variable_code = indicator
+%   )
+
+% # replace world bank country names with our country names
+% WDI_data <-
+%   raw_WDI_data %>%
+%   # replace country names
+%   left_join(
+%     country_data %>% select(country, country_code),
+%     by = "country_code"
+%   ) %>%
+%   select(-country_code, -world_bank_country) %>%
+%   # replace variable codes
+%   pivot_longer(
+%     c(-year, -country),
+%     names_to = "variable_code",
+%     values_drop_na = TRUE
+%   ) %>% 
+%   left_join(
+%     WDI_variables %>% select(variable, variable_code),
+%     by = "variable_code"
+%   ) %>%
+%   select(-variable_code) %>%
+%   pivot_wider(names_from = variable, values_from = value) %>%
+%   # transformations for the regression
+%   left_join(CPI_data, by = "year") %>%
+%   left_join(GDP_deflator_data, by = "year") %>%
+%   mutate(
+%     log_population_density = log(population_density),
+%     log_annual_precipitation = log(annual_precipitation),
+%     log_annual_precipitation_squared = log_annual_precipitation ^ 2,
+%     # historical local currency
+%     # * historical international $ / historical local currency
+%     international_historical_GDP_per_capita =
+%       local_historical_GDP_per_capita / PPP_exchange_rate,
+%     log_GDP_per_capita = log(
+%       # * output / historical US and international $
+%       # * US and international $ in 2019 / output
+%       international_historical_GDP_per_capita / GDP_deflator * recent_GDP_deflator
+%     ),
+%     log_CPI_GDP_per_capita = log(
+%       # * basket / historical US and international $
+%       # * US and international $ in 2019 / basket
+%       international_historical_GDP_per_capita / CPI * recent_CPI
+%     ),
+%     log_nominal_GDP_per_capita = log(
+%       # historical local currency
+%       # * historical US $ / historical local currency
+%       local_historical_GDP_per_capita / nominal_exchange_rate
+%       # * output / historical US $
+%       # * US $ in 2019 / output
+%       / GDP_deflator * recent_GDP_deflator
+%     )
+%   )
+
+% country_replacements <- read_csv(
+%   "data/country_replacements.csv",
+%   show_col_types = FALSE,
+%   na = ""
+% )
+
+% currency_country_replacements <- read_csv(
+%   "data/currency_country_replacements.csv",
+%   show_col_types = FALSE,
+%   na = ""
+% )
+
+% only_positive = function(variable) {
+%   ifelse(variable <= 0, NA, variable)
+% }
+
+% all_ratios <-
+%   # read in the data from each country and bind together
+%   list.files("data/ratios", full.names = TRUE) %>%
+%   map_dfr(
+%     function(file) {
+%       read_csv(
+%         file,
+%         na = c("", "Not Stated", "Unknown/Not Stated"),
+%         # read in everything as character; parse later
+%         col_types = cols(.default = col_character())
+%       )
+%     }
+%   ) %>%
+%   select(
+%     tufts_currency_country = `Currency Country:`,
+%     tufts_price_of_life =
+%       `Incremental Cost-Effectiveness Ratio (Original currency and year):`,
+%     ratio_index = index,
+%     year = `Publication Year`,
+%     currency_year = `Currency Year:`,
+%     tufts_country = `Study Country:`,
+%     gender = `Target Genders:`
+%   ) %>%
+%   mutate(
+%     # basic data cleaning
+%     tufts_price_of_life = 
+%       tufts_price_of_life %>%
+%       as.numeric %>%
+%       # must be positive
+%       ifelse(. <= 0, NA, .),
+%     # 0 means NA
+%     year = as.numeric(year) %>% ifelse(. == 0, NA, .),
+%     currency_year = as.numeric(currency_year),
+%     gender = ifelse(
+%       # these mean the same thing
+%       gender == "Male, Female" | gender == "Female, Male",
+%       "All",
+%       gender
+%     ),
+%     # split figures in international dollars into a seperate column
+%     is_international = tufts_currency_country == "International",
+%     local_historical_price_of_life = 
+%       ifelse(is_international, NA, tufts_price_of_life),
+%     already_international_price_of_life = 
+%       ifelse(is_international, tufts_price_of_life, NA),
+%     # international isn't a country so remove it
+%     tufts_currency_country =
+%       ifelse(is_international, NA, tufts_currency_country)
+%   ) %>%
+%   # replace country aliases
+%   left_join(country_replacements, by = "tufts_country") %>%
+%   mutate(country = coalesce(country_replacement, tufts_country)) %>%
+%   # replace currency country aliases
+%   left_join(currency_country_replacements, by = "tufts_currency_country") %>%
+%   mutate(currency_country = coalesce(
+%     currency_country_replacement,
+%     tufts_currency_country
+%   )) %>%
+%   # add in CPIs
+%   left_join(
+%     CPI_data %>% select(currency_year = year, CPI),
+%     by = "currency_year"
+%   ) %>%
+%   left_join(
+%     GDP_deflator_data %>% select(currency_year = year, GDP_deflator),
+%     by = "currency_year"
+%   ) %>%
+%   # add in exchange rates
+%   left_join(
+%     WDI_data %>%
+%       select(
+%         currency_year = year,
+%         currency_country = country,
+%         PPP_exchange_rate,
+%         nominal_exchange_rate
+%       ),
+%     by = c("currency_year", "currency_country")
+%   ) %>%
+%   mutate(
+%     international_historical_price_of_life = coalesce(
+%       # already have international dollars for some countries
+%       already_international_price_of_life,
+%       # historical local currency
+%       # * historical international $ / historical local currency
+%       local_historical_price_of_life / PPP_exchange_rate
+%     ),
+%     # ignore negative or 0 values, which I can't log
+%     log_price_of_life = log(only_positive(
+%       international_historical_price_of_life
+%       # * basket / historical international $
+%       # * international $ in RECENT_YEAR / basket
+%       / GDP_deflator * recent_GDP_deflator
+%     )),
+%     # ignore negative or 0 values, which I can't log
+%     log_nominal_price_of_life = log(only_positive(
+%       # historical local currency
+%       # * historical US $ / historical local currency
+%       local_historical_price_of_life / nominal_exchange_rate
+%       # * output / historical US $
+%       # * US $ in RECENT_YEAR / output
+%       / GDP_deflator * recent_GDP_deflator
+%     )),
+%     # ignore negative or 0 values, which I can't log
+%     log_CPI_price_of_life = log(only_positive(
+%       international_historical_price_of_life
+%       # * basket / historical international $
+%       # * international $ in RECENT_YEAR / basket
+%       / CPI * recent_CPI
+%     ))
+%   ) %>% 
+%   filter(!is.na(country) & !is.na(year) & !is.na(log_price_of_life) & gender == "All")
+
+%   # check to see if we should add more country replacements
+%   all_ratios %>%
+%   select(country) %>%
+%   distinct %>%
+%   arrange(country) %>%
+%   anti_join(country_data %>% select(country), by = "country") %>%
+%   write_csv("unmatched_countries.csv")
+
+%   # check to see if we should add more currency country replacements
+%   all_ratios %>%
+%   select(currency_country) %>%
+%   distinct %>%
+%   arrange(currency_country) %>%
+%   filter(!is.na(currency_country)) %>%
+%   anti_join(
+%     country_data %>% select(currency_country = country),
+%     by = "currency_country"
+%   ) %>%
+%   write_csv("unmatched_currency_countries.csv")
+
+% ratios = 
+%   all_ratios %>%
+%   semi_join(country_data %>% select(country), by = "country") %>%
+%   semi_join(country_data %>% select(currency_country = country), by = "currency_country")
+
+% complete_WDI_data <-
+%   WDI_data %>%
+%   select(country, year,
+%     log_annual_precipitation,
+%     log_population_density,
+%     percent_health_spending_public,
+%     log_annual_precipitation,
+%     log_annual_precipitation_squared,
+%     log_GDP_per_capita,
+%     life_expectancy
+%   ) %>%
+%   filter(complete.cases(.))
+
+% by_country_and_year <-
+%   ratios %>%
+%   group_by(country, year) %>%
+%   summarize(
+%     log_price_of_life = mean(log_price_of_life),
+%     number_of_observations = n(),
+%     .groups = "drop"
+%   ) %>%
+%   inner_join(complete_WDI_data, by = c("country", "year"))
+
+% if (max(by_country_and_year$year) != RECENT_YEAR) {
+%   stop("More recent complete data!")
+% }
+
+% MINIMUM_YEARS = 8
+
+% formula <-
+%   log_price_of_life ~
+%   # exogenous
+%   log_population_density +
+%   percent_health_spending_public +
+%   log_annual_precipitation +
+%   log_annual_precipitation_squared +
+%   year +
+%   # endogenous
+%   life_expectancy |
+%   # exogenous
+%   log_population_density +
+%   percent_health_spending_public +
+%   log_annual_precipitation +
+%   log_annual_precipitation_squared +
+%   year +
+%   # instruments
+%   log_GDP_per_capita
+
+% average_by_country <- function(data) {
+%   data %>%
+%   # get the mean of all variables besides the indices
+%   pivot_longer(
+%     c(-country, -year),
+%     names_to = "variable", values_to = "value"
+%   ) %>%
+%   group_by(country, variable) %>%
+%   summarize(value = mean(value), .groups = "drop") %>%
+%   pivot_wider(names_from = variable, values_from = value) %>%
+%   left_join(
+%     # add in the number of observations and the average year
+%     data %>%
+%     group_by(country) %>%
+%     summarize(
+%       year = mean(year),
+%       number_of_observations = n()
+%     ),
+%     by = "country"
+%   )
+% }
+
+% by_country <-
+%   ratios %>%
+%   select(country, year, log_price_of_life) %>%
+%   inner_join(complete_WDI_data, by = c("year", "country")) %>%
+%   average_by_country
+
+% model <-
+%   ivreg(formula, data = by_country, weights = number_of_observations)
+
+% model_summary = summary(model)
+
+% with_predictions =
+%   by_country %>%
+%   mutate(
+%     prediction = predict(model, data = .),
+%     price_of_life = exp(prediction)
+%   ) %>%
+%   arrange(desc(prediction))
+
+% EXAMPLE_COUNTRY = "United Kingdom"
+
+% example_row = 
+%   with_predictions %>%
+%   filter(country == EXAMPLE_COUNTRY)
+
+% best_row = with_predictions %>% slice(1)
+% worst_row = with_predictions %>% slice(nrow(.))
+
+% life_expectancy_coefficient <- coef(model)[["life_expectancy"]]
+
+% predict_example_cost <- function(life_expectancy) {
+%   exp(
+%     example_row$prediction +
+%     (life_expectancy - example_row$life_expectancy) * life_expectancy_coefficient
+%   )
+% }
+
+% recent_WDI_data = 
+%   WDI_data %>%
+%   filter(year == RECENT_YEAR)
+
+% recent_life_expectancy_data =
+%   recent_WDI_data %>%
+%   select(country, life_expectancy) %>%
+%   filter(!is.na(life_expectancy)) %>%
+%   arrange(desc(life_expectancy))
+
+% recent_life_expectancies <- recent_life_expectancy_data$life_expectancy
+
+% age_range <- tibble(
+%   life_expectancy =
+%     round(min(recent_life_expectancies)):
+%     round(max(recent_life_expectancies))
+% )
+
+% prediction_data <-
+%   age_range %>%
+%   mutate(price_of_life = predict_example_cost(life_expectancy))
+
+% HEAD_TAIL_SIZE = 3
+
+% get_head_and_tail = function(data) {
+%   with_rank = data %>% mutate(rank = 1:n())
+%   bind_rows(
+%     with_rank %>% slice_head(n = HEAD_TAIL_SIZE),
+%     with_rank %>% slice_tail(n = HEAD_TAIL_SIZE)
+%   )
+% }
+
+% get_confidence_interval <- function(model) {
+%   confidence_intervals = confint(model)
+%   tibble(
+%     lower_bound = confidence_intervals["life_expectancy", "2.5 %"],
+%     upper_bound = confidence_intervals["life_expectancy", "97.5 %"]
+%   )
+% }
+
+% confidence_interval = get_confidence_interval(model)
+
+% model_CPI <-
+%   ratios %>%
+%   select(country, year, log_CPI_price_of_life) %>%
+%   filter(complete.cases(.)) %>%
+%   inner_join(
+%     WDI_data %>%
+%     select(country, year,
+%       log_annual_precipitation,
+%       log_population_density,
+%       percent_health_spending_public,
+%       log_annual_precipitation,
+%       log_annual_precipitation_squared,
+%       log_CPI_GDP_per_capita,
+%       life_expectancy
+%     ) %>%
+%     filter(complete.cases(.)),
+%     by = c("year", "country")
+%   ) %>%
+%   average_by_country %>%
+%   ivreg(
+%     log_CPI_price_of_life ~
+%       # exogenous
+%       log_population_density +
+%       percent_health_spending_public +
+%       log_annual_precipitation +
+%       log_annual_precipitation_squared +
+%       year +
+%       # endogenous
+%       life_expectancy |
+%       # exogenous
+%       log_population_density +
+%       percent_health_spending_public +
+%       log_annual_precipitation +
+%       log_annual_precipitation_squared +
+%       year +
+%       # instruments
+%       log_CPI_GDP_per_capita,
+%     data = .,
+%     weights = number_of_observations
+%   )
+
+% model_nominal <-
+%   ratios %>%
+%   select(country, year, log_nominal_price_of_life) %>%
+%   filter(complete.cases(.)) %>%
+%   inner_join(
+%     WDI_data %>%
+%     select(country, year,
+%       log_annual_precipitation,
+%       log_population_density,
+%       percent_health_spending_public,
+%       log_annual_precipitation,
+%       log_annual_precipitation_squared,
+%       log_nominal_GDP_per_capita,
+%       life_expectancy
+%     ) %>%
+%     filter(complete.cases(.)),
+%     by = c("year", "country")
+%   ) %>%
+%   average_by_country %>%
+%   ivreg(
+%     log_nominal_price_of_life ~
+%       # exogenous
+%       log_population_density +
+%       percent_health_spending_public +
+%       log_annual_precipitation +
+%       log_annual_precipitation_squared +
+%       year +
+%       # endogenous
+%       life_expectancy |
+%       # exogenous
+%       log_population_density +
+%       percent_health_spending_public +
+%       log_annual_precipitation +
+%       log_annual_precipitation_squared +
+%       year +
+%       # instruments
+%       log_nominal_GDP_per_capita,
+%     data = .,
+%     weights = number_of_observations
+%   )
+
+% residual_data <-
+%   ratios %>%
+%   select(country, ratio_index, log_price_of_life) %>%
+%   filter(!is.na(log_price_of_life)) %>%
+%   inner_join(
+%     with_predictions %>%
+%     select(country, prediction),
+%     by = "country"
+%   ) %>%
+%   mutate(residual = log_price_of_life - prediction) %>%
+%   arrange(residual)
+
+% model_coefficients = coef(model)
+
+% log_precipitation_vertex =
+%   -model_coefficients[["log_annual_precipitation"]] /
+%   2 / model_coefficients[["log_annual_precipitation_squared"]]
+
+% closest_to_vertex = 
+%   WDI_data %>% 
+%   filter(year == RECENT_YEAR) %>%
+%   mutate(log_precipitation_difference = abs(log_annual_precipitation - log_precipitation_vertex)) %>%
+%   arrange(log_precipitation_difference) %>%
+%   slice(1)
+
+% panel_residuals <-
+%   # get all combinations of countries and years
+%   # not sure if this is strictly necessary but just in case
+%   by_country_and_year %>%
+%   group_by(country) %>%
+%   # without enough years the stationarity test will fail
+%   filter(n() >= MINIMUM_YEARS) %>%
+%   ungroup() %>%
+%   mutate(year_copy = year) %>%
+%   pdata.frame(index = c("country", "year_copy")) %>%
+%   plm(formula, data = .) %>%
+%   resid
+
+% test_stationarity = function(data, test, pmax = 1, exo = "none") {
+%   statistic = purtest(data, pmax = pmax, exo = exo, test = test)$statistic
+%   tibble(
+%     Method = statistic$method,
+%     Statistic = statistic$statistic,
+%     `Degrees of freedom` = statistic$parameter,
+%     `p value` = statistic$p.value
+%   )
+% }
+%% end.rcode
+
+%% begin.rcode, echo=FALSE
+
+%% end.rcode
+
+
+\section{Abstract}
+
+Any government should value all people's lives equally, regardless of
+people's wealth or citizenship. Consider what a government that valued
+all people's lives equally would do. If the marginal cost of life were
+not the same for all countries, the government would not necessarily pay
+for healthcare treatments for its own citizens. Instead, by the
+principle of effective altruism, the government would pay for healthcare
+treatments in the country with the lowest marginal cost of life. Due to
+the law of increasing marginal costs, the marginal cost of life should
+be lower in low-life-expectancy countries than in high-life-expectancy
+countries, all else being equal. To assess this, I estimated the
+marginal cost of life curve. I use the following model of how a
+government would make healthcare decisions. A government would choose
+both life expectancy and the price of life in their country
+corresponding to the intersection of a marginal cost of life curve and a
+marginal benefit of life curve. To estimate the marginal cost of life
+curve, I used two-stage least squares. I downloaded data from three
+sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry,
+the World Bank's World Development Indicators (WDI), and the US Federal
+Reserve. I used GDP per capita as an instrument because it would
+correlate with shifts in the marginal benefit of life curve but not the
+marginal cost of life curve. I also controlled for several variables
+that could correlate with shifts in the marginal cost of life curve:
+time, population density, the proportion of healthcare spending that is
+public, and annual precipitation. I found that the marginal cost of life
+is strongly increasing. With 95\% confidence, when life expectancy
+increases by one year, the marginal cost of life increases by between
+\rinline{signif(confidence_interval$lower_bound * 100, DISPLAY_FIGURES)}\% and 
+\rinline{signif(confidence_interval$upper_bound * 100, DISPLAY_FIGURES)}\%.
+The marginal cost of life is far lower in some
+countries than others. For example, I predict that, in 
+\rinline{RECENT_YEAR},
+while the marginal cost of life was
+\rinline{best_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
+international dollars per QALY in
+\rinline{best_row$country},
+it was
+\rinline{worst_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
+international dollars per QALY in
+\rinline{worst_row$country}.
+For this reason, all governments should spend more money on healthcare in
+the country with the lowest marginal cost of life.
+
+\section{Motivation}
+
+Any government should value all people's lives equally, regardless of
+people's wealth or citizenship. Consider what a government that valued
+all people's lives equally would do. If the marginal cost of life were
+not the same for all countries, the government would not necessarily pay
+for healthcare treatments for its own citizens. Instead, it would pay
+for healthcare treatments in the country with the lowest marginal cost
+of life.
+
+In \autoref{tab:life_expectancy_table} and \autoref{fig:life_expectancy_map}, I show that life expectancy varies between
+countries.
+
+%% begin.rcode life_expectancy_table, echo=FALSE
+% get_head_and_tail(recent_life_expectancy_data) %>%
+%   mutate(life_expectancy = signif(life_expectancy, DISPLAY_FIGURES)) %>%
+%   select(
+%     Rank = rank,
+%     `Country or Territory` = country,
+%     `Life Expectancy` = life_expectancy
+%   ) %>%
+%   kable(caption = paste0(
+%       "The top and bottom ",
+%       HEAD_TAIL_SIZE,
+%       " life expectancies in countries in ",
+%       RECENT_YEAR
+%     ))
+%% end.rcode
+
+%% begin.rcode life_expectancy_map, echo=FALSE, dpi = 300, fig.width = 8, fig.height = 6, fig.cap = "Life expectancy by country"
+% map_data %>%
+%   # add in life expectancy in RECENT_YEAR
+%   left_join(
+%     recent_WDI_data %>%
+%     select(country, life_expectancy),
+%     by = "country"
+%   ) %>%
+%   select(`Life expectancy in 2019, in years` = life_expectancy) %>%
+%   st_transform(crs = "+proj=eqearth") %>%
+%   # remove borders which clutter the image
+%   plot(border = NA)
+%% end.rcode
+
+Due to the law of increasing marginal costs, the marginal cost of life
+should be lower in low-life-expectancy countries than in
+high-life-expectancy countries, all else being equal. To assess this, I
+estimate the marginal cost of life curve.
+
+\section{Literature}
+
+Any government should value all people's lives equally, regardless of
+people's wealth or citizenship. Unfortunately, not all economists agree.
+Consider the previous discussion of the value of a statistical life.
+
+\textbf{Value of a statistical life (VSL)}: A VSL is the value of a
+human life, in dollar terms, that a government would use in cost-benefit
+analysis.
+
+A consultant at RAND first proposed a VSL. The US Air Force had asked
+the consultant to recommend whether the US Air Force should build cheap
+yet dangerous airplanes, or expensive yet safe airplanes. The consultant
+realized that if they put no value on safety, they must recommend that
+the Air Force should build cheap yet dangerous airplanes. They would
+have to place a positive value on human life, a VSL, to recommend that
+the Air Force should build the expensive yet safe airplanes \autocite{banzhafRetrospectivesColdWarOrigins2014}.
+The consultant shared the idea of a VSL with Schelling, and
+Schelling argued for using a VSL in cost-benefit analysis. He argued
+that ``we nearly all want our lives extended and are probably willing to
+pay for it'' \autocite[129]{schellingLifeYouMay1968}.
+
+Economists use many methods to choose a VSL, but wealth and income
+always influence the outcome. If one uses revealed preferences, one
+measures how much money a person is willing to sacrifice for more safety
+by considering the person's decisions, such as which car to buy. For
+example, Atkinson et al. used data on car ``price, fuel efficiency, and
+performance characteristics such as acceleration, comfort, and safety''
+\autocite[133]{atkinsonValuationRisksLife1990} to calculate a VSL. If one uses contingent valuation, one
+asks people how much money these people would be willing to pay for more
+safety, or willing to accept for less safety. For example, Alberini et
+al. asked participants ``whether they would purchase a product that
+would reduce {[}mortality{]} risk by either 1 in 1000 or 5 in 1000, at a
+stated price'' \autocite[773]{alberiniDoesValueStatistical2004}. Finally, if one uses compensating wage
+differentials, one measures the wage premium employers use to entice
+workers to do dangerous jobs. For example, Viscusi asked ``controlling
+for other aspects of the job, what is the wage premium workers receive
+for risk'' \autocite[1913]{viscusiValueRisksLife1993}? Regardless of which of these three methods
+one uses, wealth and income always influence the outcome. For example, a
+wealthy person might be willing to pay more to buy safe products than a
+poor person, purely because the wealthy person has a higher ability to
+pay. For this reason, Summers concluded that ``the economic logic behind
+dumping a load of toxic waste in the lowest wage country is impeccable''
+\autocite{summersGEP1991}.
+
+Governments sometimes vary VSLs based on wealth and income. After 9-11,
+the US Congress compensated the families of victims by paying the
+families based on foregone income, that is, how much income the victim
+would have earned had they not died. Thus, the government paid the
+families of CEOs much more than the families of firefighters. The lawyer
+who oversaw the program, Kenneth Feinberg, disagreed with how Congress
+distributed this fund: ``any statutory compensation formula that
+recognizes and reinforces economic distinctions among claimants is
+guaranteed to promote divisiveness among the very families it seeks to
+help'' \autocite[183]{feinbergWhatLifeWorth2005}.
+
+Although EPA economists considered varying VSLs based on wealth and
+income, they decided to use a constant VSL so that they would need less
+information. EPA economists considered varying VSLs based on wealth
+income. They argued that ``an ideal value estimate for fatal risk
+reduction would account for all of these demographic and risk
+characteristics'' \autocite[88]{GuidelinesPreparingEconomic2010a}. If these economists varied VSLs based
+on wealth and income, to conduct a cost-benefit analysis, they would
+need to know the wealth and income of everyone whose health the EPA
+could protect with an environmental policy. Instead, to reduce the
+amount of information they would need, the economists used a constant
+VSL. They explained that ``unfortunately, it is simply too expensive and
+time-consuming to obtain such unique risk value estimates for each EPA
+policy'' \autocite[88]{GuidelinesPreparingEconomic2010a}.
+
+Some climate economists varied the VSL to justify discounting over time
+without recommending that governments should redistribute wealth. When
+one uses cost-benefit analysis to analyze climate change, one must
+decide on a discount rate. Present generations pay the cost of
+preventing climate change, and the benefit of preventing climate change
+includes saving future people's lives. If one used a high discount rate,
+one would discount these benefits. Some economists justified discounting
+by weighing benefits to comparatively rich future people lower than
+benefits to comparatively poor present people. However, if the
+economists had assumed that the marginal utility-as-well-being of money
+was decreasing, and if they had used utilitarianism, they must then have
+recommended that governments should redistribute money globally. This is
+because redistributing money from rich people with low marginal utility
+to poorer people with high marginal utility would increase total
+utility. These economists put Negishi weights on people in richer
+countries to justify discounting without recommending that governments
+should redistribute wealth. Negishi weights are weights that cancel out
+differences in marginal utility. For example, in a rich country,
+although the marginal utility of a dollar would be lower, the Negishi
+weight would be higher, so redistribution would make no difference.
+Stanton summarizes: ``in Negishi-weighted models, human welfare is more
+valuable in richer regions and redistribution of income among world
+regions is suppressed, maintaining the existing income distribution''
+\autocite[423]{stantonNegishiWelfareWeights2010}.
+
+One should not choose a VSL if life and money are incommensurable, that
+is, if one cannot compare life and money. Raz argued that ``if people's
+evaluations can form a foundation for a general theory of comparative
+value judgments, perhaps people's refusal to evaluate could provide a
+pointer to the existence of significant incommensurabilities'' \autocite[129]{razValueIncommensurabilityPreliminaries1986}. That is, if people refuse to compare life and money, then perhaps
+economists should too.
+
+To avoid choosing a value of a statistical life, some economists use
+cost-effectiveness analysis instead. However, governments still need to
+choose a value of a statistical life to choose a cost-effectiveness
+threshold. To define cost-effectiveness analysis, I use the following
+definitions.
+
+\textbf{Life expectancy}: how many years which one predicts a baby born
+in a country will live for, on average.
+
+For example, if the life expectancy of a country were low, citizens in
+the country would die at young ages, on average.
+
+\textbf{Healthcare treatment}: any action a government could take to
+increase a citizen's life expectancy.
+
+This is a broad definition. Governments can pay for individual
+healthcare, so any prescription is a healthcare treatment. In addition,
+public health measures, such as nutrition programs, exercise programs,
+and water sanitation, are all healthcare treatments.
+
+\textbf{Quality-adjusted life year (QALY)}: a health improvement that
+one judges to have the same value as an extra year of life for a subject
+who is fully healthy.
+
+This measure is necessarily subjective.
+
+\textbf{Cost-effectiveness ratio} or the \textbf{Price of life}: Any
+healthcare treatment has a different cost-effectiveness ratio: how much
+the treatment costs in units of currency per QALY.
+
+For example, giving rehydration fluid to a small child with
+life-threatening diarrhea would have a low cost-effectiveness ratio:
+rehydration fluid has a low cost, and the child could live for many more
+years. On the other hand, giving radiation therapy to a very elderly
+person with cancer would have a low cost-effectiveness ratio: radiation
+therapy has a high cost, and even if the treatment were successful, the
+elderly person would probably not live much longer. I describe a
+cost-effectiveness ratio as a ``price of life'' because a price is the
+cost per unit of a good, and for a cost-effectiveness ratio, that good
+is a QALY. One does not need to choose a VSL to analyze
+cost-effectiveness. Smith explained that ``until we discover a universal
+unit for quantifying the value of health, ways to measure the benefits
+will continue to hamper comparisons among alternate health programs''
+\autocite[900]{smithCosteffectivenessCostbenefitAnalyses1968}.
+
+\textbf{Cost-effectiveness threshold} or the \textbf{Marginal benefit of
+life}: A government's cost-effectiveness threshold, or marginal benefit
+of life, is the cost effectiveness ratio of the treatment with the
+maximum cost-effectiveness ratio among the treatments the government is
+willing to pay for.
+
+A government can use a cost-effectiveness threshold to decide how to
+spend money to improve public health. Although this seems callous, many
+public health agencies use such cost-effectiveness thresholds to make
+healthcare decisions. {[}TODO: cite UK's cost-effectiveness
+threshold{]}.
+
+I call a cost-effectiveness threshold the ``marginal benefit of life''
+because it is the value a government assigns to a health improvement
+equivalent to a QALY. For example, if a government is willing to pay for
+all healthcare interventions that cost no more than \$50,000 per QALY
+(quality-adjusted life year), the government must believe that a QALY is
+worth \$50,000. The only difference between a cost-effectiveness
+threshold and a VSL is that a VSL is the value of the remainder of a
+person's life, while a cost-effectiveness threshold is only the value of
+a quality-adjusted life year. Using a quality-adjusted life year as a
+unit, instead of the remainder of a person's life, makes more sense. For
+example, consider whether the government should save the life of a child
+or an elderly person (if forced to choose only one), both of whom live
+the same quality of life. On one hand, if the government used a value of
+a statistical life, it would be indifferent about which person to save.
+On the other hand, if the government used a cost-effectiveness
+threshold, it would choose to save the child, because the child would
+probably live many more additional years than the elderly person would.
+
+Different governments use different cost-effectiveness thresholds
+because some governments can afford more expensive treatments than
+others can. Garber and Phelps used Pareto efficiency to argue that
+different governments using different cost-effectiveness thresholds is
+optimal: ``our estimates imply that...CE cutoffs should be about double
+the annual income'' \autocite[25]{garberEconomicFoundationsCosteffectiveness1997}. The World Bank Commission on
+Macroeconomics and Health endorsed this view: ``this multiple of
+earnings reflects the value of leisure time in addition to market
+consumption, the pure longevity effect, and the pain and suffering
+associated with disease'' \autocite[31]{sachsMacroeconomicsHealthInvesting2001}. The World Health Organization
+also endorsed this view: ``interventions that avert one DALY
+{[}disability adjusted life-year{]} for less than average per capita
+income for a given country or region are considered very cost-effective;
+interventions that cost less than three times average per capita income
+per DALY averted are still considered cost-effective; and those that
+exceed this level are considered not cost-effective'' \autocite[31]{hutubessyGeneralizedCosteffectivenessAnalysis2003}. Shillcutt et al. were concerned that using income to
+choose cost-effectiveness thresholds ``puts a value on livelihood rather
+than life'' \autocite[909]{shillcuttCostEffectivenessLow2009}. Marseille et al. argued that these
+thresholds are too high: ``the WHO-CHOICE thresholds set such a low bar
+for cost-effectiveness that very few interventions with evidence of
+efficacy can be ruled out'' \autocite[118]{marseilleThresholdsCostEffectiveness2015}.
+
+\textbf{Marginal cost of life}: For a country, the marginal cost of life
+is the cost-effectiveness ratio of the treatment any citizen needs with
+the minimum cost-effectiveness ratio.
+
+Consider what a government that valued all people's lives equally would
+do. If the marginal cost of life were not the same for all countries,
+the government would not necessarily pay for healthcare treatments for
+its own citizens. Instead, the government would pay for healthcare
+treatments in the country with the lowest marginal cost of life. Then,
+the government would be acting according to the principle of effective
+altruism.
+
+\textbf{Effective altruism}: the principle that a certain agent should
+act to maximize global social welfare.
+
+Governments, not only people, should use effective altruism, because
+governments can impact the world more than people can. Philosophers use
+effective altruism to analyze personal, not social, duties. Singer
+noted that ``if it is in our power to prevent something bad from
+happening, without thereby sacrificing anything of comparable ethical
+importance, we ought, ethically, to do it\ldots. If {[}this principle{]}
+were acted upon, even in its qualified form, our lives, our society, and
+our world would be fundamentally changed'' \autocite[231]{singerFamineAffluenceMorality1972}. GiveWell, a
+non-profit organization, promotes effective altruism and recommends the
+most cost-effective charities \autocite{GiveWell}. However, because
+governments can impact the world more than people can, governments, not
+only people, should use effective altruism.
+
+Due to the law of increasing marginal costs, the marginal cost of life
+should be lower in low-life-expectancy countries than in
+high-life-expectancy countries, all else being equal. To assess this, I
+estimated the marginal cost of life curve.
+
+\section{Theory}
+
+I use the following model of how a government makes healthcare
+decisions. Imagine an impartial government paying for healthcare for
+their citizens. By impartial, I mean that the government would
+prioritize the most cost-effective treatments without regard for which
+citizen would receive them. One can most clearly apply this model to a
+country with public health care. For the model, I use the following
+concepts:
+
+\textbf{Marginal cost of life curve}: the relationship between life
+expectancy of citizens and the marginal cost of life.
+
+By the law of increasing marginal costs, the marginal cost of life curve
+should be increasing. This is for the following reason. Because they are
+impartial, the government would prioritize the most cost-effective
+treatments first. To increase life expectancy, the government could fund
+treatments with higher cost-effectiveness ratios. Because the government
+would pay for more healthcare treatments, mortality rates would
+decrease, so life expectancy would increase. Also, because the
+government would pay for treatments with higher cost-effectiveness
+ratios, the marginal cost-effectiveness ratio of further treatments
+would also increase. Thus, there would be a positive relationship
+between life expectancy (the ``quantity'' of life) and the marginal cost
+of life.
+
+\textbf{Marginal benefit of life curve}: the relationship between the
+life expectancy and a government's marginal benefit of life.
+
+By the law of decreasing marginal benefits, the marginal benefit of life
+curve should be slightly decreasing. This is for the following reason.
+Consider how a government would change their marginal benefit of life if
+life expectancy exogenously increased. Because this increase is
+exogenous, other factors, such as the government's ability to pay for
+healthcare, would stay the same. Although most citizens would desire
+additional life as much as before, some elderly people, who would have
+lived more complete lives, might desire additional life less. In
+response, the government might slightly decrease the marginal benefit of
+life. Thus, there might be a slightly negative relationship between life
+expectancy (the ``quantity'' of life) and the government's cost
+effectiveness threshold (their marginal benefit of life). This aligns
+with the law of decreasing marginal benefits.
+
+The government's ability to pay for life would determine the
+government's marginal benefit of life curve. Two effects can cause a
+marginal benefits curve to shift: the ``income effect'' and the
+``substitution effect'', but in this case, only the income effect is
+relevant. Generally, the ``income effect'' means that, if someone's
+income increased, the person would have a higher ability to pay, and
+thus, willingness to pay, for a good. In this case, if per-capita income
+in the group increased, but other factors, such as life expectancy,
+remained the same, due to the income effect, the government would have a
+higher ability to pay, and thus, willingness to pay, for healthcare
+treatments. So, if per capita income in a country increased, the
+marginal benefit of life curve would shift upwards. The ``substitution
+effect'' means that, if the price of a substitute good decreased,
+someone might choose to purchase a substitute good instead, so their
+willingness to pay for the original good would decrease. In this case,
+however, I cannot imagine a substitute good for additional life.
+
+A rational government would choose a level of healthcare funding
+corresponding to where the marginal benefit and marginal cost curves
+intersect. This is for the following reason: if the government's
+marginal benefit was greater than the marginal cost of life, the
+government would pay for more healthcare treatments. If the government's
+marginal benefit was less than the marginal cost of life, the government
+would pay for less healthcare treatments. The government would then
+choose a level of healthcare funding corresponding to where the marginal
+benefit and marginal cost curves intersect. The position of this
+intersection would correspond to a certain life expectancy and a certain
+price of life.
+
+I graph an example of such an intersection in \autoref{fig:intersection_example}.
+
+%% begin.rcode intersection_example, echo=FALSE, dpi = 300, fig.width = 8, fig.height = 6, fig.cap = "The intersection of a marginal cost of life curve and marginal benefit of life curve. The marginal cost curve is the curve I predicted. The marginal benefit curve in the figure is (arbitrarily) horizontal, with a price of life equal to the price of life I estimated."
+% ggplot(
+%   bind_rows(
+%     prediction_data %>%
+%       mutate(
+%         price_of_life = price_of_life / 1000,
+%         side = "Marginal cost of life"
+%       ),
+%     age_range %>%
+%       mutate(
+%         price_of_life = exp(example_row$log_price_of_life) / 1000,
+%         side = "Marginal benefit of life"
+%       )
+%   ) %>%
+%   rename(
+%     `Life expectancy` = life_expectancy,
+%     `Price of life, in thousand 2019 International $ / QALY` = price_of_life
+%   )
+% ) +
+%   aes(
+%     x = `Life expectancy`,
+%     y = `Price of life, in thousand 2019 International $ / QALY`,
+%     color = side
+%   ) +
+%   geom_line() +
+%   theme_bw() +
+%   labs(color = paste0("For the ", EXAMPLE_COUNTRY, " in ", RECENT_YEAR))
+%% end.rcode
+
+There are two problems when one applies this model to the governments of
+different countries.
+
+The first problem is that most countries have some mixture of public and
+private healthcare. Citizens vary in their ability to pay for, and thus
+willingness to pay for, healthcare treatments. If a government
+privatized healthcare, this would result in more disparate health
+outcomes, because some citizens could afford expensive treatments, and
+others could not. Thus, implementing private healthcare would cause
+citizens to have more disparate life expectancies. To address this
+problem, I averaged all published prices of life within each country and
+year. Even so, private healthcare might be less cost-effective overall
+than public healthcare, for reasons I discuss below. Therefore, I
+controlled for the proportion of health spending that is public.
+
+The second problem is that governments might not always make rational
+and impartial healthcare decisions. In fact, governments might not even
+know the cost-effectiveness ratios of various treatments. This could
+affect the results below. This is because, if typical healthcare
+treatments are more expensive than need be, I would overestimate the
+marginal cost of life.
+
+\section{Methods}
+
+I used the following methods to estimate the marginal cost of life
+curve. I used two-stage least squares because no other method, that is,
+direct accounting, analyzing an experiment, analyzing a
+quasi-experiment, or multivariable regression, would be effective. I use
+gross domestic product (GDP) per capita as an instrumental variable
+because an exogenous change in GDP per capita should cause the marginal
+benefit of life curve, but not the marginal cost of life curve, to
+shift. I controlled for several variables that could be correlated with
+shifts of the marginal cost of life curve: time, population density, the
+proportion of healthcare spending that is public, log annual
+precipitation, and log annual precipitation.
+
+I could not use direct accounting to estimate the marginal cost of life
+curve because I do not have the data I would need. If one had data about
+both which healthcare treatments any citizen might need, and the
+cost-effectiveness ratios of these healthcare treatments, then one could
+directly calculate an aggregate marginal cost of life curve for a
+country. Some health insurance companies and national healthcare
+providers might have already estimated a marginal cost of life curve
+because these institutions could use this curve to predict budget costs.
+However, even if an institution has already used individual data to
+estimate a marginal cost of life curve, that institution currently
+publishes neither individual data, nor an aggregate cost curve.
+
+I could not use an experiment to estimate the marginal cost of life
+curve. If I paid for healthcare for a large group of people, then, I
+could observe the marginal cost of life curve by shifting the marginal
+benefit of life curve I use and observing subsequent changes in the
+group's life expectancy. However,
+I do not pay for healthcare for a large group of people, and even if I
+did, I would not experiment with their healthcare.
+
+I could not use a quasi-experiment to estimate the marginal cost of life
+curve. A quasi-experiment is like an experiment, except, in a
+quasi-experiment, one observes the results of a previous exogenous
+change. In this case, I would need to find a government that exogenously
+shifted their marginal benefit of life curve. Unfortunately, I could not
+identify such a quasi-experiment.
+
+I could not use multivariable regression to estimate the marginal cost
+of life curve. Naively, if one knew, for many countries, both life
+expectancy and the price of life, one could use a multivariable
+regression to estimate a marginal cost of life curve. The problem is
+that the marginal cost of life and marginal benefit of life curves
+mutually determine the life expectancy and price of life. In other
+words, life expectancy and the price of life are endogenous, that is,
+neither variable directly determines the other. So, if one used naive
+regression, one could only observe the combined effects of both the
+marginal cost and marginal benefit curves.
+
+Because none of the strategies above, direct accounting, analyzing an
+experiment, analyzing a quasi-experiment, or multivariable regression,
+would be effective, I must use two-stage least squares (2SLS) to
+estimate the marginal cost of life curve. The main input variable is
+life expectancy, and the main output variable is the price of life.
+Thus, I need data for both variables. In this case, to use two-stage
+least squares, I must find an instrumental variable that would be
+correlated with shifts in the marginal benefit curve, not the marginal
+cost curve. I also must find control variables that would correlate with
+shifts of the marginal cost curve, but not the marginal benefit curve.
+
+I downloaded data from three sources: the Tufts Medical
+Cost-Effectiveness Analysis (CEA) Registry, the World Bank's World
+Development Indicators (WDI), and the US Federal Reserve.
+
+To obtain price of life data, I downloaded data about the
+cost-effectiveness of healthcare treatments from the CEA Registry. This
+registry is a ``comprehensive database of 8,056 cost-utility analyses on
+a wide variety of diseases and treatments published from 1976 to 2018''
+\autocite[2020]{CEARegistry2020}. {[}TODO: update quote, discuss cutoff date{]}.
+For each study,
+Tufts Medical reports the following variables:
+
+\begin{itemize}
+\item
+  the publication year
+\item
+  the gender of study participants (only male, only female, or all
+  genders)
+\item
+  the country (or countries) where the study participants live.
+\item
+  the currency used to calculate costs.
+\item
+  the year of currency used to calculate costs.
+\item
+  a cost-effectiveness ratio in local historical currency per QALY
+\end{itemize}
+
+For each country and year (country-year), I use the average of log
+cost-effectiveness ratios published in that country-year as a rough
+estimate of the log price of life. I log cost effectiveness ratios
+because all values are positive and the distribution is right skewed,
+with a few very high ratios. Of course, no author who published such a
+ratio intended to estimate the price of life in a country and year.
+Instead, each author was simply analyzing the cost-effectiveness of a
+healthcare treatment the author was interested in and could obtain data
+about. However, the average of the log of published cost-effectiveness
+ratios in each country and year might be close to the log price of life,
+for three reasons. First, unless they use retrospective data, a
+researcher can only study treatments that patients in a country and year
+can still benefit from. Second, researchers can most easily study
+treatments that are typical in a country and year. Typical treatments
+should be cost-effective because patients and doctors try to choose the
+most cost-effective treatments. Third, if a researcher found a low
+cost-effectiveness ratio for an uncommon treatment, a publisher would be
+more likely to publish the researcher's results. Such a low
+cost-effectiveness ratio would be close to the marginal price of life.
+
+Even so, by using the average of the log of published cost-effectiveness
+ratios in a country and year, I likely over-estimated the log price of
+life. This is because, if a researcher found a high cost-effectiveness
+ratio for a common treatment, a publisher would be more likely to
+publish the researcher's results. Such a cost-effectiveness ratio would
+be higher than the marginal cost of life.
+
+I only used some cost-effectiveness ratios. I excluded
+cost-effectiveness ratios from studies of participants from more than
+one country. I also excluded zero or negative cost-effectiveness ratios
+because a cost-effectiveness ratio must be positive. I only considered
+ratios from studies with participants of all genders (that is, not just
+men or just women). Other authors could consider whether governments
+could be under-providing cost-effective gender-specific therapies, due
+to, for example, sexism.
+
+To obtain the main input variable, the instrumental variable, and
+control variables, I downloaded data from the World Bank's World
+Development Indicators (WDI) \autocite{WorldDevelopmentIndicators2020}. I
+downloaded:
+
+\begin{itemize}
+\item
+  The percent of health spending in the country that the domestic
+  government pays for
+\item
+  Population density in people per square kilometer (km²)
+\item
+  GDP per capita, in local historical currency
+\item
+  Annual precipitation, in millimeters (mm) per year
+\item
+  Life expectancy at birth in years
+\item
+  The nominal exchange rate in local historical currency per historical
+  US \$
+\item
+  The Purchasing Power Parity (PPP) adjusted exchange rate (in local
+  historical currency per international \$)
+\end{itemize}
+
+I report further details about these variables in \autoref{WDI_variables}.
+
+I used (log) gross domestic product (GDP) per capita as an instrumental
+variable because an exogenous change in GDP per capita should cause the
+marginal benefit of life curve, but not the marginal cost of life curve,
+to shift. An exogenous increase in GDP per capita should cause the
+marginal benefit curve to shift upwards, because, as I discussed above,
+countries with a higher GDP per capita have a higher ability to pay, and
+thus, willingness to pay, for life. All else being equal, an exogenous
+change in GDP per capita should not cause the marginal cost of life
+curve to shift, because a change in GDP per capita should not change the
+cost of any given healthcare treatment. Here, I am referring to the real
+cost in terms of healthcare inputs (like skilled labor and equipment),
+not the currency cost, which I address below. I log GDP per capita
+because all values are positive and the distribution is right-skewed,
+with a few countries with very high values.
+
+I controlled for several variables that could be correlated with shifts
+of the marginal cost of life curve: time, population density, the
+proportion of healthcare spending that is public, log annual
+precipitation, and log annual precipitation squared. I discuss the
+reason for each below.
+
+First, I controlled for a time trend in the regression below. I did this
+because technology could be correlated with shifts of the marginal cost
+of life curve. Healthcare technology changes over time. As researchers
+discover new treatments, more cost-effective healthcare treatments
+become available. Thus, the cost to achieve a given health outcome might
+decrease over time. To address this issue, I added a time trend to the
+regression below.
+
+Second, I controlled for population density in the regression below. I
+did this because returns to scale could correlate with shifts of the
+marginal cost of life curve. There are returns to scale in healthcare.
+One reason for this is that hospitals with more patients can more easily
+cover fixed costs like MRI machines. In areas where the population is
+too small to support a local hospital, patients could potentially travel
+to hospitals in other areas. However, traveling from remote areas could
+be expensive. Thus, all else being equal, the cost of healthcare might
+be higher in sparsely populated areas.
+
+Third, I controlled for the proportion of healthcare spending that is
+public in the regression below. I did this because, all else being
+equal, the cost of healthcare could be lower in countries with public
+health care than in countries with private health care, for two reasons.
+The first reason is that governments, via public health providers, have
+more bargaining power than private citizens against drug companies and
+hospitals. Drug companies have market power because they often own
+patents and thus have monopolies. Hospital owners have market power
+because a hospital owner might own the only hospital in a region, and
+thus, have a local monopoly. The second reason is that, if a government
+instituted a public health system, it could centralize patient
+administration more than any individual doctors could. Thus,
+administration costs per patient could be lower in countries with public
+health care. {[}TODO: add citations{]}.
+
+Finally, I controlled for two climate variables, log annual
+precipitation, and log annual precipitation squared, in the regression
+below. I did so because the marginal cost of healthcare might vary
+between countries with different climates. This could be due to
+different endemic diseases, and thus, effective treatments, in different
+countries. For example, malaria is only endemic in countries with humid
+climates, so antimalarial drugs would only be effective in such
+countries. Note that there is no reason to expect climate to have a
+linear effect. The World Development Indicators include one climate
+variable, annual precipitation. All values of this variable are
+positive, and the distribution is right-skewed, with a few countries
+with very high levels of precipitation. Thus, first, I took the log of
+annual precipitation. Then, to allow for a non-linear effect, I added
+both this log, and the square of this log, to the regression.
+
+Ideally, I could adjust prices from different countries and years, such
+that, for the same price in all countries and years, one could buy the
+same ``basket'' of healthcare inputs. Unfortunately, there are not
+widely available exchange rates or inflation measures based solely on
+the price of healthcare inputs {[}TODO: check{]}. Thus, I had two
+choices to make. First, I could use nominal exchange rates or
+purchasing-power parity (PPP) adjusted exchange rates. Second, I could
+use US GDP deflators or the US CPI to adjust for inflation.
+
+For the main analysis, I used PPP-adjusted exchange rates instead of
+nominal exchange rates to compare the price of life and GDP per capita
+between countries. A PPP-adjusted exchange rate is the price of a basket
+of consumer goods in one country divided by the price of the same basket
+of goods in another country. A nominal exchange rate is the amount of
+one currency one can exchange for a unit of another currency in an
+international currency market. In equilibrium, a nominal exchange rate
+should reflect the price of a basket of internationally traded goods. I
+chose to use PPP-adjusted exchange rates because countries do not trade
+many healthcare inputs, such as the labor of doctors and nurses,
+internationally. In fact, via border restrictions, governments actively
+prevent healthcare workers from migrating freely. To check for
+robustness, I repeated my calculations using nominal exchange rates, and
+report the results in \autoref{robustness_tests}.
+
+The basket of goods that economists use to calculate PPP-adjusted
+exchange rates might not represent healthcare inputs well, but I am not
+sure in which direction this would bias my results. Suppose, for
+example, that I am consistently overestimating health-care costs in rich
+countries because I am not fully accounting for the higher cost of labor
+in rich countries. On one hand, I would overestimate the relationship
+between GDP per capita and the price of life, because richer countries
+would have an artificially high price of life. On the other hand, I
+would underestimate the relationship between life expectancy and GDP per
+capita, because rich countries would have to pay artificially high
+healthcare costs to achieve the same life expectancy outcomes.
+
+For the main analysis, I used US GDP deflators instead of the US CPI to
+adjust for inflation. To compare the price of life and GDP per capita
+between years, I downloaded two inflation measures from the US Federal
+Reserve: the consumer price index (CPI) for all urban consumers, and the
+GDP deflator. The Federal Reserve bases GDP deflators on the prices of
+all inputs to GDP. The Federal Reserve bases the CPI on the price of a
+basket of consumer goods. I decided to use GDP deflators because many
+healthcare inputs, such as the labor of doctors and nurses, are not
+consumer goods. To check for robustness, I repeated my calculations
+using the CPI and report the results in \autoref{robustness_tests}.
+
+For the regression, I discarded rows where the value of any variable is
+missing. In general, more data is missing for developing countries than
+for developed countries. I discuss this more in \autoref{WDI_variables} and
+\autoref{ratios_balance}. However, unless developed countries are different from developing
+countries in a way I did not control for, this should not bias my
+results.
+
+\section{Results}
+
+I regressed the log price of life against life expectancy, using log GDP
+per capita as an instrument, and controlled for the variables I list
+above.
+
+Initially, I analyzed the data as panel data with country-level fixed
+effects. Unfortunately, I found that the residuals from this model were
+highly non-stationary, and therefore the results were unreliable. I
+discuss this more in \autoref{stationarity_tests}. I also could not find a combination of
+predictors such that the panel model was cointegrated.
+
+To avoid issues with non-stationarity, for the main result below, for
+each country, I averaged data across all years. For each country, when I
+averaged a variable from the WDI over years (including the year itself),
+I weighed by the number of ratio observations for each year in that
+country. Also, for each country, I averaged all log prices of life.
+Then, in the regression, I weighed each country by the total number of
+price-of-life observations for that country. I report the full
+regression results in \autoref{full_regression_results}.
+
+I expect to have overestimated the marginal cost of life, for the two
+reasons I mention above. First, citizens and governments might not
+always make rational healthcare decisions, and thus, typical healthcare
+treatments might be more expensive than necessary. Second, if a
+researcher found a high cost-effectiveness ratio for a common treatment,
+a publisher would be more likely to publish the researcher's results,
+and such a cost-effectiveness ratio would be higher than the marginal
+cost of life.
+
+I found that the marginal cost of life is strongly increasing. With 95\%
+confidence, when life expectancy increases by one year, the marginal
+cost of life increases by between 
+\rinline{signif(confidence_interval$lower_bound * 100, DISPLAY_FIGURES)}\% and 
+\rinline{signif(confidence_interval$upper_bound * 100, DISPLAY_FIGURES)}\%.
+Life expectancy is
+by far the most statistically significant predictor, and the adjusted R²
+of the model is
+\rinline{signif(model_summary$adj.r.squared * 100, DISPLAY_FIGURES)}\%.
+I report more detailed results in Appendix D.
+
+In \autoref{tab:marginal_costs_of_life}, I show that the marginal cost of life is far lower in
+low-life-expectancy countries than in high-life-expectancy countries.
+For example, I predict that, in 
+\rinline{RECENT_YEAR},
+while the marginal cost of life was
+\rinline{best_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
+international dollars per QALY in
+\rinline{best_row$country},
+it was
+\rinline{worst_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
+international dollars per QALY in
+\rinline{worst_row$country}.
+For this reason, all
+governments should spend more money on healthcare in the country with
+the lowest marginal cost of life.
+
+%% begin.rcode marginal_costs_of_life, echo=FALSE
+% with_predictions %>% 
+%   get_head_and_tail %>%
+%   mutate(
+%     price_of_life = 
+%       signif(price_of_life, DISPLAY_FIGURES) %>%
+%       format(big.mark = ",", drop0trailing = TRUE, scientific = FALSE),
+%     GDP_per_capita = 
+%       exp(log_GDP_per_capita) %>%
+%       signif(DISPLAY_FIGURES) %>%
+%       format(big.mark = ","),
+%     life_expectancy = signif(life_expectancy, DISPLAY_FIGURES),
+%   ) %>%
+%   select(
+%     Rank = rank,
+%     Country = country,
+%     `Marginal cost of life` = price_of_life,
+%     `Life expectancy` = life_expectancy
+%   ) %>% 
+%   kable(
+%     caption = paste0(
+%       "Top and bottom ",
+%       HEAD_TAIL_SIZE,
+%       " countries by marginal cost of life, in ",
+%       RECENT_YEAR,
+%       "international \\$"
+%     )
+%   )
+%% end.rcode
+
+
+\section{Conclusion}
+
+Any government should value all people's lives equally, regardless of
+people's wealth or citizenship. Consider what a government that valued
+all people's lives equally would do. If the marginal cost of life were
+not the same for all countries, the government would not necessarily pay
+for healthcare treatments for its own citizens. Instead, by the
+principle of effective altruism, the government would pay for healthcare
+treatments in the country with the lowest marginal cost of life. Due to
+the law of increasing marginal costs, the marginal cost of life should
+be lower in low-life-expectancy countries than in high-life-expectancy
+countries, all else being equal. To assess this, I estimated the
+marginal cost of life curve. I use the following model of how a
+government would make healthcare decisions. A government would choose
+both life expectancy and the price of life in their country
+corresponding to the intersection of a marginal cost of life curve and a
+marginal benefit of life curve. To estimate the marginal cost of life
+curve, I used two-stage least squares. I downloaded data from three
+sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry,
+the World Bank's World Development Indicators (WDI), and the US Federal
+Reserve. I used GDP per capita as an instrument because it would
+correlate with shifts in the marginal benefit of life curve but not the
+marginal cost of life curve. I also controlled for several variables
+that could correlate with shifts in the marginal cost of life curve:
+time, population density, the proportion of healthcare spending that is
+public, and annual precipitation. I found that the marginal cost of life
+is strongly increasing. With 95\% confidence, when life expectancy
+increases by one year, the marginal cost of life increases by between
+\rinline{signif(confidence_interval$lower_bound * 100, DISPLAY_FIGURES)}\% and 
+\rinline{signif(confidence_interval$upper_bound * 100, DISPLAY_FIGURES)}\%.
+The marginal cost of life is far lower in some
+countries than others. For example, I predict that, in 
+\rinline{RECENT_YEAR},
+while the marginal cost of life was
+\rinline{best_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
+international dollars per QALY in
+\rinline{best_row$country},
+it was
+\rinline{worst_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
+international dollars per QALY in
+\rinline{worst_row$country}.
+For this reason, all governments should spend more money on healthcare in
+the country with the lowest marginal cost of life.
+
+\section{Works cited}
+
+\printbibliography
+
+\section{Appendices}
+
+\begin{appendices}
+
+\section{Number of ratios by country}
+\label{ratios_balance}
+
+In \autoref{tab:ratios_balance}, I show that authors have published cost-effective analyses
+for some countries much more than in others.
+
+%% begin.rcode ratios_balance, echo = FALSE
+% ratios %>%
+%   group_by(country) %>%
+%   summarize(count = n()) %>%
+%   arrange(desc(count)) %>%
+%   get_head_and_tail() %>%
+%   select(
+%     Rank = rank,
+%     Country = country,
+%     `Number of ratios` = count
+%   ) %>%
+%   kable(
+%     caption = paste0(
+%       "Top and bottom ",
+%       HEAD_TAIL_SIZE,
+%       " countries by number of ratios"
+%     )
+%   )
+%% end.rcode
+
+\section{Details about the WDI variables}
+\label{WDI_variables}
+
+In \autoref{tab:WDI_variables}, for each variable I downloaded from the WDI, I report
+additional information, and the proportion of data missing for
+country-year combinations present in the CEA registry. I could not find
+suitable alternative variables with more available data in the WDI.
+
+%% begin.rcode WDI_variables, echo = FALSE
+% tibble(
+%   variable = c(
+%     "annual_precipitation",
+%     "percent_health_spending_public",
+%     "local_historical_GDP_per_capita",
+%     "life_expectancy",
+%     "nominal_exchange_rate",
+%     "population_density",
+%     "PPP_exchange_rate"
+%   )
+% ) %>%
+%   left_join(WDI_variables, by = "variable") %>%
+%   left_join(
+%     ratios %>%
+%     select(country, year) %>%
+%     distinct() %>%
+%     left_join(WDI_data, by = c("country", "year")) %>%
+%     pivot_longer(
+%       c(-year, -country),
+%       names_to = "variable",
+%       values_to = "value"
+%     ) %>%
+%     group_by(variable) %>%
+%     summarize(
+%       percent_missing =
+%         (sum(is.na(value)) / n() * 100) %>%
+%         signif(DISPLAY_FIGURES) %>%
+%         paste0("%"),
+%       .groups = "drop"
+%     ),
+%     by = "variable"
+%   ) %>%
+%   mutate(variable = stri_replace_all_fixed(variable, "_", " ")) %>%
+%   select(
+%     Variable = variable,
+%     Code = variable_code,
+%     `Percent missing` = percent_missing
+%   ) %>%
+%   kable(
+%     caption = "WDU variables I downloaded, with the percent of data missing for country-year combinations present in the CEA registry"
+%   )
+%% end.rcode
+
+\section{Non-stationarity}
+\label{stationarity_tests}
+
+I tested the residuals from a panel regression with country fixed
+effects for non-stationarity within each country. I only included the
+countries with at least 8 years of data. Otherwise, there was too much
+missing data for the tests to work. I considered only a lag of one and
+did not allow different intercepts or time trends between countries
+(because the residuals should all center on 0).
+I report these results in \autoref{tab:stationarity_tests}.
+From the low p-value for all three tests, I conclude that the panel residuals are non-stationary.
+
+%% begin.rcode stationarity_tests, echo = FALSE
+% map_df(
+%   c("madwu", "invnormal", "logit"),
+%   function (test) {
+%     test_stationarity(panel_residuals, test)
+%   }
+% ) %>%
+%   mutate(
+%     `p value` = signif(`p value`, DISPLAY_FIGURES),
+%     Method = stri_match_first_regex(Method, "^(.*)\\s\\(.*\\)")[,2]
+%   ) %>%
+%   select(Method, `p value`) %>%
+%   kable(caption = "Stationarity test results")
+%% end.rcode
+
+\section{Full regression results}
+\label{full_regression_results}
+
+In \autoref{tab:coefficients}, I report the coefficients from the main analysis.
+
+%% begin.rcode coefficients, echo = FALSE
+% tibble(
+%   raw_regressor = c(
+%     "(Intercept)",
+%     "log_population_density",
+%     "percent_health_spending_public",
+%     "year",
+%     "log_annual_precipitation",
+%     "log_annual_precipitation_squared",
+%     "life_expectancy"
+%   ),
+%   Regressor = c(
+%     "Intercept",
+%     "log(population density)",
+%     "% health spending public",
+%     "year",
+%     "log(annual precipitation)",
+%     "log(annual precipitation)²",
+%     "life expectancy"
+%   )
+% ) %>%
+%   left_join(
+%     model_summary$coefficients %>%
+%     as_tibble(rownames = "raw_regressor"),
+%     by = "raw_regressor"
+%   ) %>%
+%   select(-raw_regressor) %>%
+%   rename(`p value` = `Pr(>|t|)`) %>%
+%   mutate(
+%     Estimate = signif(Estimate, DISPLAY_FIGURES),
+%     `p value` = signif(`p value`, DISPLAY_FIGURES)
+%   ) %>%
+%   select(Regressor, Estimate, `p value`) %>%
+%   kable(caption = "Coefficients from the main analysis")
+%% end.rcode
+
+I interpret the life expectancy coefficient above. I interpret other
+coefficients as follows:
+
+When population density increases by 1\%, the marginal cost of life
+decreases by about
+\rinline{signif(-model_coefficients[["log_population_density"]], DISPLAY_FIGURES)}\%.
+As I discussed above, I expected this
+because there could be returns to scale in healthcare.
+
+When the percent health spending that is public increases by 1\%, the
+marginal cost of life decreases by about
+\rinline{signif(-model_coefficients[["percent_health_spending_public"]] * 100, DISPLAY_FIGURES)}\%.
+As I discussed above, I
+expected this because public healthcare might be more cost effective due
+to more bargaining power and central administration.
+
+The effect of precipitation is unimodal. The marginal cost of life is
+the highest in countries with about
+\rinline{signif(exp(log_precipitation_vertex), DISPLAY_FIGURES)}
+mm of annual precipitation. The
+marginal cost of life is lower in both more arid and more humid
+countries. In
+\rinline{RECENT_YEAR},
+the closest country to this peak was
+\rinline{closest_to_vertex$country},
+which had 
+\rinline{signif(closest_to_vertex$annual_precipitation, DISPLAY_FIGURES)}
+mm of annual precipitation. As I discussed above, I expected
+this because there are different endemic diseases, and thus, effective
+treatments, in countries with different climates.
+Patterns of colonialism could be influencing this relationship. In general,
+Europeans settled in areas with climates like European climates.
+However, I am not sure how patterns of colonialism could directly affect
+healthcare costs.
+
+Each year, the marginal cost of life increases by about
+\rinline{signif(model_coefficients[["year"]] * 100, DISPLAY_FIGURES)}\%.
+This is
+surprising: I expected this cost to decrease over time as medical
+technology improves.
+
+In \autoref{tab:diagnostics}, I report diagnostics from the main regression.
+
+%% begin.rcode diagnostics, echo = FALSE
+% bind_rows(
+%   model_summary$waldtest %>%
+%     setNames(c(
+%       "Statistic",
+%       "p value",
+%       "Degrees of freedom 1",
+%       "Degrees of freedom 2"
+%     )) %>%
+%     as.list %>%
+%     as_tibble() %>%
+%     mutate(Diagnostic = "Wald test"),
+%   model_summary$diagnostics %>%
+%     as_tibble(rownames = "Diagnostic") %>%
+%     filter(Diagnostic != "Sargan") %>%
+%     rename(
+%       Statistic = statistic,
+%       `p value` = `p-value`
+%     )
+% ) %>%
+%   select(
+%     Diagnostic,
+%     `p value`
+%   ) %>%
+%   mutate(`p value` = signif(`p value`, DISPLAY_FIGURES)) %>%
+%   kable(caption = "Diagnostics from the main regression")
+%% end.rcode
+
+I interpret these diagnostics as follows. From the low p-value of the
+Wald test, I conclude that at least one predictor is statistically
+significant. From the low p-value of the Weak instruments test, I
+conclude that the instrument (GDP per capita) is related to the
+endogenous variable (life expectancy). From the low p value of the
+Wu-Hausman test, I conclude that the suspected endogenous variable (life
+expectancy) is truly endogenous.
+
+\section{Robustness tests}
+\label{robustness_tests}
+
+In \autoref{tab:robustness_tests}, I compare the main results to the results of two robustness
+tests, one where I used nominal exchange rates instead of PPP-adjusted
+exchange rates, and one where I used the CPI instead of GDP deflators.
+The confidence interval for the life expectancy coefficient is roughly
+the same in the main analysis and two robustness tests. Thus, my results
+seem robust to the choice of exchange rates and inflation measures.
+
+%% begin.rcode robustness_tests, echo = FALSE
+% bind_rows(
+%   confidence_interval %>% mutate(case = "Main analysis"),
+%   get_confidence_interval(model_CPI) %>%
+%     mutate(case = "Using the US CPI"),
+%   get_confidence_interval(model_nominal) %>%
+%     mutate(case = "Using nominal exchange rates")
+% ) %>%
+%   mutate(
+%     lower_bound = signif(lower_bound, DISPLAY_FIGURES),
+%     upper_bound = signif(upper_bound, DISPLAY_FIGURES)
+%   ) %>%
+%   select(
+%     Case = case,
+%     `Lower bound` = lower_bound,
+%     `Upper bound` = upper_bound
+%   ) %>%
+%   kable(caption = "95\\% confidence intervals for the life expectancy coefficient from the main analysis and two robustness checks")
+%% end.rcode
+
+\end{appendices}
+
+\end{document}

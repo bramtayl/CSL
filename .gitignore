@@ -1,2 +1,16 @@
 *.html
 CSY.docx
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.pdf
+*.run.xml
+*.synctex.gz
+*.xdv
+*.tex
+*.out
+latex/cache/*
