@@ -2,7 +2,9 @@
 CSY.docx
 *.aux
 *.bbl
+*.bbl-SAVE-ERROR
 *.bcf
+*.bcf-SAVE-ERROR
 *.blg
 *.fdb_latexmk
 *.fls
@@ -14,3 +16,4 @@ CSY.docx
 *.tex
 *.out
 latex/cache/*
+figure/*

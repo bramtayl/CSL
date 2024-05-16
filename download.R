@@ -1,6 +1,5 @@
 library(countrycode)
 library(dplyr)
-library(FAOSTAT)
 library(fredr)
 library(readr)
 library(rnaturalearth)
@@ -8,49 +7,41 @@ library(sf)
 library(stringi)
 library(tibble)
 library(tidyr)
-library(WDI)
-    
-FRED_START_DATE = as.Date("1947-01-01")
-FRED_END_DATE = as.Date("2023-12-31")
+library(wbstats)
 
-CPI_data = 
-    fredr(
-        series_id = "CPIAUCSL",
-        observation_start = FRED_START_DATE,
-        observation_end = FRED_END_DATE
-    )
+fredr_set_key("859a3bf50a026ca281aaeaf9dd06e3de")
 
+CPI_data = fredr("CPIAUCSL")
 write_csv(CPI_data, "data/CPI.csv", na = "")
 
-GDP_deflator_data = 
-    fredr(
-        series_id = "GDPDEF",
-        observation_start = FRED_START_DATE,
-        observation_end = FRED_END_DATE
-    )
-
+GDP_deflator_data = fredr("GDPDEF")
 write_csv(GDP_deflator_data, "data/GDP_deflator.csv", na = "")
 
-all_WDI_variables = as_tibble(WDI_data$series)
-write_csv(all_WDI_variables, "data/all_WDI_variables.csv", na = "")
-selected_WDI_variables = read_csv("data/selected_WDI_variables.csv", na = "")
+CPI_medical_data = fredr("CPIMEDSL")
+write_csv(CPI_medical_data, "data/CPI_medical.csv", na = "")
 
-WDI_variable_details =
-    selected_WDI_variables %>%
-    left_join(all_WDI_variables)
+all_WB_variables <- wb_cache()$indicators
+write_csv(all_WDI_variables, "data/all_WB_variables.csv", na = "")
 
-if (any(is.na(WDI_variable_details$indicator))) {
-    stop("Missing indicators!")
-}
+indicator_ids = c(
+    "AG.LND.PRCP.MM", # annual_precipitation
+    "SH.XPD.GHED.CH.ZS", # percent_health_spending_public
+    "NY.GDP.PCAP.CN", # local_historical_GDP_per_capita
+    "SP.DYN.LE00.IN", # life_expectancy 
+    "PA.NUS.FCRF", # nominal_exchange_rate
+    "EN.POP.DNST", # population_density
+    "PA.NUS.PPP", # PPP_exchange_rate_GDP
+    "PA.NUS.PRVT.PP" # PPP_exchange_rate_private_consumption,
+    # wb_data is not working with series 9080000
+    # had to download health.csv manually
+    # "9080000" # PPP_exchange_rate_health
+)
 
-WDI_downloads = WDI(WDI_variable_details$indicator, country = "all")
-write_csv(WDI_downloads, "data/WDI_data.csv", na = "")
+WB_downloads = wb_data(indicator_ids, country = "all")
+write_csv(WB_downloads, "data/WB_data.csv", na = "")
 
-write_csv(codelist, "data/countries.csv", na = "")
+write_csv(codelist, "data/countrycode_data.csv", na = "")
 
-map_data = 
-    ne_countries(scale = "small", returnclass = "sf") %>%
-    # transform to a more common CRS so GDAL doesn't get confused
-    st_transform(crs = "EPSG:4326")
+map_data = ne_countries(scale = "small", returnclass = "sf")
 
 st_write(map_data, "data/map_data.gpkg")
