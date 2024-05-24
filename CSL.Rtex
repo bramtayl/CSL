@@ -1040,14 +1040,12 @@ the lowest marginal cost of life.
 %     GDP_per_capita = 
 %       exp(log_GDP_per_capita) %>%
 %       signif(DISPLAY_FIGURES) %>%
-%       format(big.mark = ","),
-%     life_expectancy = signif(life_expectancy, DISPLAY_FIGURES),
+%       format(big.mark = ",")
 %   ) %>%
 %   select(
 %     Rank = rank,
 %     Country = country,
-%     `Marginal cost of life` = price_of_life,
-%     `Life expectancy` = life_expectancy
+%     `Marginal cost of life` = price_of_life
 %   ) %>% 
 %   kable(
 %     caption = paste0(
