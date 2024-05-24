@@ -410,9 +410,11 @@
 % model_summary = summary(model)
 
 % with_predictions =
-%   by_country_main %>%
+%   WB_data_transformed %>%
+%   filter(year == RECENT_YEAR) %>%
+%   get_main_adjustments() %>%
 %   mutate(
-%     prediction = predict(model, data = .),
+%     prediction = predict(model, newdata = .),
 %     price_of_life = exp(prediction)
 %   ) %>%
 %   arrange(desc(prediction))
@@ -455,7 +457,7 @@
 %     ),
 %   age_range %>%
 %     mutate(
-%       price_of_life = exp(example_row$log_price_of_life),
+%       price_of_life = exp(example_row$prediction),
 %       side = "Marginal benefit of life"
 %     )
 % )
@@ -578,45 +580,6 @@ not the same for all countries, the government would not necessarily pay
 for healthcare treatments for its own citizens. Instead, it would pay
 for healthcare treatments in the country with the lowest marginal cost
 of life.
-
-In \autoref{tab:life_expectancy_table} and \autoref{fig:life_expectancy_map},
-I show that life expectancy varies between countries.
-
-%% begin.rcode life_expectancy_table, echo=FALSE
-% get_head_and_tail(recent_life_expectancy_data) %>%
-%   mutate(life_expectancy = signif(life_expectancy, DISPLAY_FIGURES)) %>%
-%   select(
-%     Rank = rank,
-%     `Country or Territory` = country,
-%     `Life Expectancy` = life_expectancy
-%   ) %>%
-%   kable(caption = paste0(
-%     "The top and bottom ",
-%     HEAD_TAIL_SIZE,
-%     " life expectancies in countries in ",
-%     RECENT_YEAR
-%   )) %>%
-%   bold_header()
-
-%% end.rcode
-
-%% begin.rcode life_expectancy_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Life expectancy in years from ", RECENT_YEAR, " by country")
-% raw_map_data %>%
-%   # replace country names
-%   left_join(country_data, by = "country_code") %>%
-%   select(-map_country, -country_code) %>%
-%   # add in life expectancy in RECENT_YEAR
-%   inner_join(
-%     recent_WDI_data %>%
-%     select(country, life_expectancy) %>%
-%     filter(!is.na(life_expectancy)),
-%     by = "country"
-%   ) %>%
-%   select(`Life expectancy in years` = life_expectancy) %>%
-%   st_transform(crs = "+proj=eqearth") %>%
-%   # remove borders which clutter the image
-%   plot(border = NA, key.pos = 1, main = NULL)
-%% end.rcode
 
 Due to the law of increasing marginal costs, the marginal cost of life
 should be lower in low-life-expectancy countries than in
@@ -1285,7 +1248,7 @@ of the model is
 \rinline{signif(model_summary$adj.r.squared * 100, DISPLAY_FIGURES)}\%.
 I report more detailed results in Appendix D.
 
-In \autoref{tab:marginal_costs_of_life}, I show that the marginal cost of life is far lower in
+In \autoref{tab:marginal_costs_of_life} and \autoref{fig:cost_of_life_map}, I show that the marginal cost of life is far lower in
 low-life-expectancy countries than in high-life-expectancy countries.
 For example, I predict that, in 
 \rinline{RECENT_YEAR},
@@ -1333,6 +1296,22 @@ the lowest marginal cost of life.
 %   bold_header()
 %% end.rcode
 
+%% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life, in ", RECENT_YEAR, " international \\$ / QALY, by country")
+% raw_map_data %>%
+%   # replace country names
+%   left_join(country_data, by = "country_code") %>%
+%   select(-map_country, -country_code) %>%
+%   # add in life expectancy in RECENT_YEAR
+%   inner_join(
+%     with_predictions %>%
+%     select(country, price_of_life),
+%     by = "country"
+%   ) %>%
+%   select(`Predicted marginal cost of life` = price_of_life) %>%
+%   st_transform(crs = "+proj=eqearth") %>%
+%   # remove borders which clutter the image
+%   plot(border = NA, key.pos = 1, main = NULL, logz = TRUE)
+%% end.rcode
 
 \section{Conclusion}
 
