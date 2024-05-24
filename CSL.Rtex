@@ -571,22 +571,7 @@ international dollars per QALY in
 For this reason, all governments should spend more money on healthcare in
 the country with the lowest marginal cost of life.
 
-\section{Motivation}
-
-Any government should value all people's lives equally, regardless of
-people's wealth or citizenship. Consider what a government that valued
-all people's lives equally would do. If the marginal cost of life were
-not the same for all countries, the government would not necessarily pay
-for healthcare treatments for its own citizens. Instead, it would pay
-for healthcare treatments in the country with the lowest marginal cost
-of life.
-
-Due to the law of increasing marginal costs, the marginal cost of life
-should be lower in low-life-expectancy countries than in
-high-life-expectancy countries, all else being equal. To assess this, I
-estimate the marginal cost of life curve.
-
-\section{Literature}
+\section{Introduction}
 
 Any government should value all people's lives equally, regardless of
 people's wealth or citizenship. Unfortunately, not all economists agree.
@@ -828,7 +813,7 @@ should be lower in low-life-expectancy countries than in
 high-life-expectancy countries, all else being equal. To assess this, I
 estimated the marginal cost of life curve.
 
-\section{Theory}
+\section{Methods}
 
 I use the following model of how a government makes healthcare
 decisions. Imagine an impartial government paying for healthcare for
@@ -842,64 +827,17 @@ concepts:
 expectancy of citizens and the marginal cost of life.
 
 By the law of increasing marginal costs, the marginal cost of life curve
-should be increasing. This is for the following reason. Because they are
-impartial, the government would prioritize the most cost-effective
-treatments first. To increase life expectancy, the government could fund
-treatments with higher cost-effectiveness ratios. Because the government
-would pay for more healthcare treatments, mortality rates would
-decrease, so life expectancy would increase. Also, because the
-government would pay for treatments with higher cost-effectiveness
-ratios, the marginal cost-effectiveness ratio of further treatments
-would also increase. Thus, there would be a positive relationship
-between life expectancy (the ``quantity'' of life) and the marginal cost
-of life.
+should be increasing. I analyze this further in the discussion.
 
 \textbf{Marginal benefit of life curve}: the relationship between the
 life expectancy and a government's marginal benefit of life.
 
 By the law of decreasing marginal benefits, the marginal benefit of life
-curve should be slightly decreasing. This is for the following reason.
-Consider how a government would change their marginal benefit of life if
-life expectancy exogenously increased. Because this increase is
-exogenous, other factors, such as the government's ability to pay for
-healthcare, would stay the same. Although most citizens would desire
-additional life as much as before, some elderly people, who would have
-lived more complete lives, might desire additional life less. In
-response, the government might slightly decrease the marginal benefit of
-life. Thus, there might be a slightly negative relationship between life
-expectancy (the ``quantity'' of life) and the government's cost
-effectiveness threshold (their marginal benefit of life). This aligns
-with the law of decreasing marginal benefits.
-
-The government's ability to pay for life would determine the
-government's marginal benefit of life curve. Two effects can cause a
-marginal benefits curve to shift: the ``income effect'' and the
-``substitution effect'', but in this case, only the income effect is
-relevant. Generally, the ``income effect'' means that, if someone's
-income increased, the person would have a higher ability to pay, and
-thus, willingness to pay, for a good. In this case, if per-capita income
-in the group increased, but other factors, such as life expectancy,
-remained the same, due to the income effect, the government would have a
-higher ability to pay, and thus, willingness to pay, for healthcare
-treatments. So, if per capita income in a country increased, the
-marginal benefit of life curve would shift upwards. The ``substitution
-effect'' means that, if the price of a substitute good decreased,
-someone might choose to purchase a substitute good instead, so their
-willingness to pay for the original good would decrease. In this case,
-however, I cannot imagine a substitute good for additional life.
+curve should be slightly decreasing. I analyze this further in the discussion.
 
 A rational government would choose a level of healthcare funding
 corresponding to where the marginal benefit and marginal cost curves
-intersect. This is for the following reason: if the government's
-marginal benefit was greater than the marginal cost of life, the
-government would pay for more healthcare treatments. If the government's
-marginal benefit was less than the marginal cost of life, the government
-would pay for less healthcare treatments. The government would then
-choose a level of healthcare funding corresponding to where the marginal
-benefit and marginal cost curves intersect. The position of this
-intersection would correspond to a certain life expectancy and a certain
-price of life.
-
+intersect. I analyze this further in the discussion.
 I graph an example of such an intersection in \autoref{fig:intersection_example}.
 
 %% begin.rcode intersection_example, echo=FALSE, dpi = 300, fig.width = 8, fig.height = 6, fig.cap = paste0("The intersection of a marginal cost of life curve and marginal benefit of life curve for the ", EXAMPLE_COUNTRY, " in ", RECENT_YEAR, ". The marginal cost curve is the curve I predicted. The marginal benefit curve in the figure is (arbitrarily) horizontal, with a price of life equal to the price of life I estimated.")
@@ -921,84 +859,11 @@ I graph an example of such an intersection in \autoref{fig:intersection_example}
 %   theme_bw()
 %% end.rcode
 
-There are two problems when one applies this model to the governments of
-different countries.
-
-The first problem is that most countries have some mixture of public and
-private healthcare. Citizens vary in their ability to pay for, and thus
-willingness to pay for, healthcare treatments. If a government
-privatized healthcare, this would result in more disparate health
-outcomes, because some citizens could afford expensive treatments, and
-others could not. Thus, implementing private healthcare would cause
-citizens to have more disparate life expectancies. To address this
-problem, I averaged all published prices of life within each country and
-year. Even so, private healthcare might be less cost-effective overall
-than public healthcare, for reasons I discuss below. Therefore, I
-controlled for the proportion of health spending that is public.
-
-The second problem is that governments might not always make rational
-and impartial healthcare decisions. In fact, governments might not even
-know the cost-effectiveness ratios of various treatments. This could
-affect the results below. This is because, if typical healthcare
-treatments are more expensive than need be, I would overestimate the
-marginal cost of life.
-
-\section{Methods}
-
-I used the following methods to estimate the marginal cost of life
-curve. I used two-stage least squares because no other method, that is,
+I used two-stage least squres to estimate the marginal cost of life
+curve. I used two-stage least squares (2SLS) because no other method, that is,
 direct accounting, analyzing an experiment, analyzing a
-quasi-experiment, or multivariable regression, would be effective. I use
-GDP per capita as an instrumental variable
-because an exogenous change in GDP per capita should cause the marginal
-benefit of life curve, but not the marginal cost of life curve, to
-shift. I controlled for several variables that could be correlated with
-shifts of the marginal cost of life curve: time, population density, the
-proportion of healthcare spending that is public, log annual
-precipitation, and log annual precipitation.
-
-I could not use direct accounting to estimate the marginal cost of life
-curve because I do not have the data I would need. If one had data about
-both which healthcare treatments any citizen might need, and the
-cost-effectiveness ratios of these healthcare treatments, then one could
-directly calculate an aggregate marginal cost of life curve for a
-country. Some health insurance companies and national healthcare
-providers might have already estimated a marginal cost of life curve
-because these institutions could use this curve to predict budget costs.
-However, even if an institution has already used individual data to
-estimate a marginal cost of life curve, that institution currently
-publishes neither individual data, nor an aggregate cost curve.
-
-I could not use an experiment to estimate the marginal cost of life
-curve. If I paid for healthcare for a large group of people, then, I
-could observe the marginal cost of life curve by shifting the marginal
-benefit of life curve I use and observing subsequent changes in the
-group's life expectancy. However,
-I do not pay for healthcare for a large group of people, and even if I
-did, I would not experiment with their healthcare.
-
-I could not use a quasi-experiment to estimate the marginal cost of life
-curve. A quasi-experiment is like an experiment, except, in a
-quasi-experiment, one observes the results of a previous exogenous
-change. In this case, I would need to find a government that exogenously
-shifted their marginal benefit of life curve. Unfortunately, I could not
-identify such a quasi-experiment.
-
-I could not use multivariable regression to estimate the marginal cost
-of life curve. Naively, if one knew, for many countries, both life
-expectancy and the price of life, one could use a multivariable
-regression to estimate a marginal cost of life curve. The problem is
-that the marginal cost of life and marginal benefit of life curves
-mutually determine the life expectancy and price of life. In other
-words, life expectancy and the price of life are endogenous, that is,
-neither variable directly determines the other. So, if one used naive
-regression, one could only observe the combined effects of both the
-marginal cost and marginal benefit curves.
-
-Because none of the strategies above, direct accounting, analyzing an
-experiment, analyzing a quasi-experiment, or multivariable regression,
-would be effective, I must use two-stage least squares (2SLS) to
-estimate the marginal cost of life curve. The main input variable is
+quasi-experiment, or multivariable regression, would be effective.
+I discuss alternatives further in the discussion. The main input variable is
 life expectancy, and the main output variable is the price of life.
 Thus, I need data for both variables. In this case, to use two-stage
 least squares, I must find an instrumental variable that would be
@@ -1036,30 +901,7 @@ Tufts Medical reports the following variables:
 
 For each country and year (country-year), I use the average of log
 cost-effectiveness ratios published in that country-year as a rough
-estimate of the log price of life. I log cost effectiveness ratios
-because all values are positive and the distribution is right skewed,
-with a few very high ratios. Of course, no author who published such a
-ratio intended to estimate the price of life in a country and year.
-Instead, each author was simply analyzing the cost-effectiveness of a
-healthcare treatment the author was interested in and could obtain data
-about. However, the average of the log of published cost-effectiveness
-ratios in each country and year might be close to the log price of life,
-for three reasons. First, unless they use retrospective data, a
-researcher can only study treatments that patients in a country and year
-can still benefit from. Second, researchers can most easily study
-treatments that are typical in a country and year. Typical treatments
-should be cost-effective because patients and doctors try to choose the
-most cost-effective treatments. Third, if a researcher found a low
-cost-effectiveness ratio for an uncommon treatment, a publisher would be
-more likely to publish the researcher's results. Such a low
-cost-effectiveness ratio would be close to the marginal price of life.
-
-Even so, by using the average of the log of published cost-effectiveness
-ratios in a country and year, I likely over-estimated the log price of
-life. This is because, if a researcher found a high cost-effectiveness
-ratio for a common treatment, a publisher would be more likely to
-publish the researcher's results. Such a cost-effectiveness ratio would
-be higher than the marginal cost of life.
+estimate of the log price of life. I analyze this further in the discussion.
 
 I only used some cost-effectiveness ratios. I excluded
 cost-effectiveness ratios from studies of participants from more than
@@ -1105,97 +947,29 @@ I report further details about these variables in \autoref{WDI_variables}.
 I used (log) gross domestic product (GDP) per capita as an instrumental
 variable because an exogenous change in GDP per capita should cause the
 marginal benefit of life curve, but not the marginal cost of life curve,
-to shift. An exogenous increase in GDP per capita should cause the
-marginal benefit curve to shift upwards, because, as I discussed above,
-countries with a higher GDP per capita have a higher ability to pay, and
-thus, willingness to pay, for life. All else being equal, an exogenous
-change in GDP per capita should not cause the marginal cost of life
-curve to shift, because a change in GDP per capita should not change the
-cost of any given healthcare treatment. Here, I am referring to the real
-cost in terms of healthcare inputs (like skilled labor and equipment),
-not the currency cost, which I address below. I log GDP per capita
-because all values are positive and the distribution is right-skewed,
-with a few countries with very high values.
+to shift. I analyze this further in the discussion.
 
 I controlled for several variables that could be correlated with shifts
-of the marginal cost of life curve: time, population density, the
-proportion of healthcare spending that is public, log annual
-precipitation, and log annual precipitation squared. I discuss the
-reason for each below.
-
+of the marginal cost of life curve. These were as follows.
 First, I controlled for a time trend in the regression below. I did this
 because technology could be correlated with shifts of the marginal cost
-of life curve. Healthcare technology changes over time. As researchers
-discover new treatments, more cost-effective healthcare treatments
-become available. Thus, the cost to achieve a given health outcome might
-decrease over time. To address this issue, I added a time trend to the
-regression below.
-
+of life curve. 
 Second, I controlled for population density in the regression below. I
 did this because returns to scale could correlate with shifts of the
-marginal cost of life curve. There are returns to scale in healthcare.
-One reason for this is that hospitals with more patients can more easily
-cover fixed costs like MRI machines. In areas where the population is
-too small to support a local hospital, patients could potentially travel
-to hospitals in other areas. However, traveling from remote areas could
-be expensive. Thus, all else being equal, the cost of healthcare might
-be higher in sparsely populated areas.
-
+marginal cost of life curve. 
 Third, I controlled for the proportion of healthcare spending that is
 public in the regression below. I did this because, all else being
 equal, the cost of healthcare could be lower in countries with public
-health care than in countries with private health care, for two reasons.
-The first reason is that governments, via public health providers, have
-more bargaining power than private citizens against drug companies and
-hospitals. Drug companies have market power because they often own
-patents and thus have monopolies. Hospital owners have market power
-because a hospital owner might own the only hospital in a region, and
-thus, have a local monopoly. The second reason is that, if a government
-instituted a public health system, it could centralize patient
-administration more than any individual doctors could. Thus,
-administration costs per patient could be lower in countries with public
-health care. {[}TODO: add citations{]}.
-
+health care than in countries with private health care.
 Finally, I controlled for two climate variables, log annual
 precipitation, and log annual precipitation squared, in the regression
 below. I did so because the marginal cost of healthcare might vary
-between countries with different climates. This could be due to
-different endemic diseases, and thus, effective treatments, in different
-countries. For example, malaria is only endemic in countries with humid
-climates, so antimalarial drugs would only be effective in such
-countries. Note that there is no reason to expect climate to have a
-linear effect. The World Development Indicators include one climate
-variable, annual precipitation. All values of this variable are
-positive, and the distribution is right-skewed, with a few countries
-with very high levels of precipitation. Thus, first, I took the log of
-annual precipitation. Then, to allow for a non-linear effect, I added
-both this log, and the square of this log, to the regression.
+between countries with different climates. 
+I analyze each control variable further in the discussion.
 
 To compare prices between different countries, I used PPPs for
 GDP, and to deflate prices, I used the US GDP deflators.
-Ideally, I could adjust prices from different countries and years, such
-that, for the same price in all countries and years, one could buy the
-same ``basket'' of healthcare goods.
-For the exchange rates, the International Comparison Program (ICP) provided
-PPPs for healthcare.
-Unfortunately, it only provides this data for two years, 2011 and 2017.
-I tried using this data, but with just two years, I had only \rinline{number_health_rows}
-rows, which was not enough for the main analysis.
-Thus, I considered three alternatives.
-First, I considered using nominal exchange rates. A nominal exchange rate is the amount of
-one currency one can exchange for a unit of another currency in an
-international currency market. In equilibrium, a nominal exchange rate
-should reflect the price of a basket of internationally traded goods.
-I decided not to use nominal exchange rates because countries do not trade
-many healthcare inputs, such as the labor of doctors and nurses,
-internationally. In fact, via border restrictions, governments actively
-prevent healthcare workers from migrating freely. 
-Second, I considered using PPPs for private consumption.
-I choose not to use PPPs for private consumption because, for countries with public
-healthcare, healthcare is not part of private consumption.
-Instead, I chose the third options, PPPs for GDP.
-For price deflators, I used GDP deflators to be consistent with the PPPs for GDP.
-
+I analyze this further in the discussion.
 To check for robustness, I repeated my calculations several different sets deflators and
 exchange rates, and report the results in \autoref{robustness_tests}. My results seem
 robust to the choice of price deflators and exchange rates.
@@ -1227,15 +1001,6 @@ country. Also, for each country, I averaged all log prices of life.
 Then, in the regression, I weighed each country by the total number of
 price-of-life observations for that country. I report the full
 regression results in \autoref{full_regression_results}.
-
-I expect to have overestimated the marginal cost of life, for the two
-reasons I mention above. First, citizens and governments might not
-always make rational healthcare decisions, and thus, typical healthcare
-treatments might be more expensive than necessary. Second, if a
-researcher found a high cost-effectiveness ratio for a common treatment,
-a publisher would be more likely to publish the researcher's results,
-and such a cost-effectiveness ratio would be higher than the marginal
-cost of life.
 
 I found that the marginal cost of life is strongly increasing. With 95\%
 confidence, when life expectancy increases by one year, the marginal
@@ -1313,9 +1078,9 @@ the lowest marginal cost of life.
 %   plot(border = NA, key.pos = 1, main = NULL, logz = TRUE)
 %% end.rcode
 
-\section{Conclusion}
+\section{Discussion}
 
-Any government should value all people's lives equally, regardless of
+In conclusion: any government should value all people's lives equally, regardless of
 people's wealth or citizenship. Consider what a government that valued
 all people's lives equally would do. If the marginal cost of life were
 not the same for all countries, the government would not necessarily pay
@@ -1357,6 +1122,249 @@ international dollars per QALY in
 For this reason, all governments should spend more money on healthcare in
 the country with the lowest marginal cost of life.
 
+By the law of increasing marginal costs, the marginal cost of life curve
+should be increasing. This is for the following reason. Because they are
+impartial, the government would prioritize the most cost-effective
+treatments first. To increase life expectancy, the government could fund
+treatments with higher cost-effectiveness ratios. Because the government
+would pay for more healthcare treatments, mortality rates would
+decrease, so life expectancy would increase. Also, because the
+government would pay for treatments with higher cost-effectiveness
+ratios, the marginal cost-effectiveness ratio of further treatments
+would also increase. Thus, there would be a positive relationship
+between life expectancy (the ``quantity'' of life) and the marginal cost
+of life.
+
+By the law of decreasing marginal benefits, the marginal benefit of life
+curve should be slightly decreasing. This is for the following reason.
+Consider how a government would change their marginal benefit of life if
+life expectancy exogenously increased. Because this increase is
+exogenous, other factors, such as the government's ability to pay for
+healthcare, would stay the same. Although most citizens would desire
+additional life as much as before, some elderly people, who would have
+lived more complete lives, might desire additional life less. In
+response, the government might slightly decrease the marginal benefit of
+life. Thus, there might be a slightly negative relationship between life
+expectancy (the ``quantity'' of life) and the government's cost
+effectiveness threshold (their marginal benefit of life). This aligns
+with the law of decreasing marginal benefits.
+
+The government's ability to pay for life would determine the
+government's marginal benefit of life curve. Two effects can cause a
+marginal benefits curve to shift: the ``income effect'' and the
+``substitution effect'', but in this case, only the income effect is
+relevant. Generally, the ``income effect'' means that, if someone's
+income increased, the person would have a higher ability to pay, and
+thus, willingness to pay, for a good. In this case, if per-capita income
+in the group increased, but other factors, such as life expectancy,
+remained the same, due to the income effect, the government would have a
+higher ability to pay, and thus, willingness to pay, for healthcare
+treatments. So, if per capita income in a country increased, the
+marginal benefit of life curve would shift upwards. The ``substitution
+effect'' means that, if the price of a substitute good decreased,
+someone might choose to purchase a substitute good instead, so their
+willingness to pay for the original good would decrease. In this case,
+however, I cannot imagine a substitute good for additional life.
+
+A rational government would choose a level of healthcare funding
+corresponding to where the marginal benefit and marginal cost curves
+intersect. This is for the following reason: if the government's
+marginal benefit was greater than the marginal cost of life, the
+government would pay for more healthcare treatments. If the government's
+marginal benefit was less than the marginal cost of life, the government
+would pay for less healthcare treatments. The government would then
+choose a level of healthcare funding corresponding to where the marginal
+benefit and marginal cost curves intersect. The position of this
+intersection would correspond to a certain life expectancy and a certain
+price of life.
+
+Most countries have some mixture of public and
+private healthcare. Citizens vary in their ability to pay for, and thus
+willingness to pay for, healthcare treatments. If a government
+privatized healthcare, this would result in more disparate health
+outcomes, because some citizens could afford expensive treatments, and
+others could not. Thus, implementing private healthcare would cause
+citizens to have more disparate life expectancies. To address this
+problem, I averaged all published prices of life within each country and
+year.
+
+I used two-stage least squares because no other method, that is,
+direct accounting, analyzing an experiment, analyzing a
+quasi-experiment, or multivariable regression, would be effective. I discuss each below.
+I could not use direct accounting to estimate the marginal cost of life
+curve because I do not have the data I would need. If one had data about
+both which healthcare treatments any citizen might need, and the
+cost-effectiveness ratios of these healthcare treatments, then one could
+directly calculate an aggregate marginal cost of life curve for a
+country. Some health insurance companies and national healthcare
+providers might have already estimated a marginal cost of life curve
+because these institutions could use this curve to predict budget costs.
+However, even if an institution has already used individual data to
+estimate a marginal cost of life curve, that institution currently
+publishes neither individual data, nor an aggregate cost curve.
+
+I could not use an experiment to estimate the marginal cost of life
+curve. If I paid for healthcare for a large group of people, then, I
+could observe the marginal cost of life curve by shifting the marginal
+benefit of life curve I use and observing subsequent changes in the
+group's life expectancy. However,
+I do not pay for healthcare for a large group of people, and even if I
+did, I would not experiment with their healthcare.
+
+I could not use a quasi-experiment to estimate the marginal cost of life
+curve. A quasi-experiment is like an experiment, except, in a
+quasi-experiment, one observes the results of a previous exogenous
+change. In this case, I would need to find a government that exogenously
+shifted their marginal benefit of life curve. Unfortunately, I could not
+identify such a quasi-experiment.
+
+I could not use multivariable regression to estimate the marginal cost
+of life curve. Naively, if one knew, for many countries, both life
+expectancy and the price of life, one could use a multivariable
+regression to estimate a marginal cost of life curve. The problem is
+that the marginal cost of life and marginal benefit of life curves
+mutually determine the life expectancy and price of life. In other
+words, life expectancy and the price of life are endogenous, that is,
+neither variable directly determines the other. So, if one used naive
+regression, one could only observe the combined effects of both the
+marginal cost and marginal benefit curves.
+
+I used (log) gross domestic product (GDP) per capita as an instrumental
+variable because an exogenous change in GDP per capita should cause the
+marginal benefit of life curve, but not the marginal cost of life curve,
+to shift. An exogenous increase in GDP per capita should cause the
+marginal benefit curve to shift upwards, because, as I discussed above,
+countries with a higher GDP per capita have a higher ability to pay, and
+thus, willingness to pay, for life. All else being equal, an exogenous
+change in GDP per capita should not cause the marginal cost of life
+curve to shift, because a change in GDP per capita should not change the
+cost of any given healthcare treatment. Here, I am referring to the real
+cost in terms of healthcare inputs (like skilled labor and equipment),
+not the currency cost, which I address below. I log GDP per capita
+because all values are positive and the distribution is right-skewed,
+with a few countries with very high values.
+
+I controlled for several variables that could be correlated with
+shifts of the marginal cost of life curve: time, population density, the
+proportion of healthcare spending that is public, log annual
+precipitation, and log annual precipitation. I discuss each below.
+
+First, I controlled for a time trend in the regression above. I did this
+because technology could be correlated with shifts of the marginal cost
+of life curve. Healthcare technology changes over time. As researchers
+discover new treatments, more cost-effective healthcare treatments
+become available. Thus, the cost to achieve a given health outcome might
+decrease over time. To address this issue, I added a time trend to the
+regression above.
+
+Second, I controlled for population density in the regression above. I
+did this because returns to scale could correlate with shifts of the
+marginal cost of life curve. There are returns to scale in healthcare.
+One reason for this is that hospitals with more patients can more easily
+cover fixed costs like MRI machines. In areas where the population is
+too small to support a local hospital, patients could potentially travel
+to hospitals in other areas. However, traveling from remote areas could
+be expensive. Thus, all else being equal, the cost of healthcare might
+be higher in sparsely populated areas.
+
+Third, I controlled for the proportion of healthcare spending that is
+public in the regression above. I did this because, all else being
+equal, the cost of healthcare could be lower in countries with public
+health care than in countries with private health care, for two reasons.
+The first reason is that governments, via public health providers, have
+more bargaining power than private citizens against drug companies and
+hospitals. Drug companies have market power because they often own
+patents and thus have monopolies. Hospital owners have market power
+because a hospital owner might own the only hospital in a region, and
+thus, have a local monopoly. The second reason is that, if a government
+instituted a public health system, it could centralize patient
+administration more than any individual doctors could. Thus,
+administration costs per patient could be lower in countries with public
+health care. {[}TODO: add citations{]}.
+
+Finally, I controlled for two climate variables, log annual
+precipitation, and log annual precipitation squared, in the regression
+below. I did so because the marginal cost of healthcare might vary
+between countries with different climates. This could be due to
+different endemic diseases, and thus, effective treatments, in different
+countries. For example, malaria is only endemic in countries with humid
+climates, so antimalarial drugs would only be effective in such
+countries. Note that there is no reason to expect climate to have a
+linear effect. The World Development Indicators include one climate
+variable, annual precipitation. All values of this variable are
+positive, and the distribution is right-skewed, with a few countries
+with very high levels of precipitation. Thus, first, I took the log of
+annual precipitation. Then, to allow for a non-linear effect, I added
+both this log, and the square of this log, to the regression.
+
+To compare prices between different countries, I used PPPs for
+GDP, and to deflate prices, I used the US GDP deflators.
+Ideally, I could adjust prices from different countries and years, such
+that, for the same price in all countries and years, one could buy the
+same ``basket'' of healthcare goods.
+For the exchange rates, the International Comparison Program (ICP) provided
+PPPs for healthcare.
+Unfortunately, it only provides this data for two years, 2011 and 2017.
+I tried using this data, but with just two years, I had only \rinline{number_health_rows}
+rows, which was not enough for the main analysis.
+Thus, I considered three alternatives.
+First, I considered using nominal exchange rates. A nominal exchange rate is the amount of
+one currency one can exchange for a unit of another currency in an
+international currency market. In equilibrium, a nominal exchange rate
+should reflect the price of a basket of internationally traded goods.
+I decided not to use nominal exchange rates because countries do not trade
+many healthcare inputs, such as the labor of doctors and nurses,
+internationally. In fact, via border restrictions, governments actively
+prevent healthcare workers from migrating freely. 
+Second, I considered using PPPs for private consumption.
+I choose not to use PPPs for private consumption because, for countries with public
+healthcare, healthcare is not part of private consumption.
+Instead, I chose the third options, PPPs for GDP.
+For price deflators, I used GDP deflators to be consistent with the PPPs for GDP.
+
+I expect to have overestimated the marginal cost of life, for the two
+reasons below.
+
+First, citizens and governments might not
+always make rational healthcare decisions, and thus, typical healthcare
+treatments might be more expensive than necessary.
+In fact, governments might not even
+know the cost-effectiveness ratios of various treatments. This could
+affect the results below. This is because, if typical healthcare
+treatments are more expensive than need be, I would overestimate the
+marginal cost of life.
+
+Second, if a
+researcher found a high cost-effectiveness ratio for a common treatment,
+a publisher would be more likely to publish the researcher's results,
+and such a cost-effectiveness ratio would be higher than the marginal
+cost of life. For each country and year (country-year), I use the average of log
+cost-effectiveness ratios published in that country-year as a rough
+estimate of the log price of life. I log cost effectiveness ratios
+because all values are positive and the distribution is right skewed,
+with a few very high ratios. Of course, no author who published such a
+ratio intended to estimate the price of life in a country and year.
+Instead, each author was simply analyzing the cost-effectiveness of a
+healthcare treatment the author was interested in and could obtain data
+about. However, the average of the log of published cost-effectiveness
+ratios in each country and year might be close to the log price of life,
+for three reasons. First, unless they use retrospective data, a
+researcher can only study treatments that patients in a country and year
+can still benefit from. Second, researchers can most easily study
+treatments that are typical in a country and year. Typical treatments
+should be cost-effective because patients and doctors try to choose the
+most cost-effective treatments. Third, if a researcher found a low
+cost-effectiveness ratio for an uncommon treatment, a publisher would be
+more likely to publish the researcher's results. Such a low
+cost-effectiveness ratio would be close to the marginal price of life.
+
+Even so, by using the average of the log of published cost-effectiveness
+ratios in a country and year, I likely over-estimated the log price of
+life. This is because, if a researcher found a high cost-effectiveness
+ratio for a common treatment, a publisher would be more likely to
+publish the researcher's results. Such a cost-effectiveness ratio would
+be higher than the marginal cost of life.
+
 \section{Works cited}
 
 \printbibliography
@@ -1369,7 +1377,7 @@ the country with the lowest marginal cost of life.
 \label{ratios_balance}
 
 In \autoref{tab:ratios_balance}, I show that authors have published cost-effective analyses
-for some countries much more than in others.
+for healthcare treatments in some countries much more than in others.
 
 %% begin.rcode ratios_balance, echo = FALSE
 % ratios %>%
