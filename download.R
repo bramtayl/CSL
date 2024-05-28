@@ -20,8 +20,8 @@ write_csv(GDP_deflator_data, "data/GDP_deflator.csv", na = "")
 CPI_medical_data = fredr("CPIMEDSL")
 write_csv(CPI_medical_data, "data/CPI_medical.csv", na = "")
 
-all_WB_variables <- wb_cache()$indicators
-write_csv(all_WDI_variables, "data/all_WB_variables.csv", na = "")
+all_world_bank_variables <- wb_cache()$indicators
+write_csv(all_world_bank_variables, "data/all_world_bank_variables.csv", na = "")
 
 indicator_ids = c(
     "AG.LND.PRCP.MM", # annual_precipitation
@@ -37,8 +37,9 @@ indicator_ids = c(
     # "9080000" # PPP_exchange_rate_health
 )
 
-WB_downloads = wb_data(indicator_ids, country = "all")
-write_csv(WB_downloads, "data/WB_data.csv", na = "")
+wb_data("9080000")
+world_bank_downlaods = wb_data(indicator_ids, country = "all")
+write_csv(world_bank_downlaods, "data/world_bank_data.csv", na = "")
 
 write_csv(codelist, "data/countrycode_data.csv", na = "")
 

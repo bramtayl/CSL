@@ -13,7 +13,6 @@
 
 %% begin.rcode setup, include=FALSE
 % library(knitr)
-% opts_chunk$set(fig.path='figure/latex-', cache.path='cache/latex-')
 %% end.rcode
 
 \begin{document}
@@ -47,16 +46,16 @@
 % # Throughout, set na to "", not "NA", when reading csvs
 % # because "NA" is Namibia's country code.
 
-% raw_WB_data <-
-%   read_csv("data/WB_data.csv", show_col_types = FALSE, na = "") %>%
+% raw_world_bank_data <-
+%   read_csv("data/world_bank_data.csv", show_col_types = FALSE, na = "") %>%
 %   select(
 %     country_code = iso2c,
 %     world_bank_country = country,
 %     year = date,
 %     annual_precipitation = AG.LND.PRCP.MM,
 %     percent_health_spending_public = SH.XPD.GHED.CH.ZS,
-%     local_historical_GDP_per_capita = NY.GDP.PCAP.CN,
 %     life_expectancy = SP.DYN.LE00.IN,
+%     local_GDP_per_capita = NY.GDP.PCAP.CN,
 %     nominal_exchange_rate = PA.NUS.FCRF,
 %     population_density = EN.POP.DNST,
 %     PPP_GDP = PA.NUS.PPP,
@@ -83,7 +82,7 @@
 %   filter(!is.na(country_code)) %>%
 %   # add in world bank countries
 %   full_join(
-%     raw_WB_data %>%
+%     raw_world_bank_data %>%
 %     select(country_code, world_bank_country) %>%
 %     distinct(),
 %     by = "country_code"
@@ -107,25 +106,25 @@
 %   stop("Missing countries")
 % }
 
-% # replace world bank country names with our country names
-% WB_data <-
-%   raw_WB_data %>%
-%   # add in health PPPs
-%   full_join(
-%     read_csv("data/health.csv", show_col_types = FALSE, n_max = 222, na = "..") %>%
-%     select(
-%       world_bank_country = `Country Name`,
-%       `2011` = `2011 [YR2011]`,
-%       `2017` = `2017 [YR2017]`
-%     ) %>%
-%     pivot_longer(-world_bank_country,
-%       names_to = "year",
-%       values_to = "PPP_health",
-%       values_drop_na = TRUE
-%     ) %>%
-%     mutate(year = as.numeric(year)),
-%     by = c("world_bank_country", "year")
+% PPP_health_data = 
+%   read_csv("data/health.csv", show_col_types = FALSE, n_max = 222, na = "..") %>%
+%   select(
+%     world_bank_country = `Country Name`,
+%     `2011` = `2011 [YR2011]`,
+%     `2017` = `2017 [YR2017]`
 %   ) %>%
+%   pivot_longer(-world_bank_country,
+%     names_to = "year",
+%     values_to = "PPP_health",
+%     values_drop_na = TRUE
+%   ) %>%
+%   mutate(year = as.numeric(year))
+
+% # replace world bank country names with our country names
+% world_bank_data <-
+%   raw_world_bank_data %>%
+%   # add in health PPPs
+%   full_join(PPP_health_data, by = c("world_bank_country", "year")) %>%
 %   select(-world_bank_country) %>%
 %   # replace country_code with country
 %   left_join(country_data, by = "country_code") %>%
@@ -156,7 +155,7 @@
 %   select(-deflator)
 
 % price_ratios = 
-%   WB_data %>% 
+%   world_bank_data %>% 
 %   select(country, year,
 %     nominal_exchange_rate,
 %     PPP_GDP,
@@ -169,6 +168,7 @@
 %     values_to = "exchange_rate",
 %     values_drop_na = TRUE
 %   ) %>%
+%   # duplicate for different price adjustments
 %   inner_join(deflator_data, by = "year", relationship = "many-to-many") %>%
 %   mutate(
 %     # * historical USD / local historical currency
@@ -206,16 +206,16 @@
 %   select(
 %     year = `Publication Year`,
 %     tufts_country = `Study Country:`,
-%     currency_year = `Currency Year:`,
 %     tufts_currency_country = `Currency Country:`,
-%     local_historical_price_of_life =
+%     currency_year = `Currency Year:`,
+%     local_price_of_life =
 %       `Incremental Cost-Effectiveness Ratio (Original currency and year):`,
 %     gender = `Target Genders:`
 %   ) %>%
 %   mutate(
 %     # basic data cleaning
-%     local_historical_price_of_life = 
-%       local_historical_price_of_life %>%
+%     local_price_of_life = 
+%       local_price_of_life %>%
 %       as.numeric %>%
 %       # must be positive
 %       ifelse(. <= 0, NA, .),
@@ -241,7 +241,7 @@
 %   ) %>%
 %   filter(
 %     gender == "All" &
-%     !is.na(local_historical_price_of_life) &
+%     !is.na(local_price_of_life) &
 %     !is.na(year) &
 %     !is.na(currency_year) &
 %     !is.na(tufts_currency_country) &
@@ -280,28 +280,14 @@
 %   ) %>%
 %   write_csv("data/unmatched_currency_countries.csv")
 
+% # ratios with matching countries and currency countries
 % matched_ratios = 
 %   raw_ratios %>%
 %   semi_join(country_data %>% select(country), by = "country") %>%
 %   semi_join(country_data %>% select(currency_country = country), by = "currency_country")
 
-% ratios = 
-%   matched_ratios %>%
-%   inner_join(
-%     price_ratios %>% rename(currency_country = country, currency_year = year),
-%     by = c("currency_year", "currency_country"),
-%     relationship = "many-to-many"
-%   ) %>%
-%   mutate(log_price_of_life = 
-%     # local historical currency
-%     # * USD in RECENT_YEAR / local historical currency
-%     # = USD in RECENT_YEAR
-%     log(local_historical_price_of_life * price_ratio)
-%   ) %>%
-%   select(-local_historical_price_of_life, -price_ratio)
-
-% WB_data_transformed <-
-%   WB_data %>%
+% world_bank_data_transformed <-
+%   world_bank_data %>%
 %   select(
 %     -nominal_exchange_rate,
 %     -PPP_GDP,
@@ -313,7 +299,7 @@
 %     !is.na(percent_health_spending_public) &
 %     !is.na(life_expectancy) &
 %     !is.na(population_density) &
-%     !is.na(local_historical_GDP_per_capita)
+%     !is.na(local_GDP_per_capita)
 %   ) %>%
 %   mutate(
 %     log_population_density = log(population_density),
@@ -324,18 +310,32 @@
 %   inner_join(
 %     price_ratios,
 %     by = c("country", "year"),
+%     # duplicate for different price adjustments
 %     relationship = "many-to-many"
 %   ) %>%
 %   mutate(
 %     # local historical currency
 %     # * USD in RECENT_YEAR / local historical currency
 %     # = USD in RECENT_YEAR
-%     log_GDP_per_capita = log(local_historical_GDP_per_capita * price_ratio)
+%     log_GDP_per_capita = log(local_GDP_per_capita * price_ratio)
 %   ) %>%
-%   select(-local_historical_GDP_per_capita, -price_ratio)
+%   select(-local_GDP_per_capita, -price_ratio)
 
 % by_country_and_year <-
-%   ratios %>%
+%   matched_ratios %>%
+%   inner_join(
+%     price_ratios %>% rename(currency_country = country, currency_year = year),
+%     by = c("currency_year", "currency_country"),
+%     # duplicate for different price adjustments
+%     relationship = "many-to-many"
+%   ) %>%
+%   mutate(log_price_of_life = 
+%     # local historical currency
+%     # * USD in RECENT_YEAR / local historical currency
+%     # = USD in RECENT_YEAR
+%     log(local_price_of_life * price_ratio)
+%   ) %>%
+%   select(-local_price_of_life, -price_ratio) %>%
 %   select(
 %     exchange_rate_kind,
 %     deflator_kind,
@@ -350,7 +350,7 @@
 %     .groups = "drop"
 %   ) %>%
 %   inner_join(
-%     WB_data_transformed,
+%     world_bank_data_transformed,
 %     by = c("exchange_rate_kind", "deflator_kind", "country", "year")
 %   )
 
@@ -370,16 +370,14 @@
 %     .groups = "drop"
 %   )
 
-% get_main_adjustments = function(data) {
+% # choose exchange rate kind and deflator kind for the main analysis
+% main_price_ratios = function(data) {
 %   data %>%
 %     filter(
 %       exchange_rate_kind == "PPP_GDP" &
 %       deflator_kind == "GDP_deflator"
 %     )
 % }
-
-% # choose exchange rate kind and deflator kind for the main analysis
-% by_country_main = get_main_adjustments(by_country)
 
 % formula <-
 %   log_price_of_life ~
@@ -403,16 +401,16 @@
 % model <-
 %   ivreg(
 %     formula,
-%     data = by_country_main,
+%     data = main_price_ratios(by_country),
 %     weights = number_of_observations
 %   )
 
 % model_summary = summary(model)
 
-% with_predictions =
-%   WB_data_transformed %>%
+% recent_predictions =
+%   world_bank_data_transformed %>%
 %   filter(year == RECENT_YEAR) %>%
-%   get_main_adjustments() %>%
+%   main_price_ratios() %>%
 %   mutate(
 %     prediction = predict(model, newdata = .),
 %     price_of_life = exp(prediction)
@@ -421,43 +419,40 @@
 
 % EXAMPLE_COUNTRY = "United Kingdom"
 
-% example_row = 
-%   with_predictions %>%
+% example_prediction = 
+%   recent_predictions %>%
 %   filter(country == EXAMPLE_COUNTRY)
 
-% best_row = with_predictions %>% slice(1)
-% worst_row = with_predictions %>% slice(nrow(.))
+% best_prediction = recent_predictions %>% slice(1)
+% worst_prediction = recent_predictions %>% slice(nrow(.))
 
 % life_expectancy_coefficient <- coef(model)[["life_expectancy"]]
 
-% recent_WDI_data = 
-%   WB_data %>%
-%   filter(year == RECENT_YEAR)
-
-% recent_life_expectancy_data =
-%   recent_WDI_data %>%
-%   select(country, life_expectancy) %>%
+% life_expectancies =
+%   world_bank_data %>%
+%   filter(year == RECENT_YEAR) %>%
+%   select(life_expectancy) %>%
 %   filter(!is.na(life_expectancy)) %>%
-%   arrange(desc(life_expectancy))
+%   .$life_expectancy
 
 % age_range <- tibble(
 %   life_expectancy =
-%     round(min(recent_life_expectancy_data$life_expectancy)):
-%     round(max(recent_life_expectancy_data$life_expectancy))
+%     round(min(life_expectancies)):
+%     round(max(life_expectancies))
 % )
 
 % intersection_data <- bind_rows(
 %   age_range %>%
 %     mutate(
 %       price_of_life = exp(
-%         example_row$prediction +
-%         (life_expectancy - example_row$life_expectancy) * life_expectancy_coefficient
+%         example_prediction$prediction +
+%         (life_expectancy - example_prediction$life_expectancy) * life_expectancy_coefficient
 %       ),
 %       side = "Marginal cost of life"
 %     ),
 %   age_range %>%
 %     mutate(
-%       price_of_life = exp(example_row$prediction),
+%       price_of_life = exp(example_prediction$prediction),
 %       side = "Marginal benefit of life"
 %     )
 % )
@@ -473,8 +468,6 @@
 % }
 
 % confidence_intervals = confint(model)
-% lower_bound = confidence_intervals["life_expectancy", "2.5 %"]
-% upper_bound = confidence_intervals["life_expectancy", "97.5 %"]
 
 % model_coefficients = coef(model)
 
@@ -483,7 +476,7 @@
 %   2 / model_coefficients[["log_annual_precipitation_squared"]]
 
 % closest_to_vertex = 
-%   WB_data %>% 
+%   world_bank_data %>% 
 %   filter(year == RECENT_YEAR) %>%
 %   mutate(log_precipitation_difference = abs(log(annual_precipitation) - log_precipitation_vertex)) %>%
 %   arrange(log_precipitation_difference) %>%
@@ -494,7 +487,7 @@
 % panel_residuals <-
 %   # get all combinations of countries and years
 %   # not sure if this is strictly necessary but just in case
-%   get_main_adjustments(by_country_and_year) %>%
+%   main_price_ratios(by_country_and_year) %>%
 %   group_by(country) %>%
 %   # without enough years the stationarity test will fail
 %   filter(n() >= MINIMUM_YEARS) %>%
@@ -512,13 +505,12 @@
 %   )
 % }
 
-% number_health_rows = 
+% PPP_health_data = 
 %   by_country %>% 
 %   filter(
 %     exchange_rate_kind == "PPP_health" &
 %     deflator_kind == "CPI_medical"
-%   ) %>%
-%   nrow()
+%   )
 
 % bold_header = function(table) {
 %   table %>%
@@ -555,19 +547,19 @@ time, population density, the proportion of healthcare spending that is
 public, and annual precipitation. I found that the marginal cost of life
 is strongly increasing. With 95\% confidence, when life expectancy
 increases by one year, the marginal cost of life increases by between
-\rinline{signif(lower_bound * 100, DISPLAY_FIGURES)}\% and 
-\rinline{signif(upper_bound * 100, DISPLAY_FIGURES)}\%.
+\rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, DISPLAY_FIGURES)}\% and 
+\rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, DISPLAY_FIGURES)}\%.
 The marginal cost of life is far lower in some
 countries than others. For example, I predict that, in 
 \rinline{RECENT_YEAR},
 while the marginal cost of life was
-\rinline{best_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
+\rinline{best_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
 international dollars per QALY in
-\rinline{best_row$country},
+\rinline{best_prediction$country},
 it was
-\rinline{worst_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
+\rinline{worst_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
 international dollars per QALY in
-\rinline{worst_row$country}.
+\rinline{worst_prediction$country}.
 For this reason, all governments should spend more money on healthcare in
 the country with the lowest marginal cost of life.
 
@@ -879,7 +871,7 @@ cost-effectiveness of healthcare treatments from the CEA Registry. This
 registry is a ``comprehensive database of >10,000 cost-utility analyses on
 a wide variety of diseases and treatments published from 1976 to the present.''
 \autocite[2020]{CEARegistry2020}. As of when I downloaded the data, the most recent study
-was published in \rinline{max(ratios$year)}.
+was published in \rinline{max(matched_ratios$year)}.
 For each study,
 Tufts Medical reports the following variables:
 
@@ -995,9 +987,9 @@ predictors such that the panel model was cointegrated.
 
 To avoid issues with non-stationarity, for the main result below, for
 each country, I averaged data across all years. For each country, when I
-averaged a variable from the World Bank over years (including the year itself),
+averaged a variable over years (including the year itself),
 I weighed by the number of ratio observations for each year in that
-country. Also, for each country, I averaged all log prices of life.
+country.
 Then, in the regression, I weighed each country by the total number of
 price-of-life observations for that country. I report the full
 regression results in \autoref{full_regression_results}.
@@ -1005,32 +997,32 @@ regression results in \autoref{full_regression_results}.
 I found that the marginal cost of life is strongly increasing. With 95\%
 confidence, when life expectancy increases by one year, the marginal
 cost of life increases by between 
-\rinline{signif(lower_bound * 100, DISPLAY_FIGURES)}\% and 
-\rinline{signif(upper_bound * 100, DISPLAY_FIGURES)}\%.
+\rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, DISPLAY_FIGURES)}\% and 
+\rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, DISPLAY_FIGURES)}\%.
 Life expectancy is
 by far the most statistically significant predictor, and the adjusted R²
 of the model is
 \rinline{signif(model_summary$adj.r.squared * 100, DISPLAY_FIGURES)}\%.
 I report more detailed results in Appendix D.
 
-In \autoref{tab:marginal_costs_of_life} and \autoref{fig:cost_of_life_map}, I show that the marginal cost of life is far lower in
+In \autoref{tab:cost_of_life_table} and \autoref{fig:cost_of_life_map}, I show that the marginal cost of life is far lower in
 low-life-expectancy countries than in high-life-expectancy countries.
 For example, I predict that, in 
 \rinline{RECENT_YEAR},
 while the marginal cost of life was
-\rinline{best_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
+\rinline{best_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
 international dollars per QALY in
-\rinline{best_row$country},
+\rinline{best_prediction$country},
 it was
-\rinline{worst_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
+\rinline{worst_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
 international dollars per QALY in
-\rinline{worst_row$country}.
+\rinline{worst_prediction$country}.
 For this reason, all
 governments should spend more money on healthcare in the country with
 the lowest marginal cost of life.
 
-%% begin.rcode marginal_costs_of_life, echo=FALSE
-% with_predictions %>% 
+%% begin.rcode cost_of_life_table, echo=FALSE
+% recent_predictions %>% 
 %   get_head_and_tail %>%
 %   mutate(
 %     price_of_life = 
@@ -1066,7 +1058,7 @@ the lowest marginal cost of life.
 %   select(-map_country, -country_code) %>%
 %   # add in life expectancy in RECENT_YEAR
 %   inner_join(
-%     with_predictions %>%
+%     recent_predictions %>%
 %     select(country, price_of_life),
 %     by = "country"
 %   ) %>%
@@ -1104,19 +1096,19 @@ time, population density, the proportion of healthcare spending that is
 public, and annual precipitation. I found that the marginal cost of life
 is strongly increasing. With 95\% confidence, when life expectancy
 increases by one year, the marginal cost of life increases by between
-\rinline{signif(lower_bound * 100, DISPLAY_FIGURES)}\% and 
-\rinline{signif(upper_bound * 100, DISPLAY_FIGURES)}\%.
+\rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, DISPLAY_FIGURES)}\% and 
+\rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, DISPLAY_FIGURES)}\%.
 The marginal cost of life is far lower in some
 countries than others. For example, I predict that, in 
 \rinline{RECENT_YEAR},
 while the marginal cost of life was
-\rinline{best_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
+\rinline{best_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")} 
 international dollars per QALY in
-\rinline{best_row$country},
+\rinline{best_prediction$country},
 it was
-\rinline{worst_row$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
+\rinline{worst_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
 international dollars per QALY in
-\rinline{worst_row$country}.
+\rinline{worst_prediction$country}.
 For this reason, all governments should spend more money on healthcare in
 the country with the lowest marginal cost of life.
 
@@ -1189,6 +1181,8 @@ year.
 I used two-stage least squares because no other method, that is,
 direct accounting, analyzing an experiment, analyzing a
 quasi-experiment, or multivariable regression, would be effective. I discuss each below.
+
+
 I could not use direct accounting to estimate the marginal cost of life
 curve because I do not have the data I would need. If one had data about
 both which healthcare treatments any citizen might need, and the
@@ -1226,6 +1220,26 @@ words, life expectancy and the price of life are endogenous, that is,
 neither variable directly determines the other. So, if one used naive
 regression, one could only observe the combined effects of both the
 marginal cost and marginal benefit curves.
+
+For each country and year (country-year), I use the average of log
+cost-effectiveness ratios published in that country-year as a rough
+estimate of the log price of life. I log cost effectiveness ratios
+because all values are positive and the distribution is right skewed,
+with a few very high ratios. Of course, no author who published such a
+ratio intended to estimate the price of life in a country and year.
+Instead, each author was simply analyzing the cost-effectiveness of a
+healthcare treatment the author was interested in and could obtain data
+about. However, the average of the log of published cost-effectiveness
+ratios in each country and year might be close to the log price of life,
+for three reasons. First, unless they use retrospective data, a
+researcher can only study treatments that patients in a country and year
+can still benefit from. Second, researchers can most easily study
+treatments that are typical in a country and year. Typical treatments
+should be cost-effective because patients and doctors try to choose the
+most cost-effective treatments. Third, if a researcher found a low
+cost-effectiveness ratio for an uncommon treatment, a publisher would be
+more likely to publish the researcher's results. Such a low
+cost-effectiveness ratio would be close to the marginal price of life.
 
 I used (log) gross domestic product (GDP) per capita as an instrumental
 variable because an exogenous change in GDP per capita should cause the
@@ -1300,10 +1314,10 @@ GDP, and to deflate prices, I used the US GDP deflators.
 Ideally, I could adjust prices from different countries and years, such
 that, for the same price in all countries and years, one could buy the
 same ``basket'' of healthcare goods.
-For the exchange rates, the International Comparison Program (ICP) provided
+For the exchange rates, the International Comparison Program (ICP) provides
 PPPs for healthcare.
 Unfortunately, it only provides this data for two years, 2011 and 2017.
-I tried using this data, but with just two years, I had only \rinline{number_health_rows}
+I tried using this data, but with just two years, I had only \rinline{nrow(PPP_health_data)}
 rows, which was not enough for the main analysis.
 Thus, I considered three alternatives.
 First, I considered using nominal exchange rates. A nominal exchange rate is the amount of
@@ -1320,48 +1334,19 @@ healthcare, healthcare is not part of private consumption.
 Instead, I chose the third options, PPPs for GDP.
 For price deflators, I used GDP deflators to be consistent with the PPPs for GDP.
 
-I expect to have overestimated the marginal cost of life, for the two
-reasons below.
-
-First, citizens and governments might not
+I expect to have overestimated the marginal cost of life, for two
+reasons. First, citizens and governments might not
 always make rational healthcare decisions, and thus, typical healthcare
 treatments might be more expensive than necessary.
 In fact, governments might not even
 know the cost-effectiveness ratios of various treatments. This could
-affect the results below. This is because, if typical healthcare
+affect my results, because, if typical healthcare
 treatments are more expensive than need be, I would overestimate the
-marginal cost of life.
-
-Second, if a
+marginal cost of life. Second, if a
 researcher found a high cost-effectiveness ratio for a common treatment,
 a publisher would be more likely to publish the researcher's results,
 and such a cost-effectiveness ratio would be higher than the marginal
-cost of life. For each country and year (country-year), I use the average of log
-cost-effectiveness ratios published in that country-year as a rough
-estimate of the log price of life. I log cost effectiveness ratios
-because all values are positive and the distribution is right skewed,
-with a few very high ratios. Of course, no author who published such a
-ratio intended to estimate the price of life in a country and year.
-Instead, each author was simply analyzing the cost-effectiveness of a
-healthcare treatment the author was interested in and could obtain data
-about. However, the average of the log of published cost-effectiveness
-ratios in each country and year might be close to the log price of life,
-for three reasons. First, unless they use retrospective data, a
-researcher can only study treatments that patients in a country and year
-can still benefit from. Second, researchers can most easily study
-treatments that are typical in a country and year. Typical treatments
-should be cost-effective because patients and doctors try to choose the
-most cost-effective treatments. Third, if a researcher found a low
-cost-effectiveness ratio for an uncommon treatment, a publisher would be
-more likely to publish the researcher's results. Such a low
-cost-effectiveness ratio would be close to the marginal price of life.
-
-Even so, by using the average of the log of published cost-effectiveness
-ratios in a country and year, I likely over-estimated the log price of
-life. This is because, if a researcher found a high cost-effectiveness
-ratio for a common treatment, a publisher would be more likely to
-publish the researcher's results. Such a cost-effectiveness ratio would
-be higher than the marginal cost of life.
+cost of life.
 
 \section{Works cited}
 
@@ -1378,11 +1363,12 @@ In \autoref{tab:ratios_balance}, I show that authors have published cost-effecti
 for healthcare treatments in some countries much more than in others.
 
 %% begin.rcode ratios_balance, echo = FALSE
-% ratios %>%
+% matched_ratios %>%
 %   group_by(country) %>%
 %   summarize(count = n()) %>%
 %   arrange(desc(count)) %>%
 %   get_head_and_tail() %>%
+%   mutate(count = count %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")) %>%
 %   select(
 %     Rank = rank,
 %     Country = country,
@@ -1410,7 +1396,8 @@ suitable alternative variables with more available data in the World Bank.
 % matched_ratios %>%
 %   select(country, year) %>%
 %   distinct() %>%
-%   left_join(WB_data, by = c("country", "year")) %>%
+%   left_join(world_bank_data, by = c("country", "year")) %>%
+%   rename(`%_health_spending_public` = percent_health_spending_public) %>%
 %   pivot_longer(
 %     c(-year, -country),
 %     names_to = "variable",
@@ -1425,14 +1412,14 @@ suitable alternative variables with more available data in the World Bank.
 %       .groups = "drop"
 %   ) %>%
 %   left_join(
-%     read_csv("data/selected_WB_variables.csv", show_col_types = FALSE, na = ""),
+%     read_csv("data/selected_world_bank_variables.csv", show_col_types = FALSE, na = ""),
 %     by = "variable"
 %   ) %>%
 %   mutate(variable = stri_replace_all_fixed(variable, "_", " ")) %>%
 %   select(
 %     Variable = variable,
 %     Code = variable_code,
-%     `Percent missing` = percent_missing
+%     `% missing` = percent_missing
 %   ) %>%
 %   kable(
 %     caption = "World Bank variables I downloaded, with the percent of data missing for country-year combinations present in the CEA registry"
@@ -1460,11 +1447,11 @@ From the low p-value for all three tests, I conclude that the panel residuals ar
 %   }
 % ) %>%
 %   mutate(
-%     `p-value` = signif(`p-value`, DISPLAY_FIGURES),
+%     `p-value` = signif(`p-value`, DISPLAY_FIGURES) %>% format(),
 %     Method = stri_match_first_regex(Method, "^(.*)\\s\\(.*\\)")[,2]
 %   ) %>%
 %   select(Method, `p-value`) %>%
-%   kable(caption = "Stationarity test results", digits = 64) %>%
+%   kable(caption = "Stationarity test results") %>%
 %   bold_header()
 %% end.rcode
 
@@ -1501,10 +1488,12 @@ In \autoref{tab:coefficients}, I report the coefficients from the main analysis.
 %   ) %>%
 %   select(-raw_regressor) %>%
 %   rename(`p-value` = `Pr(>|t|)`) %>%
+%   rowwise() %>%
 %   mutate(
 %     Estimate = signif(Estimate, DISPLAY_FIGURES),
-%     `p-value` = signif(`p-value`, DISPLAY_FIGURES)
+%     `p-value` = signif(`p-value`, DISPLAY_FIGURES) %>% format()
 %   ) %>%
+%   ungroup() %>%
 %   select(Regressor, Estimate, `p-value`) %>%
 %   kable(caption = "Coefficients from the main analysis", digits = 64) %>%
 %   bold_header()
@@ -1609,10 +1598,10 @@ seem robust to the choice of exchange rates and price deflators.
 %   ) %>%
 %   filter(!is.na(lower_bound)) %>%
 %   select(
-%     `Exchange rate type` = exchange_rate_kind,
-%     `Deflator type` = deflator_kind,
-%     `Lower bound` = lower_bound,
-%     `Upper bound` = upper_bound
+%     `Exchange rate` = exchange_rate_kind,
+%     `Deflator` = deflator_kind,
+%     `2.5%` = lower_bound,
+%     `97.5%` = upper_bound
 %   ) %>%
 %   kable(caption = "95\\% confidence intervals for the life expectancy coefficient with different exchange rates and price deflators") %>%
 %   bold_header()
