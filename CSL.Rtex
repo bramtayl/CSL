@@ -626,7 +626,7 @@ help'' \autocite[183]{feinbergWhatLifeWorth2005}.
 Although EPA economists considered varying VSLs based on wealth and
 income, they decided to use a constant VSL so that they would need less
 information. EPA economists considered varying VSLs based on wealth
-income. They argued that ``an ideal value estimate for fatal risk
+and income. They argued that ``an ideal value estimate for fatal risk
 reduction would account for all of these demographic and risk
 characteristics'' \autocite[88]{GuidelinesPreparingEconomic2010a}. If these economists varied VSLs based
 on wealth and income, to conduct a cost-benefit analysis, they would
@@ -723,8 +723,7 @@ willing to pay for.
 A government can use a cost-effectiveness threshold to decide how to
 spend money to improve public health. Although this seems callous, many
 public health agencies use such cost-effectiveness thresholds to make
-healthcare decisions. {[}TODO: cite UK's cost-effectiveness
-threshold{]}.
+healthcare decisions.
 
 I call a cost-effectiveness threshold the ``marginal benefit of life''
 because it is the value a government assigns to a health improvement
@@ -870,7 +869,7 @@ To obtain price of life data, I downloaded data about the
 cost-effectiveness of healthcare treatments from the CEA Registry. This
 registry is a ``comprehensive database of >10,000 cost-utility analyses on
 a wide variety of diseases and treatments published from 1976 to the present.''
-\autocite[2020]{CEARegistry2020}. As of when I downloaded the data, the most recent study
+\autocite{CEARegistry2020}. As of when I downloaded the data, the most recent study
 was published in \rinline{max(matched_ratios$year)}.
 For each study,
 Tufts Medical reports the following variables:
@@ -905,7 +904,7 @@ could be under-providing cost-effective gender-specific therapies, due
 to, for example, sexism.
 
 To obtain the main input variable, the instrumental variable, and
-control variables, I downloaded data from the World Bank {[}TODO: add citation{]}. I
+control variables, I downloaded data from the World Bank \autocite{DataBank}. I
 downloaded:
 
 \begin{itemize}
@@ -961,6 +960,7 @@ I analyze each control variable further in the discussion.
 
 To compare prices between different countries, I used PPPs for
 GDP, and to deflate prices, I used the US GDP deflators.
+I downloaded deflator data from the US Federal Reserve \autocite{FRED}.
 I analyze this further in the discussion.
 To check for robustness, I repeated my calculations several different sets deflators and
 exchange rates, and report the results in \autoref{robustness_tests}. My results seem
@@ -1070,7 +1070,7 @@ the lowest marginal cost of life.
 
 \section{Discussion}
 
-In conclusion: any government should value all people's lives equally, regardless of
+Any government should value all people's lives equally, regardless of
 people's wealth or citizenship. Consider what a government that valued
 all people's lives equally would do. If the marginal cost of life were
 not the same for all countries, the government would not necessarily pay
@@ -1258,8 +1258,8 @@ with a few countries with very high values.
 
 I controlled for several variables that could be correlated with
 shifts of the marginal cost of life curve: time, population density, the
-proportion of healthcare spending that is public, log annual
-precipitation, and log annual precipitation. I discuss each below.
+proportion of healthcare spending that is public, and annual
+precipitation. I discuss each below.
 
 First, I controlled for a time trend in the regression above. I did this
 because technology could be correlated with shifts of the marginal cost
@@ -1292,10 +1292,10 @@ thus, have a local monopoly. The second reason is that, if a government
 instituted a public health system, it could centralize patient
 administration more than any individual doctors could. Thus,
 administration costs per patient could be lower in countries with public
-health care. {[}TODO: add citations{]}.
+health care.
 
-Finally, I controlled for two climate variables, log annual
-precipitation, and log annual precipitation squared, in the regression
+Finally, I controlled for annual
+precipitation in the regression
 below. I did so because the marginal cost of healthcare might vary
 between countries with different climates. This could be due to
 different endemic diseases, and thus, effective treatments, in different
@@ -1317,8 +1317,7 @@ same ``basket'' of healthcare goods.
 For the exchange rates, the International Comparison Program (ICP) provides
 PPPs for healthcare.
 Unfortunately, it only provides this data for two years, 2011 and 2017.
-I tried using this data, but with just two years, I had only \rinline{nrow(PPP_health_data)}
-rows, which was not enough for the main analysis.
+To use this data, I would have to discard the cost effectiveness data from all other years.
 Thus, I considered three alternatives.
 First, I considered using nominal exchange rates. A nominal exchange rate is the amount of
 one currency one can exchange for a unit of another currency in an
@@ -1329,7 +1328,7 @@ many healthcare inputs, such as the labor of doctors and nurses,
 internationally. In fact, via border restrictions, governments actively
 prevent healthcare workers from migrating freely. 
 Second, I considered using PPPs for private consumption.
-I choose not to use PPPs for private consumption because, for countries with public
+I chose not to use PPPs for private consumption because, for countries with public
 healthcare, healthcare is not part of private consumption.
 Instead, I chose the third options, PPPs for GDP.
 For price deflators, I used GDP deflators to be consistent with the PPPs for GDP.
