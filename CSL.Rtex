@@ -521,17 +521,10 @@
 
 \section{Abstract}
 
-Any government should value all people's lives equally, regardless of
-people's wealth or citizenship. Consider what a government that valued
-all people's lives equally would do. If the marginal cost of life were
-not the same for all countries, the government would not necessarily pay
-for healthcare treatments for its own citizens. Instead, by the
-principle of effective altruism, the government would pay for healthcare
-treatments in the country with the lowest marginal cost of life. Due to
-the law of increasing marginal costs, the marginal cost of life should
-be lower in low-life-expectancy countries than in high-life-expectancy
-countries, all else being equal. To assess this, I estimated the
-marginal cost of life curve. I use the following model of how a
+Due to the law of increasing marginal costs, the marginal cost of life
+should be lower in low-life-expectancy countries than in
+high-life-expectancy countries, all else being equal. To assess this, I
+estimated the marginal cost of life curve. I use the following model of how a
 government would make healthcare decisions. A government would choose
 both life expectancy and the price of life in their country
 corresponding to the intersection of a marginal cost of life curve and a
@@ -560,119 +553,16 @@ it was
 \rinline{worst_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
 international dollars per QALY in
 \rinline{worst_prediction$country}.
-For this reason, all governments should spend more money on healthcare in
-the country with the lowest marginal cost of life.
 
 \section{Introduction}
 
-Any government should value all people's lives equally, regardless of
-people's wealth or citizenship. Unfortunately, not all economists agree.
-Consider the previous discussion of the value of a statistical life.
+One does not need to choose a VSL to analyze
+cost-effectiveness. Smith explained that ``until we discover a universal
+unit for quantifying the value of health, ways to measure the benefits
+will continue to hamper comparisons among alternate health programs''
+\autocite[900]{smithCosteffectivenessCostbenefitAnalyses1968}.
 
-\textbf{Value of a statistical life (VSL)}: A VSL is the value of a
-human life, in dollar terms, that a government would use in cost-benefit
-analysis.
-
-A consultant at RAND first proposed a VSL. The US Air Force had asked
-the consultant to recommend whether the US Air Force should build cheap
-yet dangerous airplanes, or expensive yet safe airplanes. The consultant
-realized that if they put no value on safety, they must recommend that
-the Air Force should build cheap yet dangerous airplanes. They would
-have to place a positive value on human life, a VSL, to recommend that
-the Air Force should build the expensive yet safe airplanes
-\autocite{banzhafRetrospectivesColdWarOrigins2014}.
-The consultant shared the idea of a VSL with Schelling, and
-Schelling argued for using a VSL in cost-benefit analysis. He argued
-that ``we nearly all want our lives extended and are probably willing to
-pay for it'' \autocite[129]{schellingLifeYouMay1968}.
-
-Economists use many methods to choose a VSL, but wealth and income
-always influence the outcome. If one uses revealed preferences, one
-measures how much money a person is willing to sacrifice for more safety
-by considering the person's decisions, such as which car to buy. For
-example, Atkinson et al. used data on car ``price, fuel efficiency, and
-performance characteristics such as acceleration, comfort, and safety''
-\autocite[133]{atkinsonValuationRisksLife1990} to calculate a VSL.
-If one uses contingent valuation, one
-asks people how much money these people would be willing to pay for more
-safety, or willing to accept for less safety. For example, Alberini et
-al. asked participants ``whether they would purchase a product that
-would reduce {[}mortality{]} risk by either 1 in 1000 or 5 in 1000, at a
-stated price'' \autocite[773]{alberiniDoesValueStatistical2004}.
-Finally, if one uses compensating wage
-differentials, one measures the wage premium employers use to entice
-workers to do dangerous jobs. For example, Viscusi asked ``controlling
-for other aspects of the job, what is the wage premium workers receive
-for risk'' \autocite[1913]{viscusiValueRisksLife1993}?
-Regardless of which of these three methods
-one uses, wealth and income always influence the outcome. For example, a
-wealthy person might be willing to pay more to buy safe products than a
-poor person, purely because the wealthy person has a higher ability to
-pay. For this reason, Summers concluded that ``the economic logic behind
-dumping a load of toxic waste in the lowest wage country is impeccable''
-\autocite{summersGEP1991}.
-
-Governments sometimes vary VSLs based on wealth and income. After 9-11,
-the US Congress compensated the families of victims by paying the
-families based on foregone income, that is, how much income the victim
-would have earned had they not died. Thus, the government paid the
-families of CEOs much more than the families of firefighters. The lawyer
-who oversaw the program, Kenneth Feinberg, disagreed with how Congress
-distributed this fund: ``any statutory compensation formula that
-recognizes and reinforces economic distinctions among claimants is
-guaranteed to promote divisiveness among the very families it seeks to
-help'' \autocite[183]{feinbergWhatLifeWorth2005}.
-
-Although EPA economists considered varying VSLs based on wealth and
-income, they decided to use a constant VSL so that they would need less
-information. EPA economists considered varying VSLs based on wealth
-and income. They argued that ``an ideal value estimate for fatal risk
-reduction would account for all of these demographic and risk
-characteristics'' \autocite[88]{GuidelinesPreparingEconomic2010a}. If these economists varied VSLs based
-on wealth and income, to conduct a cost-benefit analysis, they would
-need to know the wealth and income of everyone whose health the EPA
-could protect with an environmental policy. Instead, to reduce the
-amount of information they would need, the economists used a constant
-VSL. They explained that ``unfortunately, it is simply too expensive and
-time-consuming to obtain such unique risk value estimates for each EPA
-policy'' \autocite[88]{GuidelinesPreparingEconomic2010a}.
-
-Some climate economists varied the VSL to justify discounting over time
-without recommending that governments should redistribute wealth. When
-one uses cost-benefit analysis to analyze climate change, one must
-decide on a discount rate. Present generations pay the cost of
-preventing climate change, and the benefit of preventing climate change
-includes saving future people's lives. If one used a high discount rate,
-one would discount these benefits. Some economists justified discounting
-by weighing benefits to comparatively rich future people lower than
-benefits to comparatively poor present people. However, if the
-economists had assumed that the marginal utility-as-well-being of money
-was decreasing, and if they had used utilitarianism, they must then have
-recommended that governments should redistribute money globally. This is
-because redistributing money from rich people with low marginal utility
-to poorer people with high marginal utility would increase total
-utility. These economists put Negishi weights on people in richer
-countries to justify discounting without recommending that governments
-should redistribute wealth. Negishi weights are weights that cancel out
-differences in marginal utility. For example, in a rich country,
-although the marginal utility of a dollar would be lower, the Negishi
-weight would be higher, so redistribution would make no difference.
-Stanton summarizes: ``in Negishi-weighted models, human welfare is more
-valuable in richer regions and redistribution of income among world
-regions is suppressed, maintaining the existing income distribution''
-\autocite[423]{stantonNegishiWelfareWeights2010}.
-
-One should not choose a VSL if life and money are incommensurable, that
-is, if one cannot compare life and money. Raz argued that ``if people's
-evaluations can form a foundation for a general theory of comparative
-value judgments, perhaps people's refusal to evaluate could provide a
-pointer to the existence of significant incommensurabilities'' \autocite[129]{razValueIncommensurabilityPreliminaries1986}. That is, if people refuse to compare life and money, then perhaps
-economists should too.
-
-To avoid choosing a value of a statistical life, some economists use
-cost-effectiveness analysis instead. However, governments still need to
-choose a value of a statistical life to choose a cost-effectiveness
-threshold. To define cost-effectiveness analysis, I use the following
+To define cost-effectiveness analysis, I use the following
 definitions.
 
 \textbf{Life expectancy}: how many years which one predicts a baby born
@@ -708,11 +598,7 @@ therapy has a high cost, and even if the treatment were successful, the
 elderly person would probably not live much longer. I describe a
 cost-effectiveness ratio as a ``price of life'' because a price is the
 cost per unit of a good, and for a cost-effectiveness ratio, that good
-is a QALY. One does not need to choose a VSL to analyze
-cost-effectiveness. Smith explained that ``until we discover a universal
-unit for quantifying the value of health, ways to measure the benefits
-will continue to hamper comparisons among alternate health programs''
-\autocite[900]{smithCosteffectivenessCostbenefitAnalyses1968}.
+is a QALY.
 
 \textbf{Cost-effectiveness threshold} or the \textbf{Marginal benefit of
 life}: A government's cost-effectiveness threshold, or marginal benefit
@@ -749,62 +635,15 @@ others can. Garber and Phelps used Pareto efficiency to argue that
 different governments using different cost-effectiveness thresholds is
 optimal: ``our estimates imply that...CE cutoffs should be about double
 the annual income'' \autocite[25]{garberEconomicFoundationsCosteffectiveness1997}.
-The World Bank Commission on
-Macroeconomics and Health endorsed this view: ``this multiple of
-earnings reflects the value of leisure time in addition to market
-consumption, the pure longevity effect, and the pain and suffering
-associated with disease'' \autocite[31]{sachsMacroeconomicsHealthInvesting2001}.
-The World Health Organization
-also endorsed this view: ``interventions that avert one DALY
-{[}disability adjusted life-year{]} for less than average per capita
-income for a given country or region are considered very cost-effective;
-interventions that cost less than three times average per capita income
-per DALY averted are still considered cost-effective; and those that
-exceed this level are considered not cost-effective''
-\autocite[31]{hutubessyGeneralizedCosteffectivenessAnalysis2003}.
-Shillcutt et al. were concerned that using income to
-choose cost-effectiveness thresholds ``puts a value on livelihood rather
-than life'' \autocite[909]{shillcuttCostEffectivenessLow2009}.
-Marseille et al. argued that these
-thresholds are too high: ``the WHO-CHOICE thresholds set such a low bar
-for cost-effectiveness that very few interventions with evidence of
-efficacy can be ruled out'' \autocite[118]{marseilleThresholdsCostEffectiveness2015}.
 
 \textbf{Marginal cost of life}: For a country, the marginal cost of life
 is the cost-effectiveness ratio of the treatment any citizen needs with
 the minimum cost-effectiveness ratio.
 
-Consider what a government that valued all people's lives equally would
-do. If the marginal cost of life were not the same for all countries,
-the government would not necessarily pay for healthcare treatments for
-its own citizens. Instead, the government would pay for healthcare
-treatments in the country with the lowest marginal cost of life. Then,
-the government would be acting according to the principle of effective
-altruism.
-
-\textbf{Effective altruism}: the principle that a certain agent should
-act to maximize global social welfare.
-
-Governments, not only people, should use effective altruism, because
-governments can impact the world more than people can. Philosophers use
-effective altruism to analyze personal, not social, duties. Singer
-noted that ``if it is in our power to prevent something bad from
-happening, without thereby sacrificing anything of comparable ethical
-importance, we ought, ethically, to do it\ldots. If {[}this principle{]}
-were acted upon, even in its qualified form, our lives, our society, and
-our world would be fundamentally changed''
-\autocite[231]{singerFamineAffluenceMorality1972}. GiveWell, a
-non-profit organization, promotes effective altruism and recommends the
-most cost-effective charities \autocite{GiveWell}. However, because
-governments can impact the world more than people can, governments, not
-only people, should use effective altruism.
-
 Due to the law of increasing marginal costs, the marginal cost of life
 should be lower in low-life-expectancy countries than in
 high-life-expectancy countries, all else being equal. To assess this, I
 estimated the marginal cost of life curve.
-
-\section{Methods}
 
 I use the following model of how a government makes healthcare
 decisions. Imagine an impartial government paying for healthcare for
@@ -818,18 +657,63 @@ concepts:
 expectancy of citizens and the marginal cost of life.
 
 By the law of increasing marginal costs, the marginal cost of life curve
-should be increasing. I analyze this further in the discussion.
+should be increasing. This is for the following reason. Because they are
+impartial, the government would prioritize the most cost-effective
+treatments first. To increase life expectancy, the government could fund
+treatments with higher cost-effectiveness ratios. Because the government
+would pay for more healthcare treatments, mortality rates would
+decrease, so life expectancy would increase. Also, because the
+government would pay for treatments with higher cost-effectiveness
+ratios, the marginal cost-effectiveness ratio of further treatments
+would also increase. Thus, there would be a positive relationship
+between life expectancy (the ``quantity'' of life) and the marginal cost
+of life.
 
 \textbf{Marginal benefit of life curve}: the relationship between the
 life expectancy and a government's marginal benefit of life.
 
+The government's ability to pay for life would determine the
+government's marginal benefit of life curve. Two effects can cause a
+marginal benefits curve to shift: the ``income effect'' and the
+``substitution effect'', but in this case, only the income effect is
+relevant. Generally, the ``income effect'' means that, if someone's
+income increased, the person would have a higher ability to pay, and
+thus, willingness to pay, for a good. In this case, if per-capita income
+in the group increased, but other factors, such as life expectancy,
+remained the same, due to the income effect, the government would have a
+higher ability to pay, and thus, willingness to pay, for healthcare
+treatments. So, if per capita income in a country increased, the
+marginal benefit of life curve would shift upwards. The ``substitution
+effect'' means that, if the price of a substitute good decreased,
+someone might choose to purchase a substitute good instead, so their
+willingness to pay for the original good would decrease. In this case,
+however, I cannot imagine a substitute good for additional life.
+
 By the law of decreasing marginal benefits, the marginal benefit of life
-curve should be slightly decreasing. I analyze this further in the discussion.
+curve should be slightly decreasing. This is for the following reason.
+Consider how a government would change their marginal benefit of life if
+life expectancy exogenously increased. Because this increase is
+exogenous, other factors, such as the government's ability to pay for
+healthcare, would stay the same. Although most citizens would desire
+additional life as much as before, some elderly people, who would have
+lived more complete lives, might desire additional life less. In
+response, the government might slightly decrease the marginal benefit of
+life. Thus, there might be a slightly negative relationship between life
+expectancy (the ``quantity'' of life) and the government's cost
+effectiveness threshold (their marginal benefit of life). This aligns
+with the law of decreasing marginal benefits.
 
 A rational government would choose a level of healthcare funding
 corresponding to where the marginal benefit and marginal cost curves
-intersect. I analyze this further in the discussion.
-I graph an example of such an intersection in \autoref{fig:intersection_example}.
+intersect. This is for the following reason: if the government's
+marginal benefit was greater than the marginal cost of life, the
+government would pay for more healthcare treatments. If the government's
+marginal benefit was less than the marginal cost of life, the government
+would pay for less healthcare treatments. The government would then
+choose a level of healthcare funding corresponding to where the marginal
+benefit and marginal cost curves intersect. The position of this
+intersection would correspond to a certain life expectancy and a certain
+price of life.
 
 %% begin.rcode intersection_example, echo=FALSE, dpi = 300, fig.width = 8, fig.height = 6, fig.cap = paste0("The intersection of a marginal cost of life curve and marginal benefit of life curve for the ", EXAMPLE_COUNTRY, " in ", RECENT_YEAR, ". The marginal cost curve is the curve I predicted. The marginal benefit curve in the figure is (arbitrarily) horizontal, with a price of life equal to the price of life I estimated.")
 % ggplot(
@@ -850,11 +734,14 @@ I graph an example of such an intersection in \autoref{fig:intersection_example}
 %   theme_bw()
 %% end.rcode
 
+\section{Methods}
+
+I discuss methods in more detail in \autoref{methods_details}.
+
 I used two-stage least squres to estimate the marginal cost of life
 curve. I used two-stage least squares (2SLS) because no other method, that is,
 direct accounting, analyzing an experiment, analyzing a
-quasi-experiment, or multivariable regression, would be effective.
-I discuss alternatives further in the discussion. The main input variable is
+quasi-experiment, or multivariable regression, would be effective. The main input variable is
 life expectancy, and the main output variable is the price of life.
 Thus, I need data for both variables. In this case, to use two-stage
 least squares, I must find an instrumental variable that would be
@@ -900,8 +787,7 @@ one country. I also excluded zero or negative cost-effectiveness ratios
 because a cost-effectiveness ratio must be positive. I only considered
 ratios from studies with participants of all genders (that is, not just
 men or just women). Other authors could consider whether governments
-could be under-providing cost-effective gender-specific therapies, due
-to, for example, sexism.
+could be under-providing cost-effective gender-specific therapies.
 
 To obtain the main input variable, the instrumental variable, and
 control variables, I downloaded data from the World Bank \autocite{DataBank}. I
@@ -938,7 +824,7 @@ I report further details about these variables in \autoref{WDI_variables}.
 I used (log) gross domestic product (GDP) per capita as an instrumental
 variable because an exogenous change in GDP per capita should cause the
 marginal benefit of life curve, but not the marginal cost of life curve,
-to shift. I analyze this further in the discussion.
+to shift.
 
 I controlled for several variables that could be correlated with shifts
 of the marginal cost of life curve. These were as follows.
@@ -961,7 +847,6 @@ I analyze each control variable further in the discussion.
 To compare prices between different countries, I used PPPs for
 GDP, and to deflate prices, I used the US GDP deflators.
 I downloaded deflator data from the US Federal Reserve \autocite{FRED}.
-I analyze this further in the discussion.
 To check for robustness, I repeated my calculations several different sets deflators and
 exchange rates, and report the results in \autoref{robustness_tests}. My results seem
 robust to the choice of price deflators and exchange rates.
@@ -1017,9 +902,6 @@ it was
 \rinline{worst_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
 international dollars per QALY in
 \rinline{worst_prediction$country}.
-For this reason, all
-governments should spend more money on healthcare in the country with
-the lowest marginal cost of life.
 
 %% begin.rcode cost_of_life_table, echo=FALSE
 % recent_predictions %>% 
@@ -1070,17 +952,10 @@ the lowest marginal cost of life.
 
 \section{Discussion}
 
-Any government should value all people's lives equally, regardless of
-people's wealth or citizenship. Consider what a government that valued
-all people's lives equally would do. If the marginal cost of life were
-not the same for all countries, the government would not necessarily pay
-for healthcare treatments for its own citizens. Instead, by the
-principle of effective altruism, the government would pay for healthcare
-treatments in the country with the lowest marginal cost of life. Due to
-the law of increasing marginal costs, the marginal cost of life should
-be lower in low-life-expectancy countries than in high-life-expectancy
-countries, all else being equal. To assess this, I estimated the
-marginal cost of life curve. I use the following model of how a
+Due to the law of increasing marginal costs, the marginal cost of life
+should be lower in low-life-expectancy countries than in
+high-life-expectancy countries, all else being equal. To assess this, I
+estimated the marginal cost of life curve. I use the following model of how a
 government would make healthcare decisions. A government would choose
 both life expectancy and the price of life in their country
 corresponding to the intersection of a marginal cost of life curve and a
@@ -1088,7 +963,7 @@ marginal benefit of life curve. To estimate the marginal cost of life
 curve, I used two-stage least squares. I downloaded data from three
 sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry,
 the World Bank, and the US Federal
-Reserve. I used GDP per capita as an instrument because it would
+Reserve. I used Gross Domestic Product (GDP) per capita as an instrument because it would
 correlate with shifts in the marginal benefit of life curve but not the
 marginal cost of life curve. I also controlled for several variables
 that could correlate with shifts in the marginal cost of life curve:
@@ -1109,64 +984,31 @@ it was
 \rinline{worst_prediction$price_of_life %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")}
 international dollars per QALY in
 \rinline{worst_prediction$country}.
-For this reason, all governments should spend more money on healthcare in
-the country with the lowest marginal cost of life.
 
-By the law of increasing marginal costs, the marginal cost of life curve
-should be increasing. This is for the following reason. Because they are
-impartial, the government would prioritize the most cost-effective
-treatments first. To increase life expectancy, the government could fund
-treatments with higher cost-effectiveness ratios. Because the government
-would pay for more healthcare treatments, mortality rates would
-decrease, so life expectancy would increase. Also, because the
-government would pay for treatments with higher cost-effectiveness
-ratios, the marginal cost-effectiveness ratio of further treatments
-would also increase. Thus, there would be a positive relationship
-between life expectancy (the ``quantity'' of life) and the marginal cost
-of life.
+I expect to have overestimated the marginal cost of life, for two
+reasons. First, citizens and governments might not
+always make rational healthcare decisions, and thus, typical healthcare
+treatments might be more expensive than necessary.
+In fact, governments might not even
+know the cost-effectiveness ratios of various treatments. This could
+affect my results, because, if typical healthcare
+treatments are more expensive than need be, I would overestimate the
+marginal cost of life. Second, if a
+researcher found a high cost-effectiveness ratio for a common treatment,
+a publisher would be more likely to publish the researcher's results,
+and such a cost-effectiveness ratio would be higher than the marginal
+cost of life.
 
-By the law of decreasing marginal benefits, the marginal benefit of life
-curve should be slightly decreasing. This is for the following reason.
-Consider how a government would change their marginal benefit of life if
-life expectancy exogenously increased. Because this increase is
-exogenous, other factors, such as the government's ability to pay for
-healthcare, would stay the same. Although most citizens would desire
-additional life as much as before, some elderly people, who would have
-lived more complete lives, might desire additional life less. In
-response, the government might slightly decrease the marginal benefit of
-life. Thus, there might be a slightly negative relationship between life
-expectancy (the ``quantity'' of life) and the government's cost
-effectiveness threshold (their marginal benefit of life). This aligns
-with the law of decreasing marginal benefits.
+\section{Works cited}
 
-The government's ability to pay for life would determine the
-government's marginal benefit of life curve. Two effects can cause a
-marginal benefits curve to shift: the ``income effect'' and the
-``substitution effect'', but in this case, only the income effect is
-relevant. Generally, the ``income effect'' means that, if someone's
-income increased, the person would have a higher ability to pay, and
-thus, willingness to pay, for a good. In this case, if per-capita income
-in the group increased, but other factors, such as life expectancy,
-remained the same, due to the income effect, the government would have a
-higher ability to pay, and thus, willingness to pay, for healthcare
-treatments. So, if per capita income in a country increased, the
-marginal benefit of life curve would shift upwards. The ``substitution
-effect'' means that, if the price of a substitute good decreased,
-someone might choose to purchase a substitute good instead, so their
-willingness to pay for the original good would decrease. In this case,
-however, I cannot imagine a substitute good for additional life.
+\printbibliography
 
-A rational government would choose a level of healthcare funding
-corresponding to where the marginal benefit and marginal cost curves
-intersect. This is for the following reason: if the government's
-marginal benefit was greater than the marginal cost of life, the
-government would pay for more healthcare treatments. If the government's
-marginal benefit was less than the marginal cost of life, the government
-would pay for less healthcare treatments. The government would then
-choose a level of healthcare funding corresponding to where the marginal
-benefit and marginal cost curves intersect. The position of this
-intersection would correspond to a certain life expectancy and a certain
-price of life.
+\section{Appendices}
+
+\begin{appendices}
+
+\section{Methods details}
+\label{methods_details}
 
 Most countries have some mixture of public and
 private healthcare. Citizens vary in their ability to pay for, and thus
@@ -1181,7 +1023,6 @@ year.
 I used two-stage least squares because no other method, that is,
 direct accounting, analyzing an experiment, analyzing a
 quasi-experiment, or multivariable regression, would be effective. I discuss each below.
-
 
 I could not use direct accounting to estimate the marginal cost of life
 curve because I do not have the data I would need. If one had data about
@@ -1332,28 +1173,6 @@ I chose not to use PPPs for private consumption because, for countries with publ
 healthcare, healthcare is not part of private consumption.
 Instead, I chose the third options, PPPs for GDP.
 For price deflators, I used GDP deflators to be consistent with the PPPs for GDP.
-
-I expect to have overestimated the marginal cost of life, for two
-reasons. First, citizens and governments might not
-always make rational healthcare decisions, and thus, typical healthcare
-treatments might be more expensive than necessary.
-In fact, governments might not even
-know the cost-effectiveness ratios of various treatments. This could
-affect my results, because, if typical healthcare
-treatments are more expensive than need be, I would overestimate the
-marginal cost of life. Second, if a
-researcher found a high cost-effectiveness ratio for a common treatment,
-a publisher would be more likely to publish the researcher's results,
-and such a cost-effectiveness ratio would be higher than the marginal
-cost of life.
-
-\section{Works cited}
-
-\printbibliography
-
-\section{Appendices}
-
-\begin{appendices}
 
 \section{Number of ratios by country}
 \label{ratios_balance}
