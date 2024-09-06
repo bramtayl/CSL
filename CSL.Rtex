@@ -539,7 +539,7 @@ that could correlate with shifts in the marginal cost of life curve:
 time, population density, the proportion of healthcare spending that is
 public, and annual precipitation. I found that the marginal cost of life
 is strongly increasing. With 95\% confidence, when life expectancy
-increases by one year, the marginal cost of life increases by between
+increases by one year, all else being equal, the marginal cost of life increases by between
 \rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, DISPLAY_FIGURES)}\% and 
 \rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, DISPLAY_FIGURES)}\%.
 The marginal cost of life is far lower in some
@@ -572,15 +572,10 @@ and water sanitation, are all healthcare treatments.
 
 \textbf{Quality-adjusted life year (QALY)}: a health improvement that
 one judges to have the same value as an extra year of life for a subject
-who is fully healthy.
+who is fully healthy. This measure is necessarily subjective.
 
-This measure is necessarily subjective.
-
-\textbf{Cost-effectiveness ratio} or the \textbf{Price of life}: Any
-healthcare treatment has a different cost-effectiveness ratio: how much
-the treatment costs in units of currency per QALY.
-
-For example, giving rehydration fluid to a small child with
+\textbf{Cost-effectiveness ratio} or the \textbf{Price of life}: how much
+a healthcare treatment costs in units of currency per QALY. For example, giving rehydration fluid to a small child with
 life-threatening diarrhea would have a low cost-effectiveness ratio:
 rehydration fluid has a low cost, and the child could live for many more
 years. On the other hand, giving radiation therapy to a very elderly
@@ -592,10 +587,10 @@ cost per unit of a good, and for a cost-effectiveness ratio, that good
 is a QALY.
 
 \textbf{Cost-effectiveness threshold} or the \textbf{Marginal benefit of
-life}: A government's cost-effectiveness threshold, or marginal benefit
-of life, is the cost effectiveness ratio of the treatment with the
+life}: the cost effectiveness ratio of the treatment with the
 maximum cost-effectiveness ratio among the treatments the government is
-willing to pay for.
+willing to pay for. For example, the cost effectiveness threshold of England and Wales' National Health Service is currently
+between £20,000 and £30,000 per QALY. This is on the same order of magnitude as the value I estimated for the UK; see \autoref{fig:intersection_example}.
 
 A government can use a cost-effectiveness threshold to decide how to
 spend money to improve public health. Although this seems callous, many
@@ -663,7 +658,7 @@ marginal benefits curve to shift: the ``income effect'' and the
 ``substitution effect'', but in this case, only the income effect is
 relevant. Generally, the ``income effect'' means that, if someone's
 income increased, the person would have a higher ability to pay, and
-thus, willingness to pay, for a good.Ddue to the income effect, if per-capita income
+thus, willingness to pay, for a good. Due to the income effect, if per-capita income
 in the group increased, but other factors, such as life expectancy,
 remained the same, the government would have a
 higher ability to pay, and thus, willingness to pay, for healthcare
@@ -682,7 +677,7 @@ exogenous, other factors, such as the government's ability to pay for
 healthcare, would stay the same. Although most citizens would desire
 additional life as much as before, some elderly people, who would have
 lived more complete lives, might desire additional life less. In
-response, the government might slightly decrease the marginal benefit of
+response, the government might slightly decrease its marginal benefit of
 life. Thus, there might be a slightly negative relationship between life
 expectancy (the ``quantity'' of life) and the government's cost
 effectiveness threshold (their marginal benefit of life). This aligns
@@ -698,7 +693,7 @@ would pay for less healthcare treatments. The government would then
 choose a level of healthcare funding corresponding to where the marginal
 benefit and marginal cost curves intersect. The position of this
 intersection would correspond to a certain life expectancy and a certain
-price of life.
+price of life. I plotted an example for the UK in \autoref{fig:intersection_example}.
 
 %% begin.rcode intersection_example, echo=FALSE, dpi = 300, fig.width = 8, fig.height = 6, fig.cap = paste0("The intersection of a marginal cost of life curve and marginal benefit of life curve for the ", EXAMPLE_COUNTRY, " in ", RECENT_YEAR, ". The marginal cost curve is the curve I predicted. The marginal benefit curve in the figure is (arbitrarily) horizontal, with a price of life equal to the price of life I estimated.")
 % ggplot(
@@ -721,13 +716,11 @@ price of life.
 
 \section{Methods}
 
-I discuss methods in more detail in \autoref{methods_details}.
-
 The marginal cost of life curve and the marginal benefit of life curve mutually determine the input variable,
 life expectancy, and the output variable, the price of life. Thus, these two variables are endogenous.
-There, I used two-stage least squres to estimate the marginal cost of life
-curve. I used GDP per capita as an instrumental variable that would be
-correlated with shifts in the marginal benefit curve, not the marginal
+Therefore, I used two-stage least squres to estimate the marginal cost of life
+curve. I used GDP per capita as an instrumental variable because it would
+correlate with shifts of the marginal benefit curve but not the marginal
 cost curve. I controlled for variables that would correlate with
 shifts of the marginal cost curve, but not the marginal benefit curve.
 
@@ -747,7 +740,9 @@ Tufts Medical reports the following variables:
 \item
   the publication year
 \item
-  the country (or countries) where the study participants live.
+  the country (or countries) where the study participants live
+\item
+  the gender of study participants (male, female, or both)
 \item
   the currency used to calculate costs.
 \item
@@ -755,7 +750,6 @@ Tufts Medical reports the following variables:
 \item
   a cost-effectiveness ratio in local historical currency per QALY
 \end{itemize}
-
 
 For each country and year (country-year), I use the average of log
 cost-effectiveness ratios published in that country-year as a rough
@@ -779,13 +773,14 @@ cost-effectiveness ratio would be close to the marginal price of life.
 
 Most countries have some mixture of public and
 private healthcare. Citizens vary in their ability to pay for, and thus
-willingness to pay for, healthcare treatments. If a government
+willingness to pay for, healthcare treatments. Therefore, if a government
 privatized healthcare, this would result in more disparate health
 outcomes, because some citizens could afford expensive treatments, and
 others could not. Thus, implementing private healthcare would cause
-citizens to have more disparate life expectancies. However, since, I use the average of log
+citizens to have more disparate life expectancies and marginal costs of life. Moreover, overall cost of healthcare could be different in countries with public
+health care than in countries with private health care. However, since, I use the average of log
 cost-effectiveness ratios published in a country and year, and controlled for the percentage
-of health spending that was public, this should not be a problem.
+of health spending that was public, this should not affect my results.
 
 I only used some cost-effectiveness ratios. I excluded
 cost-effectiveness ratios from studies of participants from more than
@@ -795,7 +790,7 @@ ratios from studies with participants of all genders (that is, not just
 men or just women). Other authors could consider whether governments
 could be under-providing cost-effective gender-specific therapies.
 
-To obtain the main input variable, the instrumental variable, and
+To obtain the main input variable, life expectancy, the instrumental variable, GDP per capita, and
 control variables, I downloaded data from the World Bank \autocite{DataBank}. I
 downloaded:
 
@@ -816,7 +811,7 @@ downloaded:
   US \$
 \item
   Purchasing Power Parities (PPPs) (in local
-  historical currency per international \$) for GDP.
+  historical currency per international \$) for GDP
 \item
   PPPs (in local
   historical currency per international \$) for consumer goods
@@ -827,7 +822,7 @@ PPPs (in local
 
 I report further details about these variables in \autoref{WDI_variables}.
 
-I used (log) gross domestic product (GDP) per capita as an instrumental
+I used log GDP per capita as an instrumental
 variable because an exogenous change in GDP per capita should cause the
 marginal benefit of life curve, but not the marginal cost of life curve,
 to shift. An exogenous increase in GDP per capita should cause the
@@ -898,7 +893,7 @@ Life expectancy is
 by far the most statistically significant predictor, and the adjusted R²
 of the model is
 \rinline{signif(model_summary$adj.r.squared * 100, DISPLAY_FIGURES)}\%.
-I report more detailed results in Appendix D.
+I report more detailed results in  in \autoref{full_regression_results}.
 
 In \autoref{tab:cost_of_life_table} and \autoref{fig:cost_of_life_map}, I show that the marginal cost of life is far lower in
 low-life-expectancy countries than in high-life-expectancy countries.
@@ -943,7 +938,7 @@ international dollars per QALY in
 %   bold_header()
 %% end.rcode
 
-%% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life, in ", RECENT_YEAR, " international \\$ / QALY, by country")
+%% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life, in ", RECENT_YEAR, ", in ", RECENT_YEAR, " international \\$ / QALY, by country")
 % raw_map_data %>%
 %   # replace country names
 %   left_join(country_data, by = "country_code") %>%
@@ -999,15 +994,14 @@ I expect to have overestimated the marginal cost of life, for two
 reasons. First, citizens and governments might not
 always make rational healthcare decisions, and thus, typical healthcare
 treatments might be more expensive than necessary.
-In fact, governments might not even
-know the cost-effectiveness ratios of various treatments. This could
+This could
 affect my results, because, if typical healthcare
 treatments are more expensive than need be, I would overestimate the
 marginal cost of life. Second, if a
 researcher found a high cost-effectiveness ratio for a common treatment,
 a publisher would be more likely to publish the researcher's results,
 and such a cost-effectiveness ratio would be higher than the marginal
-cost of life.
+cost of life. This should only affect my estimate of the model intercept, not my estimate of other coefficients, in particular, the coefficient for life expectancy.
 
 \section{Works cited}
 
@@ -1017,15 +1011,11 @@ cost of life.
 
 \begin{appendices}
 
-\section{Methods details}
-\label{methods_details}
-
-
 \section{Number of ratios by country}
 \label{ratios_balance}
 
 In \autoref{tab:ratios_balance}, I show that authors have published cost-effective analyses
-for healthcare treatments in some countries much more than in others.
+for healthcare treatments for participants from some countries much more than from others.
 
 %% begin.rcode ratios_balance, echo = FALSE
 % matched_ratios %>%

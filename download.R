@@ -8,6 +8,7 @@ library(stringi)
 library(tibble)
 library(tidyr)
 library(wbstats)
+install.packages("languageserver")
 
 fredr_set_key("859a3bf50a026ca281aaeaf9dd06e3de")
 
