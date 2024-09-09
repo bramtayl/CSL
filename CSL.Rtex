@@ -8,7 +8,7 @@
 \usepackage[style=apa]{biblatex}
 \addbibresource{cost_of_life.bib}
 
-\title{Effective altruism and the marginal cost of life}
+\title{The marginal cost of life}
 \author{Brandon Taylor}
 
 %% begin.rcode setup, include=FALSE
@@ -578,7 +578,7 @@ who is fully healthy. This measure is necessarily subjective.
 a healthcare treatment costs in units of currency per QALY. For example, giving rehydration fluid to a small child with
 life-threatening diarrhea would have a low cost-effectiveness ratio:
 rehydration fluid has a low cost, and the child could live for many more
-years. On the other hand, giving radiation therapy to a very elderly
+years. On the other hand, giving radiation therapy to an elderly
 person with cancer would have a low cost-effectiveness ratio: radiation
 therapy has a high cost, and even if the treatment were successful, the
 elderly person would probably not live much longer. I describe a
@@ -649,8 +649,20 @@ would also increase. Thus, there would be a positive relationship
 between life expectancy (the ``quantity'' of life) and the marginal cost
 of life.
 
-\textbf{Marginal benefit of life curve}: the relationship between the
-life expectancy and a government's marginal benefit of life.
+\textbf{Marginal benefit of life curve}: the relationship between
+life expectancy and a government's marginal benefit of life. By the law of decreasing marginal benefits, the marginal benefit of life
+curve should be slightly decreasing. This is for the following reason.
+Consider how a government would change their marginal benefit of life if
+life expectancy exogenously increased. Because this increase is
+exogenous, other factors, such as the government's ability to pay for
+healthcare, would stay the same. Although most citizens would desire
+additional life as much as before, some elderly people, who would have
+lived more complete lives, might desire additional life less. In
+response, the government might slightly decrease its marginal benefit of
+life. Thus, there might be a slightly negative relationship between life
+expectancy (the ``quantity'' of life) and the government's cost
+effectiveness threshold (their marginal benefit of life). This aligns
+with the law of decreasing marginal benefits.
 
 The government's ability to pay for life would determine the
 government's marginal benefit of life curve. Two effects can cause a
@@ -668,20 +680,6 @@ effect'' means that, if the price of a substitute good decreased,
 someone might choose to purchase a substitute good instead, so their
 willingness to pay for the original good would decrease. In this case,
 however, I cannot imagine a substitute good for additional life.
-
-By the law of decreasing marginal benefits, the marginal benefit of life
-curve should be slightly decreasing. This is for the following reason.
-Consider how a government would change their marginal benefit of life if
-life expectancy exogenously increased. Because this increase is
-exogenous, other factors, such as the government's ability to pay for
-healthcare, would stay the same. Although most citizens would desire
-additional life as much as before, some elderly people, who would have
-lived more complete lives, might desire additional life less. In
-response, the government might slightly decrease its marginal benefit of
-life. Thus, there might be a slightly negative relationship between life
-expectancy (the ``quantity'' of life) and the government's cost
-effectiveness threshold (their marginal benefit of life). This aligns
-with the law of decreasing marginal benefits.
 
 A rational government would choose a level of healthcare funding
 corresponding to where the marginal benefit and marginal cost curves
@@ -729,7 +727,7 @@ Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal R
 
 To obtain price of life data, I downloaded data about the
 cost-effectiveness of healthcare treatments from the CEA Registry. This
-registry is a ``comprehensive database of >10,000 cost-utility analyses on
+registry is a ``comprehensive database of greater than 10,000 cost-utility analyses on
 a wide variety of diseases and treatments published from 1976 to the present.''
 \autocite{CEARegistry2020}. As of when I downloaded the data, the most recent study
 was published in \rinline{max(matched_ratios$year)}.
@@ -848,10 +846,10 @@ marginal cost of life curve.
 Third, I controlled for the proportion of healthcare spending that is
 public in the regression below. I did this because, all else being
 equal, the cost of healthcare could be different in countries with public
-health care than in countries with private health care.
+health care from in countries with private health care.
 Finally, I controlled for two climate variables, log annual
 precipitation, and log annual precipitation squared, in the regression
-below. I did so because the marginal cost of healthcare might vary
+below. I did so because the marginal cost of life might vary
 between countries with different climates. 
 
 To compare prices between different countries, I used PPPs for
@@ -1011,34 +1009,6 @@ cost of life. This should only affect my estimate of the model intercept, not my
 
 \begin{appendices}
 
-\section{Number of ratios by country}
-\label{ratios_balance}
-
-In \autoref{tab:ratios_balance}, I show that authors have published cost-effective analyses
-for healthcare treatments for participants from some countries much more than from others.
-
-%% begin.rcode ratios_balance, echo = FALSE
-% matched_ratios %>%
-%   group_by(country) %>%
-%   summarize(count = n()) %>%
-%   arrange(desc(count)) %>%
-%   get_head_and_tail() %>%
-%   mutate(count = count %>% signif(DISPLAY_FIGURES) %>% format(big.mark = ",")) %>%
-%   select(
-%     Rank = rank,
-%     Country = country,
-%     `Number of ratios` = count
-%   ) %>%
-%   kable(
-%     caption = paste0(
-%       "Top and bottom ",
-%       HEAD_TAIL_SIZE,
-%       " countries by number of ratios"
-%     )
-%   ) %>%
-%   bold_header()
-%% end.rcode
-
 \section{Details about World Bank variables}
 \label{WDI_variables}
 
@@ -1160,15 +1130,10 @@ coefficients as follows:
 When population density increases by 1\%, the marginal cost of life
 decreases by about
 \rinline{signif(-model_coefficients[["log_population_density"]], DISPLAY_FIGURES)}\%.
-As I discussed above, I expected this
-because there could be returns to scale in healthcare.
 
 When the percent health spending that is public increases by 1\%, the
 marginal cost of life decreases by about
 \rinline{signif(-model_coefficients[["percent_health_spending_public"]] * 100, DISPLAY_FIGURES)}\%.
-As I discussed above, I
-expected this because public healthcare might be more cost effective due
-to more bargaining power and central administration.
 
 The effect of precipitation is unimodal. The marginal cost of life is
 the highest in countries with about
@@ -1181,18 +1146,14 @@ the closest country to this peak was
 \rinline{closest_to_vertex$country},
 which had 
 \rinline{signif(closest_to_vertex$annual_precipitation, DISPLAY_FIGURES)}
-mm of annual precipitation. As I discussed above, I expected
-this because there are different endemic diseases, and thus, effective
-treatments, in countries with different climates.
+mm of annual precipitation.
 Patterns of colonialism could be influencing this relationship. In general,
 Europeans settled in areas with climates like European climates.
-However, I am not sure how patterns of colonialism could directly affect
-healthcare costs.
 
 Each year, the marginal cost of life increases by about
 \rinline{signif(model_coefficients[["year"]] * 100, DISPLAY_FIGURES)}\%.
 This is
-surprising: I expected this cost to decrease over time as medical
+surprising: I expected the cost to achieve any given healthcare outcome would decrease over time as medical
 technology improves.
 
 In \autoref{tab:diagnostics}, I report diagnostics from the main regression.
