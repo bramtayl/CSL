@@ -1,5 +1,6 @@
 *.html
 CSL.docx
+code.R
 *.aux
 *.bbl
 *.bbl-SAVE-ERROR
@@ -17,3 +18,7 @@ CSL.docx
 *.out
 latex/cache/*
 figure/*
+data/ratios.csv
+data/methods.csv
+data/utilities.csv
+data/world_bank_data.csv

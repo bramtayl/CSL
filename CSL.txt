@@ -1,5 +1,55 @@
 %!LW recipe=Compile Rnw files
-\documentclass[]{article}
+\documentclass[]{article}\usepackage[]{graphicx}\usepackage[]{xcolor}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlsng}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hldef}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 
 \usepackage[english]{babel}
 \usepackage[breaklinks]{hyperref}
@@ -12,19 +62,14 @@
 \title{The marginal cost of life}
 \author{Brandon Taylor}
 
-%% begin.rcode setup, include=FALSE
-% library(knitr)
-%% end.rcode
 
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
 \maketitle
 
-%% begin.rcode, echo=FALSE, warning = FALSE, message=FALSE
-% library(ggplot2)
-% library(kableExtra, warn.conflicts = FALSE)
-% source("processing.R")
-%% end.rcode
+
 
 \section{Abstract}
 
@@ -46,19 +91,19 @@ time, the proportion of healthcare spending that is
 public, and population density. I found that the marginal cost of life
 is strongly increasing. With 95\% confidence, when life expectancy
 increases by one year, all else being equal, the marginal cost of life increases by between
-\rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, display_figures)}\% and 
-\rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, display_figures)}\%.
+16\% and 
+27\%.
 The marginal cost of life is far lower in some
 countries than others. For example, I predict that, in 
-\rinline{recent_year},
+2020,
 while the marginal cost of life was
-\rinline{best_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")} 
+84,400 
 international dollars per QALY in
-\rinline{best_prediction$country},
+Switzerland,
 it was
-\rinline{worst_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+120
 international dollars per QALY in
-\rinline{worst_prediction$country}.
+Nauru.
 
 \section{Introduction}
 
@@ -171,7 +216,7 @@ marginal benefits curve to shift: the ``income effect'' and the
 relevant. Generally, the ``income effect'' means that, if someone's
 income increased, the person would have a higher ability to pay, and
 thus, willingness to pay, for a good. Due to the income effect, if per-capita income
-in the country increased, but other factors, such as life expectancy,
+in the group increased, but other factors, such as life expectancy,
 remained the same, the government would have a
 higher ability to pay, and thus, willingness to pay, for healthcare
 treatments. So, if per capita income in a country increased, the
@@ -193,16 +238,12 @@ benefit and marginal cost curves intersect. The position of this
 intersection would correspond to a certain life expectancy and a certain
 price of life. I plotted an example for the UK in \autoref{fig:intersection_example}.
 
-%% begin.rcode intersection_example, echo=FALSE, dpi = 300, fig.width = 8, fig.height = 6, fig.cap = paste0("The intersection of a marginal cost of life curve and marginal benefit of life curve for the ", example_country, " in ", recent_year, ". The marginal cost curve is the curve I predicted. The marginal benefit curve in the figure is (arbitrarily) horizontal, with a price of life equal to the price of life I estimated.")
-% ggplot(intersection_data) +
-%   aes(
-%     x = `Life expectancy`,
-%     y = `Price of life, in thousand International $ / QALY`,
-%     color = Side
-%   ) +
-%   geom_line() +
-%   theme_bw()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
+\includegraphics[width=\maxwidth]{figure/intersection_example-1} \caption[The intersection of a marginal cost of life curve and marginal benefit of life curve for the United Kingdom in 2020]{The intersection of a marginal cost of life curve and marginal benefit of life curve for the United Kingdom in 2020. The marginal cost curve is the curve I predicted. The marginal benefit curve in the figure is (arbitrarily) horizontal, with a price of life equal to the price of life I estimated.}\label{fig:intersection_example}
+\end{figure}
+
+\end{knitrout}
 
 \section{Methods}
 
@@ -213,7 +254,7 @@ curve. I used GDP per capita as an instrumental variable because it would
 correlate with shifts of the marginal benefit curve but not the marginal
 cost curve. I discuss my reasoning for this further below.
 I controlled for variables that would correlate with
-shifts of the marginal cost curve.
+shifts of the marginal cost curve, but not the marginal benefit curve.
 
 I downloaded data from three sources: the Tufts Medical
 Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
@@ -223,7 +264,7 @@ cost-effectiveness of healthcare treatments from the CEA Registry. This
 registry is a ``comprehensive database of greater than 10,000 cost-utility analyses on
 a wide variety of diseases and treatments published from 1976 to the present.''
 \autocite{CEARegistry2020}. As of when I downloaded the data, the most recent study
-was published in \rinline{max(matched_ratios$year)}.
+was published in 2024.
 For each study,
 Tufts Medical reports the following variables:
 
@@ -266,11 +307,12 @@ willingness to pay for, healthcare treatments. Therefore, if a government
 privatized healthcare, this would result in more disparate health
 outcomes, because some citizens could afford expensive treatments, and
 others could not. Thus, countries with private healthcare should have
-more disparate cost-effectiveness ratios.
-Moreover, privitization could affect the overall cost of healthcare for reasons I discuss further below.
+more disparate marginal costs of life.
+Moreover, overall cost of healthcare could be different in countries with public
+health care than in countries with private health care, for reasons I discuss further below.
 This should not affect my results, for two reasons.
 First, by using the average of log
-cost-effectiveness ratios published in a country and year, I averaged out disparate cost-effectiveness ratios.
+cost-effectiveness ratios published in a country and year, I averaged out disparte marginal costs of life in a country.
 Second, I controlled for the percentage of health spending that was public.
 
 I only used some cost-effectiveness ratios. I excluded
@@ -332,17 +374,18 @@ First, I controlled for a time trend in the regression below. I did this
 because, over time, technological innovations could shift the marginal cost
 of life curve downwards, as more cost-effective treatments become available.
 Second, I controlled for population density. I
-did this because it could be less cost-effective to provide healthcare in more sparsely populated countries.
+did this because it could be more cost-effective to provide healthcare in more densely populated countries.
 For example, it might be less cost-effective to maintain a hospital a rural area, because
 fewer people could take advantage of the staff, facilities and equipment.
 Third, I controlled for the proportion of healthcare spending that is
 public in the regression below. I did this because, all else being
-equal, socializing healthcare could decrease the overall cost of health care, for two reasons.
-First, countries with public healthcare could use their bargaining power to lower the cost of prescription drugs.
-Second, countries with public health care could streamline medical administration, reducing costs.
+equal, the cost of healthcare could be different in countries with public
+health care from in countries with private health care.
+For example, countries with public healthcare could use their bargaining power to lower the cost of prescription drugs.
+Also, countries with public health care could streamline medical administration, reducing costs.
 
 To compare prices between different countries, I used PPPs for
-GDP, and to deflate prices, I used the US consumer price index (CPI) for medical goods.
+GDP, and to deflate prices, I used the US CPI for medical goods.
 I downloaded deflator data from the US Federal Reserve \autocite{FRED}.
 To check for robustness, I repeated my calculations several different sets of
 exchange rates and deflators, and report the results in \autoref{sec:price_adjustments_appendix}.
@@ -377,52 +420,67 @@ In \autoref{sec:specification_appendix}, I test for robustness to alternate mode
 I found that the marginal cost of life is strongly increasing. With 95\%
 confidence, when life expectancy increases by one year, the marginal
 cost of life increases by between 
-\rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, display_figures)}\% and 
-\rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, display_figures)}\%.
+16\% and 
+27\%.
 Life expectancy is
 by far the most statistically significant predictor, and the adjusted R²
 of the model is
-\rinline{signif(model_summary$adj.r.squared * 100, display_figures)}\%.
+58.3\%.
 I report more detailed results in  in \autoref{sec:full_regression_results}.
 
 In \autoref{tab:cost_of_life_table} and \autoref{fig:cost_of_life_map}, I show that the marginal cost of life is far lower in
 low-life-expectancy countries than in high-life-expectancy countries.
 For example, I predict that, in 
-\rinline{recent_year},
+2020,
 while the marginal cost of life was
-\rinline{best_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")} 
+84,400 
 international dollars per QALY in
-\rinline{best_prediction$country},
+Switzerland,
 it was
-\rinline{worst_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+120
 international dollars per QALY in
-\rinline{worst_prediction$country}.
+Nauru.
 
-%% begin.rcode cost_of_life_table, echo=FALSE
-% kable(
-%   rank_table,
-%   caption = paste0(
-%     "Top and bottom ",
-%     head_tail_size,
-%     " countries by marginal cost of life in ",
-%     recent_year,
-%     " international \\$"
-%   )
-% ) %>%
-% bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:cost_of_life_table}Top and bottom 3 countries by marginal cost of life in 2020 international \$}
+\centering
+\begin{tabular}[t]{r|l|l}
+\hline
+\textbf{Rank} & \textbf{Country} & \textbf{Marginal cost of life}\\
+\hline
+1 & Switzerland & \$84,400\\
+\hline
+2 & South Korea & \$36,500\\
+\hline
+3 & Singapore & \$32,300\\
+\hline
+184 & Central African Republic & \$208\\
+\hline
+185 & Lesotho & \$145\\
+\hline
+186 & Nauru & \$120\\
+\hline
+\end{tabular}
+\end{table}
 
-%% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life, in ", recent_year, ", in ", recent_year, " international \\$ / QALY, by country")
-% plot(map, border = NA, key.pos = 1, main = NULL, logz = TRUE)
-%% end.rcode
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
+\includegraphics[width=\maxwidth]{figure/cost_of_life_map-1} \caption[Predicted marginal cost of life, in 2020, in 2020 international \$ / QALY, by country]{Predicted marginal cost of life, in 2020, in 2020 international \$ / QALY, by country}\label{fig:cost_of_life_map}
+\end{figure}
+
+\end{knitrout}
 
 \section{Discussion}
-
 
 Due to the law of increasing marginal costs, the marginal cost of life
 should be lower in low-life-expectancy countries than in
 high-life-expectancy countries, all else being equal. To assess this, I
-estimated the marginal cost of life curve. I assume that a government would choose
+estimated the marginal cost of life curve. I use the following model of how a
+government would make healthcare decisions. A government would choose
 both life expectancy and the price of life in their country
 corresponding to the intersection of a marginal cost of life curve and a
 marginal benefit of life curve. To estimate the marginal cost of life
@@ -436,20 +494,20 @@ that could correlate with shifts in the marginal cost of life curve:
 time, the proportion of healthcare spending that is
 public, and population density. I found that the marginal cost of life
 is strongly increasing. With 95\% confidence, when life expectancy
-increases by one year, all else being equal, the marginal cost of life increases by between
-\rinline{signif(confidence_intervals["life_expectancy", "2.5 %"] * 100, display_figures)}\% and 
-\rinline{signif(confidence_intervals["life_expectancy", "97.5 %"] * 100, display_figures)}\%.
+increases by one year, the marginal cost of life increases by between
+16\% and 
+27\%.
 The marginal cost of life is far lower in some
 countries than others. For example, I predict that, in 
-\rinline{recent_year},
+2020,
 while the marginal cost of life was
-\rinline{best_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")} 
+84,400 
 international dollars per QALY in
-\rinline{best_prediction$country},
+Switzerland,
 it was
-\rinline{worst_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+120
 international dollars per QALY in
-\rinline{worst_prediction$country}.
+Nauru.
 
 I expect to have overestimated the marginal cost of life, for two
 reasons. First, citizens and governments might not
@@ -480,13 +538,35 @@ its World Bank code, and the proportion of data missing for
 country-year combinations present in the CEA registry. I could not find
 suitable alternative variables with more available data in the World Bank.
 
-%% begin.rcode WDI_variables_table, echo = FALSE
-% kable(
-%   variable_table,
-%   caption = "World Bank variables I downloaded, with the percent of data missing for country-year combinations present in the CEA registry"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:WDI_variables_table}World Bank variables I downloaded, with the percent of data missing for country-year combinations present in the CEA registry}
+\centering
+\begin{tabular}[t]{l|l|l}
+\hline
+\textbf{Variable} & \textbf{Code} & \textbf{\% missing}\\
+\hline
+PPP GDP & PA.NUS.PPP & 2.05\%\\
+\hline
+PPP health & 9080000:ACTUAL HEALTH & 82.4\%\\
+\hline
+PPP private consumption & PA.NUS.PRVT.PP & 3.3\%\\
+\hline
+life expectancy & SP.DYN.LE00.IN & 4.99\%\\
+\hline
+local GDP per capita & NY.GDP.PCAP.CN & 2.23\%\\
+\hline
+nominal exchange rate & PA.NUS.FCRF & 2.76\%\\
+\hline
+percent health spending public & SH.XPD.GHED.CH.ZS & 15.1\%\\
+\hline
+population density & EN.POP.DNST & 5.08\%\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
 
 \section{Stationarity}
 \label{sec:stationarity_tests}
@@ -499,53 +579,115 @@ missing data for the tests to work. I used a lag of one and
 did not allow different intercepts or time trends between countries
 (because the residuals should all center on 0).
 I report these results in \autoref{tab:stationarity_tests_table}.
-From the low p-value for all tests, I conclude that the panel residuals are non-stationary.
+From the low p-value for all three tests, I conclude that the panel residuals are non-stationary.
 
-%% begin.rcode stationarity_tests_table, echo = FALSE
-% kable(stationarity_table, caption = "Stationarity test results") %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:stationarity_tests_table}Stationarity test results}
+\centering
+\begin{tabular}[t]{l|l|l}
+\hline
+\textbf{Model} & \textbf{Method} & \textbf{p-value}\\
+\hline
+first differencing & Maddala-Wu Unit-Root Test & 2.56e-82\\
+\hline
+first differencing & Choi's Inverse Normal Unit-Root Test & 8.68e-72\\
+\hline
+first differencing & Choi's Logit Unit-Root Test & 1.12e-62\\
+\hline
+fixed effects & Maddala-Wu Unit-Root Test & 3.33e-23\\
+\hline
+fixed effects & Choi's Inverse Normal Unit-Root Test & 2.04e-17\\
+\hline
+fixed effects & Choi's Logit Unit-Root Test & 1.13e-21\\
+\hline
+pooling & Maddala-Wu Unit-Root Test & 1.12e-58\\
+\hline
+pooling & Choi's Inverse Normal Unit-Root Test & 5.87e-55\\
+\hline
+pooling & Choi's Logit Unit-Root Test & 2.66e-49\\
+\hline
+random effects & Maddala-Wu Unit-Root Test & 1.12e-58\\
+\hline
+random effects & Choi's Inverse Normal Unit-Root Test & 5.87e-55\\
+\hline
+random effects & Choi's Logit Unit-Root Test & 2.66e-49\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
 
 \section{Full regression results}
 \label{sec:full_regression_results}
 
 In \autoref{tab:coefficients}, I report the coefficients from the main analysis.
 
-%% begin.rcode coefficients, echo = FALSE
-% kable(
-%   coefficients_table,
-%   caption = "Coefficients from the main analysis",
-%   digits = 64
-% ) %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:coefficients}Coefficients from the main analysis}
+\centering
+\begin{tabular}[t]{l|r|l}
+\hline
+\textbf{Regressor} & \textbf{Estimate} & \textbf{p-value}\\
+\hline
+Intercept & 431.0000 & 1.06e-09\\
+\hline
+log population density & -0.0338 & 0.432\\
+\hline
+percent health spending public & -0.0384 & 2.75e-09\\
+\hline
+year & -0.2160 & 8.57e-10\\
+\hline
+life expectancy & 0.2150 & 5.86e-11\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
 
 I interpret the life expectancy coefficient above. I interpret other
-coefficients as follows. All else being equal:
+coefficients as follows:
 
 When population density increases by 1\%, the
 marginal cost of life decreases by about
-\rinline{signif(-model_coefficients[["log_population_density"]], display_figures)}\%.
+3.38\%.
+This seems surprisingly high.
 
 When the percent health spending that is public increases by 1\%, the
 marginal cost of life decreases by about
-\rinline{signif(-model_coefficients[["percent_health_spending_public"]] * 100, display_figures)}\%.
+3.84\%.
 This seems surprisingly high.
 
-Each year, the marginal cost of life decreases by about
-\rinline{-signif(model_coefficients[["year"]] * 100, display_figures)}\%.
-This seems surprisingly high.
+Each year, the marginal cost of life increases by about
+-21.6\%.
+This is
+surprising: I expected the cost to achieve a given healthcare outcome would decrease over time as medical
+technology improves.
 
 In \autoref{tab:diagnostics}, I report diagnostics from the main regression.
 
-%% begin.rcode diagnostics, echo = FALSE
-% kable(
-%   diagnostics_table,
-%   caption = "Diagnostics from the main regression",
-%   digits = 64
-% ) %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:diagnostics}Diagnostics from the main regression}
+\centering
+\begin{tabular}[t]{l|r}
+\hline
+\textbf{Diagnostic} & \textbf{p-value}\\
+\hline
+Wald test & 1.61e-14\\
+\hline
+Weak instruments & 2.17e-19\\
+\hline
+Wu-Hausman & 1.17e-04\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
 
 I interpret these diagnostics as follows. From the low p-value of the
 Wald test, I conclude that at least one predictor is statistically
@@ -561,19 +703,34 @@ expectancy) is truly endogenous.
 Here, I consider compare the results for alternative sets of cost-effectiveness ratios.
 I report the results in \autoref{tab:ratios_robustness_table}.
 
-%% begin.rcode ratios_robustness_table, echo = FALSE
-% kable(
-%   ratios_robustness_table,
-%   caption = "95\\% confidence intervals for the life expectancy coefficient with different cost-effectiveness ratios"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:ratios_robustness_table}95\% confidence intervals for the life expectancy coefficient with different cost-effectiveness ratios}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+\textbf{Ratios} & \textbf{2.5\%} & \textbf{97.5\%}\\
+\hline
+article ratios & 0.160 & 0.270\\
+\hline
+with DALY ratios & 0.292 & 0.398\\
+\hline
+with Tufts currency adjustments & 0.132 & 0.278\\
+\hline
+with reader adjustments & 0.138 & 0.268\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
 
 I report my main result using ``article ratios''.
 
 For each study, Tufts reports both the published cost-effectiveness ratio and an alternative cost-effectiveness ratio calculated by a reader.
 I choose to use the published cost-effectiveness ratios because these came from peer-reviewed papers.
 However, for the ``with reader adjustments'' result, I used the figures from the readers instead.
+Interestingly, I find a lower e
 
 Tufts reports whether cost-effectiveness ratios were in units of dollars per QALY gained or dollars per DALY avoided.
 A DALY is a disability-adjusted life-year, and represents a year of life with significant disability.
@@ -585,8 +742,8 @@ However, Tufts also reports their results from these calculations.
 So, for the ``with Tufts currency adjustments'' result, I used the Tufts calculations instead.
 Note that these figures are for ratios calculated by readers, as for the ``with reader adjustments'' results.
 
-Using both QALY ratios results in a significantly higher estimate.
-This suggests differences in the two methods of calculation.
+Using only the dollars per DALY gained results in a significantly higher estimate.
+This suggests differences in the two methods of calculations.
 Using the figures from the Tufts readers does not affect the results signficantly.
 Using the Tufts currency adjustments also does not affect the results signficantly.
 
@@ -610,34 +767,40 @@ Due to the log-log model, this allowed for the exchange rates to have non-linear
 
 For the ``without endogeneity'' specification, I used regular regression, and excluded the instrumental variable, GDP per capita.
 
-The pooled model and the non-linear currency adjustments model both result in higher estimates with wider confidence intervals.
-The wider confidence intervals are likely because most of the variation in the data is between, not within countries, and stndard errors are clustered by country.
-The model without endogeneity results in a slightly lower estimate.
-I expected this result to be lower due to failing to account for the endogeneity.
-Here is one possible reason that the result is still fairly high:
-the marginal benefit of life curve has a lower slope in absolute terms than the marginal cost of life curve,
-but the shifts in the marginal benefit of life curve are typically larger in magnitude than shifts in the marginal cost of life curve.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:specification_robustness_table}95\% confidence intervals for the life expectancy coefficient with different model specfications}
+\centering
+\begin{tabular}[t]{r|r|l}
+\hline
+\textbf{2.5\%} & \textbf{97.5\%} & \textbf{Specification}\\
+\hline
+0.160 & 0.270 & country averages\\
+\hline
+0.160 & 0.568 & pooled\\
+\hline
+0.137 & 0.500 & non-linear currency adjustments\\
+\hline
+0.117 & 0.206 & without endogeneity\\
+\hline
+\end{tabular}
+\end{table}
 
-%% begin.rcode specification_robustness_table, echo = FALSE
-% kable(
-%   specification_robustness_table,
-%   caption = "95\\% confidence intervals for the life expectancy coefficient with different model specfications"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\end{knitrout}
 
 \section{Price adjustments robustness tests}
 \label{sec:price_adjustments_appendix}
 
 To compare prices between different countries, I used PPPs for
-GDP, and to deflate prices, I used the US CPI for medical goods.
+GDP, and to deflate prices, I used the US GDP deflators.
 Ideally, I could adjust prices from different countries and years, such
 that, for the same price in all countries and years, one could buy the
 same ``basket'' of healthcare goods.
-The International Comparison Program (ICP) reports
-PPP exchange rates for healthcare goods.
-Unfortunately, it only reports these figures every five years, and only for OECD countries.
-To use these figures, I would have to discard a significant amount of data.
+For the exchange rates, the International Comparison Program (ICP) reports
+PPPs for healthcare.
+Unfortunately, it only provides this data for every five years, and only for OECD countries.
+To use this data, I would have to discard the cost effectiveness data from all other years.
 Thus, I considered three alternatives.
 First, I considered using nominal exchange rates. A nominal exchange rate is the amount of
 one currency one can exchange for a unit of another currency in an
@@ -650,8 +813,8 @@ prevent healthcare workers from migrating freely.
 Second, I considered using PPPs for private consumption.
 I chose not to use PPPs for private consumption because, for countries with public
 healthcare, healthcare is not part of private consumption.
-Instead, I chose the third option, PPPs for GDP.
-For deflators, I used the US CPI for medical goods.
+Instead, I chose the third options, PPPs for GDP.
+For price deflators, I used the Consumer Price Index (CPI) for medical goods.
 
 In  \autoref{tab:gdp_deflators_robustness_table}, I compare the results from using different sets of 
 deflators to adjust GDP.
@@ -667,37 +830,91 @@ exchange rates to adjust cost-effectiveness ratios.
 
 My results are robust to the choice of deflator and exchange rates, as all confidence intervals overlap considerably.
 
-%% begin.rcode gdp_deflators_robustness_table, echo = FALSE
-% kable(
-%   gdp_deflators_robustness_table,
-%   caption = "95\\% confidence intervals for the life expectancy coefficient with different GDP deflators"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:gdp_deflators_robustness_table}95\% confidence intervals for the life expectancy coefficient with different GDP deflators}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+\textbf{GDP deflators} & \textbf{2.5\%} & \textbf{97.5\%}\\
+\hline
+CPI & 0.16 & 0.271\\
+\hline
+CPI medical & 0.16 & 0.270\\
+\hline
+GDP deflator & 0.16 & 0.270\\
+\hline
+\end{tabular}
+\end{table}
 
-%% begin.rcode gdp_exchange_robustness_table, echo = FALSE
-% kable(
-%   gdp_exchange_robustness_table,
-%   caption = "95\\% confidence intervals for the life expectancy coefficient with different GDP exchange rates"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\end{knitrout}
 
-%% begin.rcode ratio_deflators_table, echo = FALSE
-% kable(
-%   ratio_exchange_table,
-%   caption = "95\\% confidence intervals for the life expectancy coefficient with different ratio deflators"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:gdp_exchange_robustness_table}95\% confidence intervals for the life expectancy coefficient with different GDP exchange rates}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+\textbf{GDP exchange rates} & \textbf{2.5\%} & \textbf{97.5\%}\\
+\hline
+PPP GDP & 0.160 & 0.270\\
+\hline
+PPP health & 0.124 & 0.291\\
+\hline
+PPP private consumption & 0.170 & 0.283\\
+\hline
+nominal exchange rate & 0.148 & 0.254\\
+\hline
+\end{tabular}
+\end{table}
 
-%% begin.rcode ratio_exchange_table, echo = FALSE
-% kable(
-%   ratio_exchange_table,
-%   caption = "95\\% confidence intervals for the life expectancy coefficient with different ratio exchange rates"
-% ) %>%
-%   bold_header()
-%% end.rcode
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:ratio_deflators_table}95\% confidence intervals for the life expectancy coefficient with different price deflators}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+\textbf{Ratio exchange rates} & \textbf{2.5\%} & \textbf{97.5\%}\\
+\hline
+PPP GDP & 0.1600 & 0.270\\
+\hline
+PPP health & 0.0826 & 0.306\\
+\hline
+PPP private consumption & 0.1580 & 0.270\\
+\hline
+nominal exchange rate & 0.1830 & 0.304\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
+\centering
+\caption{\label{tab:ratio_exchange_table}95\% confidence intervals for the life expectancy coefficient with different price exchange rates}
+\centering
+\begin{tabular}[t]{l|r|r}
+\hline
+\textbf{Ratio exchange rates} & \textbf{2.5\%} & \textbf{97.5\%}\\
+\hline
+PPP GDP & 0.1600 & 0.270\\
+\hline
+PPP health & 0.0826 & 0.306\\
+\hline
+PPP private consumption & 0.1580 & 0.270\\
+\hline
+nominal exchange rate & 0.1830 & 0.304\\
+\hline
+\end{tabular}
+\end{table}
+
+\end{knitrout}
 
 \section{Two-stage least squares equations}
 \label{sec:two_stage_least_squares_equations}
@@ -712,7 +929,7 @@ Here, I define variables as follows:
 \item $C$: a vector of control variables.
 \item $\alpha_0$: the intercept term for the marginal benefit equation.
 \item $\alpha_Q$: the coefficient for life expectancy in the marginal benefit equation.
-\item $\alpha_I$: the coefficient for log per capita income in the marginal benefit equation.
+\item $\alpha_I$: the coefficient for log per capita income in the in the marginal benefit equation.
 \item $\epsilon_{MB}$: the error term for the marginal benefit equation
 \item $\beta_0$: the intercept for the marginal cost equation
 \item $\beta_Q$: the coefficient for life expectancy in the marginal cost equation.
@@ -741,6 +958,7 @@ Now, solve for $Q$:
 \[ Q = - \frac{\alpha_0 - \beta_0}{\alpha_Q - \beta_Q} + \frac{\beta_C}{\alpha_Q - \beta_Q} \cdot C - \frac{\alpha_I}{\alpha_Q - \beta_Q} I - \frac{\epsilon_{MB} - \epsilon_{MC}}{\alpha_Q - \beta_Q} \]
 
 This is the equation I estimated in the first stage.
+I can use this least squares to estimate the parameters this equation because $\epsilon_Q$ is not correlated with $I$.
 
 Then, 
 
@@ -755,7 +973,14 @@ Now, substituting this into the marginal cost equation:
 \[ P = \beta_0 + \beta_Q Q + \beta_C \cdot C + \epsilon_{MC} \]
 \[ = \beta_0 + \beta_Q \left(E(Q) - \frac{\epsilon_{MB} - \epsilon_{MC}}{\alpha_Q - \beta_Q}\right) + \beta_C \cdot C + \epsilon_{MC} \]
 \[ = \beta_0 + \beta_Q E(Q) + \beta_C \cdot C + \beta_Q \epsilon_Q + \epsilon_{MC} - \beta_Q \frac{\epsilon_{MB} - \epsilon_{MC}}{\alpha_Q - \beta_Q} \]
-\[ = \beta_0 + \beta_Q E(Q) + \beta_C \cdot C + \beta_Q \epsilon_Q + \frac{\alpha_Q \epsilon_{MC} - \beta_Q \epsilon_{MB}}{\alpha_Q - \beta_Q} \]
+
+Now, let 
+
+\[ \epsilon_P = \beta_Q \epsilon_Q + \epsilon_{MC} \]
+
+Substituting this above:
+
+\[ P = \beta_0 + \beta_Q E(Q) + \beta_C \cdot C + \epsilon_P \]
 
 This is the equation I estimated in the second stage.
 
