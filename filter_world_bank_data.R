@@ -19,7 +19,8 @@ read_csv(paste0(output_folder, "/all_world_bank_data.csv")) %>%
   ) %>%
   select(-country_code_3) %>%
   semi_join(
-    read_csv(paste0(output_folder, "/by_country_and_year.csv")) %>%
+    read_csv(paste0(output_folder, "/default_data.csv")) %>%
+      filter(number_of_observations > 0) %>%
       select(year, country) %>%
       distinct(),
     by = c("country", "year")

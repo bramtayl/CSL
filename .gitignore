@@ -22,3 +22,7 @@ data/ratios.csv
 data/methods.csv
 data/utilities.csv
 data/world_bank_data.csv
+
+pooled
+fixed_effects
+random_effects

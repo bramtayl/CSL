@@ -1,6 +1,6 @@
 library(countrycode)
-library(dplyr)
 library(fredr)
+library(purrr)
 library(readr)
 library(rnaturalearth)
 library(sf)
@@ -9,6 +9,8 @@ library(tibble)
 library(tidyr)
 library(wbstats)
 library(WDI)
+
+library(dplyr)
 
 output_folder = "~/Desktop"
 
@@ -34,23 +36,16 @@ fredr("CPIMEDSL") %>%
 wb_cache()$countries %>%
   write_csv("data/world_bank_countries.csv", na = "")
 
-wb_data(c(
-    "AG.LND.PRCP.MM", # annual_precipitation
-    "SH.XPD.GHED.CH.ZS", # percent_health_spending_public
-    "NY.GDP.PCAP.CN", # local_historical_GDP_per_capita
-    "SP.DYN.LE00.IN", # life_expectancy
-    "SE.TER.ENRR.FE", # female_education
-    "SM.POP.NETM", # net migration
-    "PA.NUS.FCRF", # nominal_exchange_rate
-    "SP.POP.TOTL", # population
-    "EN.POP.DNST", # population_density
-    "PA.NUS.PPP", # PPP_exchange_rate_GDP
-    "PA.NUS.PRVT.PP", # PPP_exchange_rate_private_consumption,
-    "SE.XPD.TOTL.GB.ZS" # percent_spending_education
-    # wb_data is not working with series 9080000
-    # had to download health.csv manually
-  ),
-  country = "all") %>%
+read_csv("data/selected_world_bank_variables.csv") %>%
+  .$variable_code %>%
+  map(
+    function(variable_code) {
+      print(variable_code)
+      wb_data(variable_code, country = "all", return_wide = FALSE)
+    }
+  ) %>%
+  list_rbind %>%
+  dplyr::filter(!is.na(value) & !is.na(iso2c)) %>%
   write_csv("data/world_bank_data.csv", na = "")
 
 write_csv(codelist, "data/countrycode_data.csv", na = "")

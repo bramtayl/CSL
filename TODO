@@ -1,4 +1,7 @@
-check what proportion is explained by the type of treatment
-check for differing slopes over time
-
-
+Scatterplot of raw data
+Add prediction lines
+Add interpretation of the robustness tests
+Plot the confidence intervals as bars
+Write about contrast in units
+Literature review
+Heteroskedasticity robust standard errors
