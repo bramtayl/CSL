@@ -3,6 +3,7 @@ library(timechange) # needed for lubridate
 
 library(car)
 library(fixest)
+library(ggplot2)
 library(lubridate, warn.conflicts = FALSE)
 library(knitr)
 library(ivreg)
@@ -25,6 +26,76 @@ minimum_years <- 5
 output_folder <- "~/Desktop"
 recent_year <- 2015
 year_regex <- rex(n_times(digit, 4))
+
+format_regressors <- function(data) {
+  data |>
+    stri_replace_all_fixed("_", " ") |>
+    stri_replace_all_fixed("percent", "%")
+}
+
+all_variables_table <-
+  summarized_prices |>
+  filter_price_data() |>
+  select(country, year) |>
+  distinct() |>
+  left_join(world_bank_data, by = c("country", "year")) |>
+  pivot_longer(
+    c(-year, -country),
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+  group_by(variable) |>
+  summarize(
+    percent_missing = (sum(is.na(value)) / n() * 100),
+    percent_positive =
+    (sum(value > 0, na.rm = TRUE) / sum(!is.na(value)) * 100),
+    .groups = "drop"
+  ) |>
+  mutate(
+    formatted_percent_missing =
+    percent_missing |>
+    signif(display_figures) |>
+    paste0("%"),
+    formatted_percent_positive =
+    percent_positive |>
+    signif(display_figures) |>
+    paste0("%"),
+  ) |>
+  left_join(variable_data, by = "variable") |>
+  mutate(
+    variable_code = ifelse(
+      variable == "PPP_health",
+      "9080000:ACTUAL HEALTH",
+      variable_code
+    )
+  )
+
+variable_table <-
+  all_variables_table |>
+  anti_join(
+    tibble(variable = paste0("log_", logged_controls)),
+    by = c("variable")
+  ) |>
+  mutate(variable = format_regressors(variable)) |>
+  arrange(percent_missing) |>
+  select(
+    Variable = variable,
+    Code = variable_code,
+    `% missing` = formatted_percent_missing
+  )
+
+logged_variable_table <-
+  all_variables_table |>
+  semi_join(
+    tibble(variable = logged_controls),
+    by = c("variable")
+  ) |>
+  mutate(variable = format_regressors(variable)) |>
+  arrange(percent_positive) |>
+  select(
+    Variable = variable,
+    `% positive` = formatted_percent_positive
+  )
 
 # TODO: add to output
 controls_table <-
@@ -58,14 +129,14 @@ controls_table <-
     status = ifelse(
       estimable,
       ifelse(collinear,
-        "Multicollinear",
+        "multicollinear",
         ifelse(
           significant,
-          "Signficant",
-          "Insignificant"
+          "signficant",
+          "insignificant"
         )
       ),
-      "Unestimable"
+      "unestimable"
     )
   ) |>
   arrange(status, control) |>
@@ -97,7 +168,7 @@ make_panel <- function(data) {
 }
 
 get_plm_confidence_intervals <- function(model, alpha = 0.05) {
-  model_summary <- summary(model, vcov = vcovNW)
+  model_summary <- summary(model, vcov = vcovHC(model, cluster = "group"))
   critical_z <- qnorm(1 - alpha / 2)
   coefficients_table <- model_summary$coefficients
 
@@ -122,6 +193,7 @@ get_plm_interval <- function(model, parameter = "life_expectancy") {
     `2.5%` =
       confidence_intervals$lower_bound |>
       signif(display_figures),
+    `50%` = coef(model)[[parameter]] |> signif(display_figures),
     `97.5%` =
       confidence_intervals$upper_bound |>
       signif(display_figures)
@@ -158,11 +230,22 @@ get_unit_root_p_value <- function(test) {
   )$statistic$p.value
 }
 
+format_individually <- function(values) {
+  sapply(values, function(value) {
+    signif(value, display_figures) |> format()
+  })
+}
+
 stationarity_table <-
-  tibble(test = c("madwu", "Pm", "invnormal", "logit")) |>
+  tibble(
+    test = c("madwu", "Pm", "invnormal", "logit"),
+    Test = c("Maddala Wu", "Modified p", "Inverse normal", "Logit")
+  ) |>
   rowwise() |>
-  mutate(p_value = get_unit_root_p_value(test)) |>
-  ungroup()
+  mutate(`p-value` = get_unit_root_p_value(test)) |>
+  ungroup() |>
+  mutate(`p-value` = format_individually(`p-value`)) |>
+  select(Test, `p-value`)
 
 pooled_model <- feols(
   make_feols_formula(unique_controls),
@@ -298,14 +381,22 @@ life_expectancy_coefficients <-
   sd(indexed_country_years$life_expectancy) *
   sd(indexed_price_data$log_price_of_life)
 
-# TODO: add to output
-extras <-
-  c(
-    `RMSE` = regression_statistics$rmse,
-    `Adjusted R squared` = regression_statistics$ar2[["ar2"]],
-    `First stage F-test p-value` = regression_statistics$ivf1$p,
-    `Wu-Hausman p-value` = regression_statistics$wh$p
-  )
+regression_statistics_table <-
+  tibble(
+    Statistic = c(
+      "RMSE",
+      "Adjusted R squared",
+      "First stage F-test p-value",
+      "Wu-Hausman test p-value"
+    ),
+    Value = c(
+      regression_statistics$rmse,
+      regression_statistics$ar2[["ar2"]],
+      regression_statistics$ivf1$p,
+      regression_statistics$wh$p
+    )
+  ) |>
+  mutate(Value = format_individually(Value))
 
 coefficients_table <-
   pooled_model |>
@@ -318,18 +409,19 @@ coefficients_table <-
   ) |>
   rowwise() |>
   mutate(
-    regressor = ifelse(
+    Regressor = ifelse(
       regressor == "(Intercept)",
       "intercept",
       regressor
     ) |>
       stri_replace_all_fixed("year_factor", "year=") |>
       format_regressors(),
-    Estimate = signif(Estimate, display_figures),
+    `Standard error` = signif(`Standard error`, display_figures) |> format(),
+    Estimate = signif(Estimate, display_figures) |> format(),
     `p-value` = signif(`p-value`, display_figures) |> format()
   ) |>
   ungroup() |>
-  select(Regressor = regressor, Estimate, `Standard error`, `p-value`)
+  select(Regressor, Estimate, `Standard error`, `p-value`)
 
 simple_formula <- 
   c(unique_controls, "life_expectancy") |>
@@ -369,6 +461,7 @@ get_feols_interval <- function(model, parameter = "fit_life_expectancy") {
     `2.5%` =
       confidence_intervals$`2.5 %` |>
       signif(display_figures),
+    `50%` =  coef(model)[[parameter]] |> signif(display_figures),
     `97.5%` =
       confidence_intervals$`97.5 %` |>
       signif(display_figures)
@@ -383,25 +476,6 @@ unique_hausman_p_value <- phtest(
     model = "within"
   )
 )$p.value
-
-significant_hausman_value <-
-  phtest(
-    plm(
-      make_plm_formula(significant_controls),
-      data = make_panel(default_data),
-      model = "random"
-    ),
-    plm(
-      make_plm_formula(significant_controls),
-      data = make_panel(default_data),
-      model = "within"
-    )
-  )$p.value
-
-hausman_table <- tibble(
-  `Controls set` = c("Unique controls", "Significant controls"),
-  Statistic = c(unique_hausman_p_value, significant_hausman_value)
-)
 
 # TODO: add to output
 pbgtest(plm(
@@ -431,6 +505,8 @@ specification_robustness_table <-
       Specification = "hierarchical bayesian",
       `2.5%` = 
         quantile(life_expectancy_coefficients, 0.025),
+      `50%` = 
+        quantile(life_expectancy_coefficients, 0.5),
       `97.5%` =
         quantile(life_expectancy_coefficients, 0.975)
     )
@@ -449,17 +525,30 @@ get_data_coefficient <- function(data) {
     warning = function(w) {
       tibble(
         `2.5%` = NA,
+        `50%` = NA,
         `97.5%` = NA
       )
     },
     error = function(e) {
       tibble(
         `2.5%` = NA,
+        `50%` = NA,
         `97.5%` = NA
       )
     }
   )
 }
+
+plot_confidence_intervals <- function(table, variable) {
+  ggplot(table) +
+    aes(x = .data[[variable]], y = `50%`, ymin = `2.5%`, ymax = `97.5%`) +
+    ylab("Life expectancy coefficient") +
+    labs(title = "95% confidence intervals by specification") +
+    geom_pointrange() +
+    guides(x = guide_axis(angle = 90))
+}
+
+plot_confidence_intervals(specification_robustness_table, "Specification")
 
 robustness_table <-
   full_data |>

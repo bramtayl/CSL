@@ -1,5 +1,5 @@
 data {
-    int<lower=1> number_of_countries;
+  int<lower=1> number_of_countries;
   int<lower=1> number_of_years;
   int<lower=1> number_of_country_years;
   int<lower=1> number_of_outcome_observations;

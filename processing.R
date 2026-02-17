@@ -19,10 +19,10 @@ library(tidyr, warn.conflicts = TRUE)
 library(dplyr, warn.conflicts = FALSE)
 
 default_gdp_exchange_kind <- "PPP GDP"
-default_gdp_deflator_kind <- "CPI medical"
+default_gdp_deflator_kind <- "GDP deflator"
 default_price_exchange_kind <- "PPP GDP"
-default_price_deflator_kind <- "CPI medical"
-default_price_kind <- "article ratios"
+default_price_deflator_kind <- "GDP deflator"
+default_price_kind <- "article prices"
 
 deflator_year <- 2024
 display_figures <- 3
@@ -456,8 +456,8 @@ expanded_prices <-
   raw_prices |>
   select(
     ratio_id,
-    `article ratios` = local_price_of_life_qaly,
-    `with DALY ratios` = local_price_of_life_both,
+    `article prices` = local_price_of_life_qaly,
+    `with DALY prices` = local_price_of_life_both,
     `with reader adjustments` = local_price_of_life_qaly_final
   ) |>
   pivot_longer(
@@ -757,12 +757,6 @@ get_significant <- function(controls, cutoff) {
 
 significant_controls <- get_significant(unique_controls, 0.05)
 
-format_regressors <- function(data) {
-  data |>
-    stri_replace_all_fixed("_", " ") |>
-    stri_replace_all_fixed("percent", "%")
-}
-
 reindex_data <- function(data, variables) {
   data[c(
     "country",
@@ -868,38 +862,6 @@ raw_map_data <-
 if (nrow(raw_map_data |> filter(is.na(country))) > 0) {
   stop("Missing map countries")
 }
-
-variable_table <-
-  summarized_prices |>
-  filter_price_data() |>
-  select(country, year) |>
-  distinct() |>
-  left_join(world_bank_data, by = c("country", "year")) |>
-  pivot_longer(
-    c(-year, -country),
-    names_to = "variable",
-    values_to = "value"
-  ) |>
-  group_by(variable) |>
-  summarize(
-    percent_positive =
-      (sum(value > 0, na.rm = TRUE) / sum(!is.na(value)) * 100) |>
-      signif(display_figures) |>
-      paste0("%"),
-    percent_missing =
-    (sum(is.na(value)) / n() * 100) |>
-    signif(display_figures) |>
-    paste0("%"),
-    .groups = "drop"
-  ) |>
-  left_join(variable_data, by = "variable") |>
-  mutate(variable = stri_replace_all_fixed(variable, "_", " ")) |>
-  select(
-    Variable = variable,
-    Code = variable_code,
-    `% missing` = percent_missing,
-    `% positive` = percent_positive
-  )
 
 full_data <-
   inner_join(
