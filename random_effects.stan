@@ -1,6 +1,5 @@
 data {
   int<lower=1> number_of_countries;
-  int<lower=1> number_of_years;
   int<lower=1> number_of_country_years;
   int<lower=1> number_of_outcome_observations;
 
@@ -14,8 +13,6 @@ data {
 
   array[number_of_country_years] int<lower=1, upper=number_of_countries> 
     country_index_of_country_year;
-  array[number_of_country_years] int<lower=1, upper=number_of_years> 
-    year_index_of_country_year;
 
   vector[number_of_outcome_observations] outcomes;
   array[number_of_outcome_observations] 
@@ -32,10 +29,6 @@ parameters {
   matrix[number_of_controls, number_of_stages] control_coefficients;
   matrix[number_of_instruments, number_of_endogenous_variables] instrument_coefficients;
   vector[number_of_endogenous_variables] endogenous_variable_coefficients;
-
-  matrix[number_of_years, number_of_stages] z_year_effects;
-  row_vector<lower=0>[number_of_stages] year_effects_standard_deviations;
-  cholesky_factor_corr[number_of_stages] lower_year_effects_correlation_matrix;
 
   matrix[number_of_countries, number_of_stages] z_country_effects;
   row_vector<lower=0>[number_of_stages] country_effects_standard_deviations;
@@ -54,16 +47,6 @@ model {
   to_vector(control_coefficients) ~ std_normal();
   to_vector(instrument_coefficients) ~ std_normal();
   endogenous_variable_coefficients ~ std_normal();
-  
-  lower_year_effects_correlation_matrix ~ lkj_corr_cholesky(2);
-
-  for (year_index in 1:number_of_years) {
-    z_year_effects[year_index, :] ~
-      multi_normal_cholesky(
-        rep_vector(0, number_of_stages),
-        lower_year_effects_correlation_matrix
-      );
-  }
 
   lower_country_effects_correlation_matrix ~ lkj_corr_cholesky(2);
 
@@ -75,7 +58,6 @@ model {
       );
   }
 
-  year_effects_standard_deviations ~ exponential(1);
   country_effects_standard_deviations ~ exponential(1);
 
   matrix[number_of_country_years, number_of_stages] predictions =
@@ -89,10 +71,6 @@ model {
       endogenous_variable_coefficients
     ) +
     controls * control_coefficients +
-    diag_post_multiply(
-      z_year_effects,
-      year_effects_standard_deviations
-    )[year_index_of_country_year, :] +
     diag_post_multiply(
       z_country_effects,
       country_effects_standard_deviations

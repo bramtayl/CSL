@@ -8,15 +8,12 @@ stan_data <-
     number_of_outcome_observations = nrow(indexed_price_data),
     number_of_controls = ncol(controls_frame),
     number_of_countries = nrow(indexed_countries),
-    number_of_years = nrow(indexed_years),
 
     instruments = scale(indexed_country_years$log_gdp_per_capita),
     endogenous_variables = scale(indexed_country_years$life_expectancy),
     controls = scale(controls_frame),
     country_index_of_country_year =
     indexed_country_years$country_index,
-    year_index_of_country_year =
-    indexed_country_years$year_index,
 
     outcomes = as.vector(scale(indexed_price_data$log_price_of_life)),
     country_year_index_of_observation =

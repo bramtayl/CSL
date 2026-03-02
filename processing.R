@@ -704,13 +704,13 @@ remove_max_vif <- function(controls, cutoff) {
       ) |>
       filter(is_control | coefficient == "life_expectancy") |>
       arrange(desc(value))
-    
-    removed <- 
+
+    removed <-
       vifs_table |>
-        filter(is_control) %>%
-        .$coefficient %>%
-        .[1]
-    
+      filter(is_control) %>%
+      .$coefficient %>%
+      .[1]
+
     if (vifs_table$value[1] > cutoff) {
       controls <- setdiff(controls, removed)
     } else {
@@ -787,7 +787,17 @@ present_significant_data <- reindex_data(default_data, c(
   significant_controls
 ))
 
-controls_frame <- present_data[c(unique_controls, "year")]
+controls_frame <-
+  bind_cols(
+    present_data[unique_controls],
+    # expand year into dummies
+    present_data |>
+      select(year) |>
+      mutate(year = as.factor(year)) |>
+      model.matrix(~ year, data = _) |>
+      as_tibble() |>
+      select(-`(Intercept)`)
+  )
 
 indexed_price_data <-
   inner_join(
@@ -818,24 +828,12 @@ indexed_countries <-
   arrange(country) |>
   mutate(country_index = seq_len(n()))
 
-indexed_years <-
-  present_data |>
-  select(year) |>
-  distinct() |>
-  arrange(year) |>
-  mutate(year_index = seq_len(n()))
-
 indexed_country_years <-
   present_data |>
   left_join(
     indexed_countries |>
       select(country, country_index),
     by = "country"
-  ) |>
-  left_join(
-    indexed_years |>
-      select(year, year_index),
-    by = "year"
   )
 
 life_expectancies <-

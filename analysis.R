@@ -13,6 +13,7 @@ library(readr)
 library(rex)
 library(rnaturalearth)
 suppressPackageStartupMessages(library(sf))
+library(stargazer)
 library(stringi)
 library(tidyr, warn.conflicts = TRUE)
 
@@ -376,7 +377,7 @@ stan_draws = stan_fit$draws(
   format = "df"
 )
 
-life_expectancy_coefficients <-
+bayesian_coefficients <-
   stan_draws$`endogenous_variable_coefficients[1]`  /
   sd(indexed_country_years$life_expectancy) *
   sd(indexed_price_data$log_price_of_life)
@@ -416,12 +417,28 @@ coefficients_table <-
     ) |>
       stri_replace_all_fixed("year_factor", "year=") |>
       format_regressors(),
-    `Standard error` = signif(`Standard error`, display_figures) |> format(),
-    Estimate = signif(Estimate, display_figures) |> format(),
-    `p-value` = signif(`p-value`, display_figures) |> format()
+    Coefficient = paste0(
+      signif(Estimate, display_figures) |> format(),
+      ifelse(
+        `p-value` < 0.1,
+        ifelse(
+          `p-value` < 0.05,
+          ifelse(
+            `p-value` < 0.01,
+            "***",
+            "**"
+          ),
+          "*"
+        ),
+        ""
+      ),
+      " (",
+      signif(`Standard error`, display_figures) |> format(),
+      ")"
+    )
   ) |>
   ungroup() |>
-  select(Regressor, Estimate, `Standard error`, `p-value`)
+  select(Regressor, Coefficient)
 
 simple_formula <- 
   c(unique_controls, "life_expectancy") |>
@@ -504,11 +521,11 @@ specification_robustness_table <-
     tibble(
       Specification = "hierarchical bayesian",
       `2.5%` = 
-        quantile(life_expectancy_coefficients, 0.025),
+        quantile(bayesian_coefficients, 0.025),
       `50%` = 
-        quantile(life_expectancy_coefficients, 0.5),
+        quantile(bayesian_coefficients, 0.5),
       `97.5%` =
-        quantile(life_expectancy_coefficients, 0.975)
+        quantile(bayesian_coefficients, 0.975)
     )
   )
 

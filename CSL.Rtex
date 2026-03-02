@@ -149,8 +149,8 @@ In this case, however, I cannot imagine a substitute good for additional life.
 
 A rational government would choose a level of funding corresponding to where the marginal benefit and marginal cost curves intersect.
 This is for the following reason.
-If the government's marginal benefit of life was greater than the marginal cost of life, the government would pay for more treatments.
-If the government's marginal benefit of life was less than the marginal cost of life, the government would pay for less treatments.
+If the government's marginal benefit of life were greater than the marginal cost of life, the government would pay for more treatments.
+If the government's marginal benefit of life were less than the marginal cost of life, the government would pay for less treatments.
 At equilibrium, the government would then choose a level of funding corresponding to where the marginal benefit and marginal cost curves intersect.
 The position of this intersection would correspond to a certain life expectancy and a certain price of life.
 I plotted an example for the UK in \autoref{fig:intersection_example}.
@@ -349,7 +349,7 @@ I have summarized these caveats below, ordering them roughly from the most sever
   I could not precisely tailor the exchange rates I used to the equalize the real costs of any given treatment between countries.
   However, the results are still robust to sets of exchange rates for which there is sufficient data.
 \item
-  The average of published prices is only a rough estimate of the underlying marginal cost of life.
+  The average of published prices is only a rough estimate of the underlying price of life.
 \item
   There is a units mismatch between quantity, which is in units of years of life, and price, which is in units of currency per QALY, not per year of life.
   Still, provided one is careful to distingish QALYs from years of life, my results are interpretable as is.
@@ -407,7 +407,7 @@ In the \autoref{tab:control_variables_table}, I list variables I excluded for es
 
 Next, I removed several variables due to multicollinearity.
 To check for robustness, I report the results with all estimable control variables in \autoref{sec:specification_appendix}.
-With all these variables, the modeled life expectantancy coefficient was significant at the 10\%, but not 5\%, level.
+With all these variables, the modeled life expectantancy coefficient is significant at the 10\%, but not 5\%, level.
 However, many of these control variables are highly correlated with modeled life expectancy, leading to imprecise coefficient estimates.
 To address this problem, I iteratively excluded the control variable with the highest $GVIF^{\frac{1}{2 * df}}$ until the $GVIF^{\frac{1}{2 * df}}$ values for all control variables and modeled life expectancy were below $\sqrt{10}$.
 This a relatively conservative cut-off.
@@ -529,18 +529,17 @@ Some country-years had as many as \rinline{max(filter_price_data(summarized_pric
 For the main model, as I discussed above, I simply averaged the log price of life observations within a country-year.
 Alternately, to correctly take into account variation within a country-year, I considered a hierarchical Bayesian model.
 I specified this model as follows.
-For the Bayesian instrumental variable model, instead of using modeled life expectancy in the second stage, I used observed life expectancy, and modeled the residuals as correlated between the two stages.
-I included a time trend as an extra control.
-This was not necessary for the main regression due to the year fixed effects.
-For each stage, I estimated random effects by country and year, each with non-centered parameterization, and both potentially correlated between the two stages.
+I standardized all regressors.
+Instead of using modeled life expectancy in the second stage, I used observed life expectancy, and modeled the residuals as correlated between the two stages.
+For each stage, I estimated random effects by country with non-centered parameterization, allowing correlation in the random effects between the two stages.
 Finally, I modeled random variation around a true mean for log price of life observations.
 I used standard normal priors for coefficients, exponential (1) priors for standard deviations, and LKJ (2) priors for correlation matrices.
 As the estimate from the Bayesian model was comparable to the estimate from the pooled model, I decided to use the pooled model for the main result for simplicity.
 
 I also considered alternate set of control variables.
-For the "with multicollinear controls" model, I included the control variables that I excluded due to multicollinearity.
+For the ``with multicollinear controls'' model, I included the control variables that I excluded due to multicollinearity.
 This results in a wider confidence interval; see \autoref{fig:filtered_specification_robustness_figure}.
-For the "significant" controls, I only included statistically signficant controls.
+For the ``significant'' controls, I only included statistically signficant controls.
 This results in a narrower confidence interval; see \autoref{fig:filtered_specification_robustness_figure}.
 Neither results in a significantly different central estimate, suggesting that none of the control variables considered are confounding the effect of life expectancy.
 
