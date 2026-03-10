@@ -27,7 +27,7 @@ stan_fit <- stan_model$sample(
   seed = 123,
   chains = 4,
   parallel_chains = 4,
-  refresh = 1 # print update every 500 iters
+  refresh = 1
 )
 
 stan_fit$save_object(file = paste0(output_folder, "/stan_fit.RDS"))

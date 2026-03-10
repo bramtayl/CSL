@@ -173,6 +173,36 @@ country_data <-
     -world_bank_country_code_3
   )
 
+raw_hale_data <- read_csv(
+  "data/health_adjusted_life_expectancy.csv",
+  show_col_types = FALSE, 
+  na = ""
+) |>
+  select(
+    indicator = Indicator,
+    country_code_3 = SpatialDimValueCode,
+    sex = Dim1,
+    value = FactValueNumeric,
+    year = Period
+  ) |>
+  filter(
+    indicator == "Healthy life expectancy (HALE) at birth (years)" &
+      sex == "Both sexes"
+  ) |>
+  select(-indicator, -sex) |>
+  left_join(
+    country_data |>
+      select(country, country_code_3)
+  ) |>
+  mutate(variable = "life_expectancy")
+
+if (nrow(
+  raw_hale_data |>
+    filter(is.na(country))
+) > 0) {
+  stop("Missing HALE countries")
+}
+
 write_csv(country_data, paste0(output_folder, "/country_data.csv"))
 
 clean_health_ppps <- function(base_year, number_of_rows) {
@@ -209,7 +239,7 @@ clean_health_ppps <- function(base_year, number_of_rows) {
     ) |>
     left_join(
       base_year_data |>
-      select(country_code_3, icp_country),
+        select(country_code_3, icp_country),
       by = "country_code_3"
     )
 }
@@ -269,6 +299,10 @@ world_bank_data <-
       filter(!is.na(country)) |>
       rename(value = PPP_health) |>
       mutate(variable = "PPP_health"),
+  ) |>
+  bind_rows(
+    raw_hale_data |>
+      select(-country_code_3)
   ) |>
   pivot_wider(
     names_from = variable,

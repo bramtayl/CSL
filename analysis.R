@@ -2,6 +2,7 @@ library(carData) # needed for car
 library(timechange) # needed for lubridate
 
 library(car)
+library(forcats)
 library(fixest)
 library(ggplot2)
 library(lubridate, warn.conflicts = FALSE)
@@ -67,7 +68,11 @@ all_variables_table <-
     variable_code = ifelse(
       variable == "PPP_health",
       "9080000:ACTUAL HEALTH",
-      variable_code
+      ifelse(
+        variable == "life_expectancy",
+        "WHOSIS_000002",
+        variable
+      )
     )
   )
 
@@ -266,6 +271,9 @@ significant_ivreg_model <- ivreg(
 )
 
 confidence_intervals <- confint(pooled_model)
+
+lower_bound_percent <- signif((exp(confidence_intervals["fit_life_expectancy", "2.5 %"]) - 1) * 100, display_figures)
+upper_bound_percent <- signif((exp(confidence_intervals["fit_life_expectancy", "97.5 %"]) - 1) * 100, display_figures)
 
 extra_model <- feols(
   make_feols_formula(estimable_controls),
@@ -505,19 +513,8 @@ specification_robustness_table <-
   bind_rows(
     get_feols_interval(pooled_model) |>
       mutate(Specification = "pooled model"),
-    get_feols_interval(significant_model) |>
-      mutate(Specification = "significant model"),
     get_plm_interval(random_effects_model) |>
       mutate(Specification = "random effects model"),
-    get_feols_interval(fixed_effects_model) |>
-      mutate(Specification = "fixed effects"),
-    get_feols_interval(multicollinear_model) |>
-      mutate(Specification = "with multicollinear controls"),
-    get_feols_interval(
-      model_without_endogeneity,
-      parameter = "life_expectancy"
-    ) |>
-      mutate(Specification = "without endogeneity"),
     tibble(
       Specification = "hierarchical bayesian",
       `2.5%` = 
@@ -526,7 +523,18 @@ specification_robustness_table <-
         quantile(bayesian_coefficients, 0.5),
       `97.5%` =
         quantile(bayesian_coefficients, 0.975)
-    )
+    ),
+    get_feols_interval(fixed_effects_model) |>
+      mutate(Specification = "fixed effects"),
+    get_feols_interval(multicollinear_model) |>
+      mutate(Specification = "with multicollinear controls"),
+    get_feols_interval(significant_model) |>
+      mutate(Specification = "significant model"),
+    get_feols_interval(
+      model_without_endogeneity,
+      parameter = "life_expectancy"
+    ) |>
+      mutate(Specification = "without endogeneity")
   )
 
 get_data_coefficient <- function(data) {
@@ -557,8 +565,14 @@ get_data_coefficient <- function(data) {
 }
 
 plot_confidence_intervals <- function(table, variable) {
+  table[[variable]] <- fct_inorder(table[[variable]])
   ggplot(table) +
-    aes(x = .data[[variable]], y = `50%`, ymin = `2.5%`, ymax = `97.5%`) +
+    aes(
+      x = .data[[variable]],
+      y = `50%`,
+      ymin = `2.5%`,
+      ymax = `97.5%`
+    ) +
     ylab("Life expectancy coefficient") +
     labs(title = "95% confidence intervals by specification") +
     geom_pointrange() +
