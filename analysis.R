@@ -71,7 +71,7 @@ all_variables_table <-
       ifelse(
         variable == "life_expectancy",
         "WHOSIS_000002",
-        variable
+        variable_code
       )
     )
   )
@@ -377,7 +377,6 @@ rank_table <-
   )
 
 pooled_summary <- summary(pooled_model)
-regression_statistics <- fitstat(pooled_model, c("rmse", "ar2", "ivf1", "wh"))
 
 stan_fit <- readRDS(paste0(output_folder, "/stan_fit.RDS"))
 
@@ -390,7 +389,9 @@ bayesian_coefficients <-
   sd(indexed_country_years$life_expectancy) *
   sd(indexed_price_data$log_price_of_life)
 
-regression_statistics_table <-
+get_statistics <- function(model) {
+  regression_statistics <- fitstat(pooled_model, c("rmse", "ar2", "ivf1", "wh"))
+
   tibble(
     Statistic = c(
       "RMSE",
@@ -405,13 +406,47 @@ regression_statistics_table <-
       regression_statistics$wh$p
     )
   ) |>
-  mutate(Value = format_individually(Value))
+    mutate(Value = format_individually(Value))
+}
 
-coefficients_table <-
-  pooled_model |>
+regression_statistics_table <-
+  bind_rows(
+    get_statistics(pooled_model) |>
+      mutate(specification = "Base"),
+    get_statistics(multicollinear_model) |>
+      mutate(specification = "Multicollinear"),
+    get_statistics(significant_model) |>
+      mutate(specification = "Significant")
+  ) |> 
+  pivot_wider(
+    names_from = specification,
+    values_from = Value
+  )
+
+get_coefficient_table = function(model) {
+  model |>
   summary() %>%
   .$coeftable |>
-  as_tibble(rownames = "regressor") |>
+  as_tibble(rownames = "regressor")
+}
+
+multicollinear_model <- feols(
+  make_feols_formula(estimable_controls),
+  data = present_data,
+  vcov = ~ country
+)
+
+# multicollinear_model
+# significant_model
+coefficients_table <-
+  bind_rows(
+    get_coefficient_table(pooled_model) |>
+      mutate(specification = "Base"),
+    get_coefficient_table(multicollinear_model) |>
+      mutate(specification = "Multicollinear"),
+    get_coefficient_table(significant_model) |>
+      mutate(specification = "Significant")
+  ) |>
   rename(
     `Standard error` = `Std. Error`,
     `p-value` = `Pr(>|t|)`
@@ -424,7 +459,8 @@ coefficients_table <-
       regressor
     ) |>
       stri_replace_all_fixed("year_factor", "year=") |>
-      format_regressors(),
+      format_regressors() |>
+      stri_replace_all_fixed("%", "\\%"),
     Coefficient = paste0(
       signif(Estimate, display_figures) |> format(),
       ifelse(
@@ -440,15 +476,20 @@ coefficients_table <-
         ),
         ""
       ),
-      " (",
+      "\n(",
       signif(`Standard error`, display_figures) |> format(),
       ")"
     )
   ) |>
   ungroup() |>
-  select(Regressor, Coefficient)
+  select(specification, Regressor, Coefficient) |>
+  pivot_wider(
+    names_from = specification,
+    values_from = Coefficient,
+    values_fill = ""
+  )
 
-simple_formula <- 
+simple_formula <-
   c(unique_controls, "life_expectancy") |>
   paste0(collapse = " + ") %>%
   paste0(
@@ -466,12 +507,6 @@ model_without_endogeneity <- feols(
 
 fixed_effects_model <- feols(
   make_fixed_effects_formula(unique_controls),
-  data = present_data,
-  vcov = ~ country
-)
-
-multicollinear_model <- feols(
-  make_feols_formula(estimable_controls),
   data = present_data,
   vcov = ~ country
 )
@@ -578,8 +613,6 @@ plot_confidence_intervals <- function(table, variable) {
     geom_pointrange() +
     guides(x = guide_axis(angle = 90))
 }
-
-plot_confidence_intervals(specification_robustness_table, "Specification")
 
 robustness_table <-
   full_data |>

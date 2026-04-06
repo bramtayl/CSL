@@ -57,6 +57,7 @@
 \usepackage{csquotes}
 \usepackage{bookmark}
 \usepackage[style=apa]{biblatex}
+\usepackage{makecell}
 \addbibresource{cost_of_life.bib}
 
 \title{The marginal cost of life}
@@ -77,12 +78,12 @@
 
 Due to the law of increasing marginal costs, the marginal cost of life should be lower in low-life-expectancy countries than in high-life-expectancy countries, all else being equal.
 To assess this, I estimated the marginal cost of life curve.
-I assume that a government would choose both life expectancy and the price of life in their country corresponding to the intersection of a marginal cost of life curve and a marginal benefit of life curve.
+I assume that a government would choose both life expectancy and the price of life in its country corresponding to the intersection of a marginal cost of life curve and a marginal benefit of life curve.
 To estimate the marginal cost of life curve, I used two-stage least squares.
 I downloaded data from three sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
 I used Gross Domestic Product (GDP) per capita as an instrument because it should correlate with shifts in the marginal benefit of life curve but not the marginal cost of life curve.
-I also controlled for several variables that could correlate with shifts in the marginal cost of life curve.
-I find that the marginal cost of life is strongly increasing.
+Also, I also controlled for several variables that could correlate with shifts in the marginal cost of life curve.
+The marginal cost of life is strongly increasing.
 With 95\% confidence, when life expectancy increases by one year, all else being equal, the marginal cost of life increases by between
 9.51\% and 
 37.1\%.
@@ -103,37 +104,61 @@ Lesotho.
 It is hard to spend time on the internet and not see an ad along the following lines:
 ``for just [a small amount of money], you can save a life in [a developing country]''.
 Why is it so cost-effective to save lives in developing countries?
-The underlying answer to this question, I believe, depends on intersecting marginal cost of life and marginal benefit of life curves.
+The answer, I believe, is due to intersecting marginal-cost-of-life and marginal-benefit-of-life curves.
 Individuals and governments, implicitly or explicitly, use these curves to make decisions about their health.
 As Schelling suggested, ``we nearly all want our lives extended and are probably willing to pay for it'' \autocite{Schelling_1968}.
 These curves determine not only individual differences in health outcomes, but global differences in health outcomes.
-So it is critically important to understand these curves empirically.
 
-Because this model is a helpful framing device, I will focus on explaining the model before I review the literature.
-This is largely the same model used by Johannesson \autocite{Johannesson_1995}
+Here, I estimate the marginal-cost-of-life (MCL) curve, which is the relationship between life expectancy and the cost to extend life expectancy.
+Here are four possible uses for my results.
+First, a government could use the MCL curve to estimate how much it would cost to achieve a certain increase or decrease in life expectancy.
+Second, a government could use the MCL curve to inform its cost-effectiveness threshold.
+A cost-effectiveness threshold is the cut-off that a government uses to decide which treatments to pay for.
+In fact, some researchers are already using price of life data to inform cost-effectiveness thresholds \autocite{Claxton_2015}.
+Third, donors could use the MCL curve to inform decisions about foreign aid.
+Individuals/governments could use the MCL curve to predict how much it would cost to extend life expectancy of other individuals/citizens of other countries, respectively.
+Finally, international figures for the price of life reveal both self-regarding and other-regarding values.
+Individuals make a trade-off between spending money to extend their own life, spending money to extend the lives of others, and spending money in other ways.
+Likewise, governments make a trade-off between spending money to extend the lives of their own citizens, spending money to extend the lives of citizens of other countries, and spending money in other ways.
+Thus, through revealed preferences, international figures for the price of life reveal both self-regarding and other-regarding values.
 
-The framing here might seem callous to some readers.
-After all, I am reducing life-and-death decisions to a simple model.
-However, I think it is important to be realistic about the causes of differences in health outcomes.
-I hope it is nevertheless clear that I regard life with reverence.
+This last point about revealed preferences raises the question: to what extent do rich individuals/governments have a duty to pay for treatments for other individuals/citizens of other countries, respectively?
+This is an ethical question that is outside the scope of this paper.
+On one hand, it is upsetting (to me) that rich individuals/governments spend so much money on cost-ineffective treatments for themselves/their own citizens, when they could spend the same money on much more cost-effective treatments for others individuals/citizens of other countries, respectively.
+Indeed, effective altruists argue that one should do the good that one can \autocite{MacAskill_2015}.
+On the other hand, given the economic inequality in our world, it is not surprising that there is inequality in the quantity of life, which is a good just like any other.
+So why is inequality in the quantity of life so much more upsetting (to me) than inequality in the distribution of any other good?
+Perhaps this is because one's quantity of life is perhaps the most important good, in that living is a requirement for the enjoyment of any other good.
+In other words, one's quantity of life is the most fundamental capability, to use the terminology of Amartya Sen \autocite{Sen_2008}.
+
+My results contribute to the literature because, to my knowledge, no researcher has estimated the MCL curve.
+Instead, researchers have focused on either predicting the price of life, or estimating the relationship between life expectancy and individual categories of treatments.
+Several authors have estimated the price of life in individual countries \autocites{Claxton_2015,Edney_2022}, and some have compared the price of life across different countries \autocites{Ochalek_2018,Woods_2016}.
+However, these authors do not directly estimate the marginal-cost relationship between the price of life and life expectancy.
+Other authors have estimated the relationship between life expectancy and individual categories of treatments, e.g. healthcare spending, water quality/sanitation, nutrition, etc. \autocite{Alsan_2019,Fogel_2004,Gallet_2017}.
+In contrast, my results are more general, because I use cost-effectiveness ratios for all categories of treatments.
+
+Because this model is a helpful framing device, I will focus on explaining the model before I review the literature in depth.
+This is largely the same model used by Johannesson \autocite{Johannesson_1995}.
 
 Here, I estimate the marginal cost of life curve, which, roughly, is the relationship between life expectancy and the cost to extend life expectancy.
 To be more specific, I define terms formally below. 
 
-\textbf{Life expectancy}: how many years which one predicts a baby born in a country will live for, on average.
+\textbf{Quality-adjusted life year (QALY)}: a health improvement that one values as much as an extra year of life at full health.
+This measure is necessarily subjective.
+
+\textbf{Health-adjusted life expectancy}: traditional life expectancy is how many years which one predicts a baby born in a country will live for, on average.
+In this paper, I use health-adjusted life expectancy, which is life expectancy measured in QALYs rather than years.
 
 \textbf{Treatment}: any good a citizen or government could purchase to increase a citizen's life expectancy.
 This is a broad definition that includes not only healthcare treatments, but also nutrition, water quality and sanitation, and much more. 
-
-\textbf{Quality-adjusted life year (QALY)}: a health improvement that one values as much as an extra year of life at full health.
-This measure is necessarily subjective.
 
 \textbf{Cost-effectiveness ratio} or the \textbf{Price of life}: how much a treatment costs in units of currency per QALY.
 For example, buying rehydration fluid for a small child with life-threatening diarrhea would have a low cost-effectiveness ratio: rehydration fluid has a low cost, and the child could live for many more years.
 On the other hand, paying for radiation therapy for an elderly person with cancer would have a high cost-effectiveness ratio: radiation therapy has a high cost, and even if the treatment were successful, the elderly person would probably not live much longer.
 I describe a cost-effectiveness ratio as a ``price of life'' because a price is the cost per unit of a good, and for a cost-effectiveness ratio, that good is a QALY.
 Note that, perhaps counter-intuitively, a treatment with a comparatively high cost-effectiveness would have a comparatively low cost-effectiveness ratio.
-This is one reason that, unlike in the literature, I use the term "price of life" instead of "cost-effectiveness ratio".
+This is one reason that, unlike in the literature, I use the term ``price of life'' instead of ``cost-effectiveness ratio''.
 
 \textbf{Cost-effectiveness threshold} or the \textbf{Marginal benefit of life}: in a country, the cost effectiveness ratio of the treatment with the maximum cost-effectiveness ratio among the treatments that a typical citizen or the government is willing to pay for.
 For example, the cost-effectiveness threshold of England and Wales' National Health Service is currently between £20,000 and £30,000 per QALY.
@@ -174,7 +199,7 @@ Treatments fall into categories such as healthcare spending, nutrition, and wate
 So, if one held fixed the level of treatments, one would not observe any relationship between life expectancy and the price of life, at least on the marginal-cost side.
 
 \textbf{Marginal benefit of life curve}: the relationship between life expectancy and the marginal benefit of life.
-By the law of decreasing marginal benefits, the marginal benefit of life curve should be slightly decreasing.
+By the law of decreasing marginal benefits, the marginal benefit of life curve is probably slightly decreasing.
 This is for the following reason.
 Consider how a government would change their cost-effectiveness threshold if life expectancy exogenously increased.
 Because this increase is exogenous, other factors, such as the government's ability to pay for treatments, would stay the same.
@@ -191,15 +216,18 @@ So, if per capita income in a country increased, the marginal benefit of life cu
 The ``substitution effect'' means that, if the price of a substitute good decreased, someone might choose to purchase a substitute good instead, so their willingness to pay for the original good would decrease.
 In this case, substitute goods would include goods related to the enjoyment, but not duration, of life.
 
+Thus, there should be a strong relationship between cost-effectiveness thresholds and GDP per capita.
+In fact, the WHO recommends setting cost-effectiveness thresholds to some multiple of per-capita income \autocite{Hutubessy_2003}.
+Moreover, the cost-effectiveness thresholds of most countries aligns with this advice \autocite{Iino_2022}.
+
 Note that, in using the term marginal benefit of life, I am making a descriptive, not a prescriptive, claim.
 I am only describing how individuals value their own life, and how impartial governments value the lives of their own citizens.
 In fact, I do not believe that the social value of life is higher for someone who has a higher ability to pay for life.
-In the same way, I do not believe that the social value of the consumption of any good is higher for someone who has a higher ability to pay for it.
 
 A rational government would choose a level of funding corresponding to where the marginal benefit and marginal cost curves intersect.
 This is for the following reason.
 If the government's marginal benefit of life were greater than the marginal cost of life, the government would pay for more treatments.
-If the government's marginal benefit of life were less than the marginal cost of life, the government would pay for less treatments.
+If the government's marginal benefit of life were less than the marginal cost of life, the government would pay for fewer treatments.
 At equilibrium, the government would then choose a level of funding corresponding to where the marginal benefit and marginal cost curves intersect.
 The position of this intersection would correspond to a certain life expectancy and a certain price of life.
 I plotted an example for the UK in \autoref{fig:intersection_example}.
@@ -216,7 +244,7 @@ Not only impartial governments can pay for treatments.
 Citizens pay for some of their own treatments, and citizens vary in their ability to pay for treatments.
 Therefore, within a country and year, some citizens should have a comparatively high life expectancy and price of life, while other citizens should have a comparatively low life expectancy and price of life.
 However, a typical citizen will have roughly average income, and thus, roughly average life expectancy and a roughly average price of life.
-Thus, by considering averages within a country-year, I should be able to ignore individual-level variation.
+Thus, by considering averages within a country-year, I can ignore individual-level variation.
 
 \section{Literature}
 
@@ -230,50 +258,48 @@ On the supply side, many categories of treatments increase life expectancy:
 
 \begin{itemize}
 \item
-  Healthcare spending
+  Healthcare spending \autocite{Gallet_2017}
 \item
-  Nutrition
+  Nutrition \autocite{Fogel_2004}
 \item  
-  Water sanitation/quality
+  Water sanitation/quality \autocite{Alsan_2019}
 \item
-  Reductions in air pollution
-\item 
-  Education
+  Reductions in air pollution \autocite{Caiazzo_2013}
 \end{itemize}
 
-On the demand side, the Preston curve is the relationship between GDP per capita and life expectancy.
+On the demand side, the Preston curve is the relationship between GDP per capita and life expectancy \autocite{Preston_1975}.
 Preston found that the relationship was non-linear, with a lower slope for high-income countries.
 Also, Preston found that the curve has shifted over time, as life expectancy increases at all income levels.
-While the demand for health is higher at higher incomes, it is also possible that better wealth leads to increases in GDP.
+The causality of this relationship is debated.
+While the demand for health is higher at higher incomes, it is also possible that better health causes increases in GDP \autocite{Acemoglu_2007}.
 
 Governments value their citizen's lives in at least three conflicting ways.
 In addition to cost-effectiveness thresholds, which I discuss above, governments also use a value of a statistical life (VSL) and individual foregone earnings.
 If a government used a cost-effectiveness threshold, it would value QALYs of all citizens' lives equally.
 Cost-effectiveness thresholds are commonly used by health economists.
-Compare this to a VSL, which is how much the government values the remainder of a citizen's life.
+Compare this to a VSL, which is how much the government values the remainder of a citizen's life \autocite{Viscusi_2003}.
 VSLs are commonly used by environmental economists.
 If a government used a value of a statistical life, it would value the remainder of all citizens' lives equally.
 So, unlike if it used a value of a statistical life, a government that used a cost-effectiveness threshold would prioritize saving the young, who, on average, have many more years to live, over saving the old, who do not.
-Individual foregone earnings are commonly used in law.
+Individual foregone earnings are commonly used in law \autocite{Feinberg_2005}.
 So, unlike if it used a value of a statistical life, a government that used individual foregone earnings would prioritize saving those with high incomes over saving those with low incomes.
 
 There are several proposed methods for governments to choose cost-effectiveness thresholds.
-The first is to set cost-effectiveness thresholds to the average citizen's willingness-to-pay for a QALY.
-The second is to set cost-effectiveness thresholds to some multiple of per-capita income, with the expectation of a positive relationship between per-capita income and willingness-to-pay for a QALY.
-A third is to set cost-effectiveness to balance the growth rates in life-expectancy and health expenditure.
-The third is to set cost-effectiveness thresholds to the equilibrium price of life.
+The first is to set cost-effectiveness thresholds to the average citizen's willingness-to-pay for a QALY \autocite{Iino_2022}.
+The second is to set cost-effectiveness thresholds to some multiple of per-capita income, with the expectation of a positive relationship between per-capita income and the average willingness-to-pay for a QALY \autocite{Hutubessy_2003}.
+The third is to set cost-effectiveness thresholds to balance the growth rates of life expectancy and health expenditure \autocite{Pichon_Riviere_2023}.
+The fourth is to set cost-effectiveness thresholds to the equilibrium price of life \autocite{Claxton_2015}.
 
-This third method, setting cost-effectiveness thresholds to the equilibrium price of life, is closely related to the results here. 
-The method makes sense only if the government wishes to maintain, rather than increase or decrease, its current life-expectancy.
-It has been pioneered by Claxton, who estimated the equilibrium price of life in the UK.
-It has been replicated in individual countries.
-More interestingly, Woods et al. and Ochalek et al. have extended the analysis to international comparisons.
+This last method, setting cost-effectiveness thresholds to the equilibrium price of life, is closely related to the results here. 
+The method makes sense only if the government wishes to maintain, rather than increase or decrease, its current life expectancy.
+It has been pioneered by Claxton, who estimated the price of life in the UK \autocite{Claxton_2015}.
+Claxton's methodology has been replicated in few other countries \autocite{Edney_2022}.
+More interestingly, Woods et al. \autocite{Woods_2016} and Ochalek et al. \autocite{Ochalek_2018} have extended the analysis internationally.
 So, it is worth comparing their agenda to mine.
-There are several key differences.
-First, since I directly take the equilibrium price based on published cost-effectiveness ratios, I do not need to indirectly estimate it using health expenditure.
-Given than, as discussed above, many categories of treatments outside traditional healthcare influence life-expectancy, focusing solely on health expenditure seems limiting.
-Second, the goal of this approach is not to estimate an empirical marginal cost of life curve.
-Instead, the goal is to make a normative claim about how governments should set cost-effectiveness thresholds.
+There are three key differences.
+First, since I  take the equilibrium price of life directly from published cost-effectiveness ratios, I do not need to indirectly estimate it using health expenditure.
+Second, I do not limit my analysis only to healthcare treatments, as many treatments fall outside the category of traditional healthcare.
+Third, my goal is to estimate an empirical marginal cost of life curve, while the goal of Claxton et al. is to make a normative claim about how governments should set cost-effectiveness thresholds.
 
 % TODO: talk about the change to health-adjusted life expectancy
 % TODO: add citation for main model
@@ -286,7 +312,9 @@ Therefore, I used two-stage least squares to estimate the marginal cost of life 
 I used GDP per capita as an instrumental variable because it should correlate with shifts of the marginal benefit curve but not the marginal cost curve.
 I discuss my reasoning for below.
 
-I downloaded data from three sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
+I downloaded data from four sources: the World Health Organization, the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
+
+I downloaded data on health-adjusted life expectancy from the World Health Organization \autocite{WHO}.
 
 To obtain price of life data, I downloaded data about the cost-effectiveness of healthcare treatments from the CEA Registry.
 This registry is a ``comprehensive database of greater than 10,000 cost-utility analyses on a wide variety of diseases and treatments published from 1976 to the present'' \autocite{CEA_registry}.
@@ -328,13 +356,13 @@ To obtain the main input variable, life expectancy, the instrumental variable, G
 
 I report further details about these variables in \autoref{sec:WDI_variables}.
 
-I used log GDP per capita as an instrumental variable because an exogenous change in GDP per capita should cause the marginal benefit of life curve, but not the marginal cost of life curve, to shift.
-An exogenous increase in GDP per capita should cause the marginal benefit curve to shift upwards, because, as I discussed above, countries with a higher GDP per capita have a higher ability to pay, and thus, willingness to pay, for life.
-All else being equal, an exogenous change in GDP per capita should not cause the marginal cost of life curve to shift, because a change in GDP per capita should not change the cost of any given treatment.
+I used log GDP per capita as an instrumental variable because an exogenous change in GDP per capita would cause the marginal benefit of life curve, but not the marginal cost of life curve, to shift.
+An exogenous increase in GDP per capita would cause the marginal benefit curve to shift upwards, because, as I discussed above, countries with a higher GDP per capita have a higher ability to pay, and thus, willingness to pay, for life.
+All else being equal, an exogenous change in GDP per capita would not cause the marginal cost of life curve to shift, because a change in GDP per capita would not change the cost of any given treatment.
 Here, I am referring to the real cost of treatments in terms of inputs (like hours of skilled labor and equipment), not the currency cost, which I address below.
 The only possible exception I can imagine is that countries with higher GDP per capita might have a more educated populace, who might be able to cost-effectively manage some aspects of their health without professionals.
 However, I considered controlling for levels of education, and many other variables possibly related to the marginal cost of life.
-Moreover, any relationship that exists between GDP per capita and the marginal cost of life should be negligible compared to the very strong relationship between GDP per capita and the marginal benefit of life.
+Moreover, any relationship that exists between GDP per capita and the marginal cost of life would be negligible compared to the very strong relationship between GDP per capita and the marginal benefit of life.
 
 I controlled for several variables that could be correlated with shifts of the marginal cost of life curve.
 I discuss this further in \autoref{sec:control_variables}.
@@ -418,12 +446,12 @@ These results apply equally to the random effects model and the pooled model, be
 
 Due to the law of increasing marginal costs, the marginal cost of life should be lower in low-life-expectancy countries than in high-life-expectancy countries, all else being equal.
 To assess this, I estimated the marginal cost of life curve.
-I assume that a government would choose both life expectancy and the price of life in their country corresponding to the intersection of a marginal cost of life curve and a marginal benefit of life curve.
+I assume that a government would choose both life expectancy and the price of life in its country corresponding to the intersection of a marginal cost of life curve and a marginal benefit of life curve.
 To estimate the marginal cost of life curve, I used two-stage least squares.
 I downloaded data from three sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
 I used Gross Domestic Product (GDP) per capita as an instrument because it should correlate with shifts in the marginal benefit of life curve but not the marginal cost of life curve.
-I also controlled for several variables that could correlate with shifts in the marginal cost of life curve.
-I found that the marginal cost of life is strongly increasing.
+Also, I also controlled for several variables that could correlate with shifts in the marginal cost of life curve.
+The marginal cost of life is strongly increasing.
 With 95\% confidence, when life expectancy increases by one year, all else being equal, the marginal cost of life increases by between
 9.51\% and 
 37.1\%.
@@ -456,15 +484,12 @@ I have summarized these caveats below, ordering them roughly from the most sever
   Still, including these collinear controls does not affect the central estimate for the modeled life expectancy coefficient.
 \item
   The exclusion restriction, that GDP per capita is uncorrelated with the marginal cost of life, is not unassailable.
-  Still, any relationship that exists should be negligible compared to the very strong relationship between GDP per capita and the marginal benefit of life.
+  Still, any relationship that exists would be negligible compared to the very strong relationship between GDP per capita and the marginal benefit of life.
 \item
   I could not precisely tailor the exchange rates I used to the equalize the real costs of any given treatment between countries.
   However, the results are still robust to sets of exchange rates for which there is sufficient data.
 \item
   The average of published prices is only a rough estimate of the underlying price of life.
-\item
-  There is a units mismatch between quantity, which is in units of years of life, and price, which is in units of currency per QALY, not per year of life.
-  Still, provided one is careful to distingish QALYs from years of life, my results are interpretable as is.
 \end{itemize}
 
 \section{Works cited}
@@ -489,49 +514,49 @@ In \autoref{tab:WDI_variables_table}, for each variable I downloaded from the Wo
 \hline
 \textbf{Variable} & \textbf{Code} & \textbf{\% missing}\\
 \hline
-GDP growth rate & GDP\_growth\_rate & 3.01\%\\
+GDP growth rate & NY.GDP.MKTP.KD.ZG & 3.01\%\\
 \hline
-PPP GDP & PPP\_GDP & 3.01\%\\
+PPP GDP & PA.NUS.PPP & 3.01\%\\
 \hline
-local GDP per capita & local\_GDP\_per\_capita & 3.01\%\\
+local GDP per capita & NY.GDP.PCAP.CN & 3.01\%\\
 \hline
-\% female to male employment ratio & percent\_female\_to\_male\_employment\_ratio & 3.01\%\\
+\% female to male employment ratio & SL.TLF.CACT.FM.ZS & 3.01\%\\
 \hline
-population growth rate & population\_growth\_rate & 3.01\%\\
+population growth rate & SP.POP.GROW & 3.01\%\\
 \hline
-unemployment rate & unemployment\_rate & 3.01\%\\
+unemployment rate & SL.UEM.TOTL.ZS & 3.01\%\\
 \hline
-nominal exchange rate & nominal\_exchange\_rate & 3.48\%\\
+nominal exchange rate & PA.NUS.FCRF & 3.48\%\\
 \hline
-PPP private consumption & PPP\_private\_consumption & 3.64\%\\
+PPP private consumption & PA.NUS.PRVT.PP & 3.64\%\\
 \hline
-\% GDP from farming & percent\_GDP\_from\_farming & 4.75\%\\
+\% GDP from farming & NV.AGR.TOTL.ZS & 4.75\%\\
 \hline
-\% GDP from industry & percent\_GDP\_from\_industry & 4.75\%\\
+\% GDP from industry & NV.IND.TOTL.ZS & 4.75\%\\
 \hline
-\% electricity access & percent\_electricity\_access & 6.8\%\\
+\% electricity access & EG.ELC.ACCS.ZS & 6.8\%\\
 \hline
-population density & population\_density & 6.8\%\\
+population density & EN.POP.DNST & 6.8\%\\
 \hline
-unadjusted life expectancy & unadjusted\_life\_expectancy & 6.8\%\\
+unadjusted life expectancy & SP.DYN.LE00.IN & 6.8\%\\
 \hline
-\% health spending public & percent\_health\_spending\_public & 13.8\%\\
+\% health spending public & SH.XPD.GHED.CH.ZS & 13.8\%\\
 \hline
-precipitation & precipitation & 14.9\%\\
+precipitation & AG.LND.PRCP.MM & 14.9\%\\
 \hline
 life expectancy & WHOSIS\_000002 & 26.1\%\\
 \hline
-\% college enrollment & percent\_college\_enrollment & 28\%\\
+\% college enrollment & SE.TER.ENRR & 28\%\\
 \hline
-\% child obesity & percent\_child\_obesity & 29.4\%\\
+\% child obesity & SH.STA.OWGH.ME.ZS & 29.4\%\\
 \hline
-\% health spending external & percent\_health\_spending\_external & 30.1\%\\
+\% health spending external & SH.XPD.EHEX.CH.ZS & 30.1\%\\
 \hline
-\% primary school completion & percent\_primary\_school\_completion & 30.7\%\\
+\% primary school completion & SE.PRM.CUAT.ZS & 30.7\%\\
 \hline
-alcohol consumption per capita & alcohol\_consumption\_per\_capita & 32.8\%\\
+alcohol consumption per capita & SH.ALC.PCAP.FE.LI & 32.8\%\\
 \hline
-Gini index & Gini\_index & 38.8\%\\
+Gini index & SI.POV.GINI & 38.8\%\\
 \hline
 PPP health & 9080000:ACTUAL HEALTH & 82.8\%\\
 \hline
@@ -641,64 +666,70 @@ Gini index & unestimable\\
 \section{Full regression results}
 \label{sec:full_regression_results}
 
-In \autoref{tab:coefficients}, I report the coefficients from the main regression.
+In \autoref{tab:coefficients}, I report the coefficients from three different models: the base model, the model including multi-collinear controls, and the model excluding insignificant variables.
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
 \centering
-\caption{\label{tab:coefficients}Coefficients from the main analysis}
+\caption{\label{tab:coefficients}Coefficients from three specifications: the base model, the model including multi-collinear controls, and the model excluding insignificant variables. Standard errors are in parentheses, * means $p < 0.1$, ** means $p < 0.05$, and *** means $p < 0.001$}
 \centering
-\begin{tabular}[t]{l|l}
+\begin{tabular}[t]{l|l|l|l}
 \hline
-\textbf{Regressor} & \textbf{Coefficient}\\
+\textbf{Regressor} & \textbf{Base} & \textbf{Multicollinear} & \textbf{Significant}\\
 \hline
-fit life expectancy & 0.203*** (0.0559)\\
+fit life expectancy & \makecell[l]{0.203***\\(0.0559)} & \makecell[l]{0.353\\(0.247)} & \makecell[l]{0.227***\\(0.0259)}\\
 \hline
-GDP growth rate & 0.0361 (0.0499)\\
+GDP growth rate & \makecell[l]{0.0361\\(0.0499)} & \makecell[l]{0.109\\(0.0856)} & \\
 \hline
-log alcohol consumption per capita & 0.177 (0.169)\\
+log alcohol consumption per capita & \makecell[l]{0.177\\(0.169)} & \makecell[l]{0.0419\\(0.338)} & \\
 \hline
-log population density & 0.11 (0.135)\\
+log population density & \makecell[l]{0.11\\(0.135)} & \makecell[l]{0.0358\\(0.154)} & \\
 \hline
-log precipitation & -0.669** (0.314)\\
+log precipitation & \makecell[l]{-0.669**\\(0.314)} & \makecell[l]{-0.691\\(0.575)} & \\
 \hline
-\% child obesity & 0.00717 (0.0677)\\
+% child obesity & \makecell[l]{0.00717\\(0.0677)} & \makecell[l]{0.00507\\(0.0937)} & \\
 \hline
-\% female to male employment ratio & 0.00733 (0.0138)\\
+% female to male employment ratio & \makecell[l]{0.00733\\(0.0138)} & \makecell[l]{0.0306\\(0.0233)} & \\
 \hline
-\% GDP from farming & -0.0251 (0.0475)\\
+% GDP from farming & \makecell[l]{-0.0251\\(0.0475)} & \makecell[l]{-0.0161\\(0.0982)} & \\
 \hline
-\% GDP from industry & -0.0229 (0.0292)\\
+% GDP from industry & \makecell[l]{-0.0229\\(0.0292)} & \makecell[l]{-0.0898**\\(0.04)} & \\
 \hline
-\% health spending external & -0.0104 (0.0235)\\
+% health spending external & \makecell[l]{-0.0104\\(0.0235)} & \makecell[l]{-0.0698\\(0.0748)} & \\
 \hline
-\% health spending public & -0.0161 (0.0164)\\
+% health spending public & \makecell[l]{-0.0161\\(0.0164)} & \makecell[l]{-0.00994\\(0.0295)} & \\
 \hline
-population growth rate & -0.226 (0.188)\\
+population growth rate & \makecell[l]{-0.226\\(0.188)} & \makecell[l]{-0.668\\(0.581)} & \\
+\hline
+% electricity access &  & \makecell[l]{-0.0354\\(0.0465)} & \\
+\hline
+unemployment rate &  & \makecell[l]{0.0815\\(0.14)} & \\
+\hline
+% primary school completion &  & \makecell[l]{-0.0687*\\(0.0341)} & \\
 \hline
 \end{tabular}
 \end{table}
 
 \end{knitrout}
 
-In \autoref{tab:regression_statistics}, I report statistics from the main regression.
+In \autoref{tab:regression_statistics}, I report statistics from three different models: the base model, the model including multi-collinear controls, and the model excluding insignificant variables.
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{table}
 \centering
-\caption{\label{tab:regression_statistics}Statistics from the main regression}
+\caption{\label{tab:regression_statistics}Statistics from three specifications: the base model, the model including multi-collinear controls, and the model excluding insignificant variables}
 \centering
-\begin{tabular}[t]{l|l}
+\begin{tabular}[t]{l|l|l|l}
 \hline
-\textbf{Statistic} & \textbf{Value}\\
+\textbf{Statistic} & \textbf{Base} & \textbf{Multicollinear} & \textbf{Significant}\\
 \hline
-RMSE & 1.67\\
+RMSE & 1.67 & 1.67 & 1.67\\
 \hline
-Adjusted R squared & 0.354\\
+Adjusted R squared & 0.354 & 0.354 & 0.354\\
 \hline
-First stage F-test p-value & 2.3e-36\\
+First stage F-test p-value & 2.3e-36 & 2.3e-36 & 2.3e-36\\
 \hline
-Wu-Hausman test p-value & 5.38e-05\\
+Wu-Hausman test p-value & 5.38e-05 & 5.38e-05 & 5.38e-05\\
 \hline
 \end{tabular}
 \end{table}
