@@ -16,6 +16,7 @@ code.R
 *.xdv
 *.tex
 *.out
+CSL.txt
 latex/cache/*
 figure/*
 data/ratios.csv

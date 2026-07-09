@@ -390,24 +390,41 @@ bayesian_coefficients <-
   sd(indexed_price_data$log_price_of_life)
 
 get_statistics <- function(model) {
-  regression_statistics <- fitstat(pooled_model, c("rmse", "ar2", "ivf1", "wh"))
+  regression_statistics <- fitstat(model, c("rmse", "ar2", "ar2", "ivf1", "wh"))
+  weak_instruments_test <- regression_statistics$ivf1
+  wu_hausman_test <- regression_statistics$wh
 
   tibble(
     Statistic = c(
       "RMSE",
       "Adjusted R squared",
-      "First stage F-test p-value",
-      "Wu-Hausman test p-value"
+      "Weak-instruments test",
+      "Wu-Hausman test"
     ),
     Value = c(
-      regression_statistics$rmse,
-      regression_statistics$ar2[["ar2"]],
-      regression_statistics$ivf1$p,
-      regression_statistics$wh$p
+      format_individually(regression_statistics$rmse),
+      format_individually(regression_statistics$ar2[["ar2"]]),
+      paste0(
+        "$F$: ",
+        format_individually(weak_instruments_test$stat),
+        "\n$p$: ",
+        format_individually(weak_instruments_test$p)
+      ),
+      paste0(
+        "$\\chi^2$: ",
+        format_individually(wu_hausman_test$stat),
+        "\n$p$: ",
+        format_individually(wu_hausman_test$p)
+      )
     )
-  ) |>
-    mutate(Value = format_individually(Value))
+  )
 }
+
+multicollinear_model <- feols(
+  make_feols_formula(estimable_controls),
+  data = present_data,
+  vcov = ~ country
+)
 
 regression_statistics_table <-
   bind_rows(
@@ -429,12 +446,6 @@ get_coefficient_table = function(model) {
   .$coeftable |>
   as_tibble(rownames = "regressor")
 }
-
-multicollinear_model <- feols(
-  make_feols_formula(estimable_controls),
-  data = present_data,
-  vcov = ~ country
-)
 
 # multicollinear_model
 # significant_model
