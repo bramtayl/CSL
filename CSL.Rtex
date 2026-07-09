@@ -15,6 +15,7 @@
 
 %% begin.rcode setup, include=FALSE
 % library(knitr)
+% opts_chunk$set(dev = c("pdf", "svg"))
 %% end.rcode
 
 \begin{document}
