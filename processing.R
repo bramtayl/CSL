@@ -321,13 +321,46 @@ deflator_data <-
   ungroup() |>
   select(-deflator)
 
+# linearly interpolate between present values,
+# holding the nearest value constant outside them
+interpolate <- function(years, values) {
+  present <- !is.na(values)
+  if (sum(present) == 0) {
+    values
+  } else if (sum(present) == 1) {
+    rep(values[present], length(values))
+  } else {
+    approx(years[present], values[present], xout = years, rule = 2)$y
+  }
+}
+
+# health PPPs only exist for ICP benchmark years
+# so interpolate the relative price of health between them
+interpolated_health_ppps <-
+  world_bank_data |>
+  select(country, year, PPP_GDP, PPP_health) |>
+  filter(!is.na(PPP_GDP)) |>
+  group_by(country) |>
+  mutate(
+    log_relative_health_price = interpolate(year, log(PPP_health / PPP_GDP))
+  ) |>
+  ungroup() |>
+  filter(!is.na(log_relative_health_price)) |>
+  transmute(
+    country,
+    year,
+    PPP_health_interpolated = PPP_GDP * exp(log_relative_health_price)
+  )
+
 currency_ratios <-
   world_bank_data |>
+  left_join(interpolated_health_ppps, by = c("country", "year")) |>
   select(country, year,
     `nominal exchange rate` = nominal_exchange_rate,
     `PPP GDP` = PPP_GDP,
     `PPP private consumption` = PPP_private_consumption,
-    `PPP health` = PPP_health
+    `PPP health` = PPP_health,
+    `PPP health (interpolated)` = PPP_health_interpolated
   ) |>
   pivot_longer(c(-country, -year),
     names_to = "exchange_rate_kind",
