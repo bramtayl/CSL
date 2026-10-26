@@ -22,6 +22,9 @@ figure/
 # intermediate data and diagnostics
 output/
 
+# compiled Stan model
+random_effects
+
 # Tufts CEA Registry data, which can't be redistributed
 data/methods.csv
 data/ratios.csv
