@@ -541,6 +541,20 @@ price_deflators_table <-
 price_exchange_table <-
   vary_data_choice("price_exchange_kind", "Price exchange rates")
 
+# health PPPs exist only for benchmark years, which weakens the first stage
+benchmark_health_ppp_model <- feols(
+  make_feols_formula(unique_controls),
+  data = full_data |>
+    filter_world_bank_data(chosen_gdp_exchange_kind = "PPP health") |>
+    filter_price_data(),
+  vcov = ~ country
+)
+
+benchmark_health_ppp_observations <- nobs(benchmark_health_ppp_model)
+benchmark_health_ppp_first_stage_f <-
+  fitstat(benchmark_health_ppp_model, "ivf1")$ivf1$stat |>
+  signif(display_figures)
+
 map <-
   raw_map_data |>
   select(-map_country, -country_code_2) |>

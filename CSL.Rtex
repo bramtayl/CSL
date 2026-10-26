@@ -666,7 +666,7 @@ In \autoref{fig:gdp_deflators_robustness_figure}, I compare the results from usi
 % plot_confidence_intervals(gdp_deflators_robustness_table, "GDP deflators")
 %% end.rcode
 
-In \autoref{fig:gdp_exchange_robustness_figure}, I compare the results from using different sets of  deflators to adjust GDP.
+In \autoref{fig:gdp_exchange_robustness_figure}, I compare the results from using different sets of exchange rates to adjust GDP.
 
 %% begin.rcode gdp_exchange_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient with different GDP exchange rates"
 % plot_confidence_intervals(gdp_exchange_robustness_table, "GDP exchange rates")
@@ -687,10 +687,12 @@ In \autoref{fig:price_exchange_figure}, I compare the results from using differe
 I interpret these results as follows.
 The choice of deflator has very little effect, likely due to year fixed-effects absorbing deflator differences.
 The choice of exchange rate has minor effects, with one exception.
-Unfortunately, the International Comparison Program (ICP) reports PPP exchange rates for healthcare goods only every five years, and only for OECD countries.
-To use these figures, I must discard a significant amount of data, which yields much wider confidence intervals; see \autoref{fig:gdp_exchange_robustness_figure}.
-This also results in a lower central estimate, perhaps because the relationship within developed (OECD) countries is different from the relationship between developed and developing countries.
-However, as traditional healthcare goods are only one category of treatments, estimates using exchange rates based solely on healthcare goods are going to be inaccurate in any case.
+The International Comparison Program (ICP) reports PPP exchange rates for health goods only in benchmark years (2005, 2011, 2017, and 2021).
+Using only these years leaves \rinline{benchmark_health_ppp_observations} country-years, and with GDP converted using health PPPs, GDP per capita becomes a weak instrument (first-stage $F$ of \rinline{benchmark_health_ppp_first_stage_f}), so the resulting estimate is unreliable.
+On the same country-years, using PPPs for GDP yields an estimate similar to my main estimate, so the difference is not due to the subsample.
+To use health PPPs for all years, I interpolated the relative price of health (the ratio of health PPPs to GDP PPPs) linearly between benchmark years, holding it constant before the first and after the last benchmark year.
+Using these interpolated health PPPs to convert either GDP or prices yields central estimates very close to my main estimate; see \autoref{fig:gdp_exchange_robustness_figure} and \autoref{fig:price_exchange_figure}.
+Thus, my results are not driven by health goods being relatively more expensive in richer countries.
 
 \section{Two-stage least squares equations}
 \label{sec:two_stage_least_squares_equations}
