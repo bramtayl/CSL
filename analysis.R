@@ -1,38 +1,28 @@
-library(carData) # needed for car
-library(timechange) # needed for lubridate
+# Fits the models and builds the tables and figures for CSL.Rtex.
+# Requires processing.R, and the Stan fit from bayesian_code.R.
 
-library(car)
 library(forcats)
-library(fixest)
 library(ggplot2)
-library(lubridate, warn.conflicts = FALSE)
-library(knitr)
-library(ivreg)
-library(plm)
-library(purrr, warn.conflicts = FALSE)
-library(readr)
-library(rex)
-library(rnaturalearth)
-suppressPackageStartupMessages(library(sf))
-library(stargazer)
-library(stringi)
-library(tidyr, warn.conflicts = TRUE)
+library(plm, warn.conflicts = FALSE)
 
-# load last for filter
-library(dplyr, warn.conflicts = FALSE)
-
-display_figures <- 3
 example_country <- "United Kingdom"
 head_tail_size <- 3
 minimum_years <- 5
-output_folder <- "~/Desktop"
-recent_year <- 2015
-year_regex <- rex(n_times(digit, 4))
 
 format_regressors <- function(data) {
   data |>
     stri_replace_all_fixed("_", " ") |>
     stri_replace_all_fixed("percent", "%")
+}
+
+format_percent <- function(values) {
+  paste0(signif(values, display_figures), "%")
+}
+
+format_individually <- function(values) {
+  sapply(values, function(value) {
+    signif(value, display_figures) |> format()
+  })
 }
 
 all_variables_table <-
@@ -50,38 +40,26 @@ all_variables_table <-
   summarize(
     percent_missing = (sum(is.na(value)) / n() * 100),
     percent_positive =
-    (sum(value > 0, na.rm = TRUE) / sum(!is.na(value)) * 100),
+      (sum(value > 0, na.rm = TRUE) / sum(!is.na(value)) * 100),
     .groups = "drop"
   ) |>
   mutate(
-    formatted_percent_missing =
-    percent_missing |>
-    signif(display_figures) |>
-    paste0("%"),
-    formatted_percent_positive =
-    percent_positive |>
-    signif(display_figures) |>
-    paste0("%"),
+    formatted_percent_missing = format_percent(percent_missing),
+    formatted_percent_positive = format_percent(percent_positive)
   ) |>
   left_join(variable_data, by = "variable") |>
   mutate(
-    variable_code = ifelse(
-      variable == "PPP_health",
-      "9080000:ACTUAL HEALTH",
-      ifelse(
-        variable == "life_expectancy",
-        "WHOSIS_000002",
-        variable_code
-      )
+    # these variables are not from the World Bank
+    variable_code = case_when(
+      variable == "PPP_health" ~ "9080000:ACTUAL HEALTH",
+      variable == "life_expectancy" ~ "WHOSIS_000002",
+      .default = variable_code
     )
   )
 
 variable_table <-
   all_variables_table |>
-  anti_join(
-    tibble(variable = paste0("log_", logged_controls)),
-    by = c("variable")
-  ) |>
+  filter(!(variable %in% paste0("log_", logged_controls))) |>
   mutate(variable = format_regressors(variable)) |>
   arrange(percent_missing) |>
   select(
@@ -92,10 +70,7 @@ variable_table <-
 
 logged_variable_table <-
   all_variables_table |>
-  semi_join(
-    tibble(variable = logged_controls),
-    by = c("variable")
-  ) |>
+  filter(variable %in% logged_controls) |>
   mutate(variable = format_regressors(variable)) |>
   arrange(percent_positive) |>
   select(
@@ -103,71 +78,19 @@ logged_variable_table <-
     `% positive` = formatted_percent_positive
   )
 
-# TODO: add to output
 controls_table <-
   tibble(control = all_controls) |>
-  left_join(
-    tibble(
-      control = estimable_controls,
-      estimable = TRUE
-    ),
-    by = "control"
-  ) |>
-  left_join(
-    tibble(
-      control = unique_controls,
-      collinear = FALSE
-    ),
-    by = "control"
-  ) |>
-  left_join(
-    tibble(
-      control = significant_controls,
-      significant = TRUE
-    ),
-    by = "control"
-  ) |>
-  anti_join(tibble(control = logged_controls), by = "control") |>
   mutate(
-    estimable = coalesce(estimable, FALSE),
-    collinear = coalesce(collinear, TRUE),
-    significant = coalesce(significant, FALSE),
-    status = ifelse(
-      estimable,
-      ifelse(collinear,
-        "multicollinear",
-        ifelse(
-          significant,
-          "signficant",
-          "insignificant"
-        )
-      ),
-      "unestimable"
+    status = case_when(
+      !(control %in% estimable_controls) ~ "unestimable",
+      !(control %in% unique_controls) ~ "multicollinear",
+      control %in% significant_controls ~ "significant",
+      .default = "insignificant"
     )
   ) |>
   arrange(status, control) |>
-  select(-estimable, -collinear, -significant) |>
-  rename(Control = control, Status = status) |>
+  select(Control = control, Status = status) |>
   mutate(Control = format_regressors(Control))
-
-make_plm_formula <- function(controls) {
-  if (length(controls) == 0) {
-    controls_string <- ""
-  } else {
-    controls_string <-
-      controls |>
-        paste0(collapse = " + ") %>%
-        paste0(" + ", .)
-  }
-  paste0(
-    "log_price_of_life ~ life_expectancy",
-    controls_string,
-    " + year_factor | log_gdp_per_capita",
-    controls_string,
-    " + year_factor"
-  ) |>
-    as.formula()
-}
 
 make_panel <- function(data) {
   pdata.frame(data, index = c("country", "year"))
@@ -196,17 +119,25 @@ get_plm_interval <- function(model, parameter = "life_expectancy") {
     filter(coefficient == parameter)
 
   tibble(
-    `2.5%` =
-      confidence_intervals$lower_bound |>
-      signif(display_figures),
-    `50%` = coef(model)[[parameter]] |> signif(display_figures),
-    `97.5%` =
-      confidence_intervals$upper_bound |>
-      signif(display_figures)
+    `2.5%` = signif(confidence_intervals$lower_bound, display_figures),
+    `50%` = signif(coef(model)[[parameter]], display_figures),
+    `97.5%` = signif(confidence_intervals$upper_bound, display_figures)
   )
 }
 
-# TODO: add to output
+get_feols_interval <- function(model, parameter = "fit_life_expectancy") {
+  confidence_intervals <-
+    confint(model) |>
+    as_tibble(rownames = "regressor") |>
+    filter(regressor == parameter)
+
+  tibble(
+    `2.5%` = signif(confidence_intervals$`2.5 %`, display_figures),
+    `50%` = signif(coef(model)[[parameter]], display_figures),
+    `97.5%` = signif(confidence_intervals$`97.5 %`, display_figures)
+  )
+}
+
 random_effects_model <-
   plm(
     make_plm_formula(unique_controls),
@@ -217,7 +148,8 @@ random_effects_model <-
 random_residuals <- resid(random_effects_model)
 random_index <- attr(random_residuals, "index")
 
-filtered_residuals <-
+# unit root tests need countries with enough years of data
+filtered_panel <-
   tibble(
     residuals = as.numeric(random_residuals),
     country = as.character(random_index$country),
@@ -226,20 +158,15 @@ filtered_residuals <-
   group_by(country) |>
   filter(n() >= minimum_years) |>
   ungroup() |>
-  pdata.frame(index = c("country", "year")) %>%
-  .$residuals
+  make_panel()
+
+filtered_residuals <- filtered_panel$residuals
 
 get_unit_root_p_value <- function(test) {
   purtest(filtered_residuals,
     test = test,
     lags = 1
   )$statistic$p.value
-}
-
-format_individually <- function(values) {
-  sapply(values, function(value) {
-    signif(value, display_figures) |> format()
-  })
 }
 
 stationarity_table <-
@@ -259,31 +186,41 @@ pooled_model <- feols(
   vcov = ~ country
 )
 
+multicollinear_model <- feols(
+  make_feols_formula(estimable_controls),
+  data = present_data,
+  vcov = ~ country
+)
+
 significant_model <- feols(
   make_feols_formula(significant_controls),
   data = present_significant_data,
   vcov = ~ country
 )
 
+# fixest predictions are incorrect
+# use ivreg predictions for the same model instead
 significant_ivreg_model <- ivreg(
   make_plm_formula(significant_controls),
   data = present_significant_data
 )
 
+# percent change in the price of life per year of life expectancy
+coefficient_to_percent <- function(coefficient) {
+  signif((exp(coefficient) - 1) * 100, display_figures)
+}
+
 confidence_intervals <- confint(pooled_model)
 
-lower_bound_percent <- signif((exp(confidence_intervals["fit_life_expectancy", "2.5 %"]) - 1) * 100, display_figures)
-upper_bound_percent <- signif((exp(confidence_intervals["fit_life_expectancy", "97.5 %"]) - 1) * 100, display_figures)
-
-extra_model <- feols(
-  make_feols_formula(estimable_controls),
-  data = present_data,
-  vcov = ~ country
+lower_bound_percent <- coefficient_to_percent(
+  confidence_intervals["fit_life_expectancy", "2.5 %"]
+)
+upper_bound_percent <- coefficient_to_percent(
+  confidence_intervals["fit_life_expectancy", "97.5 %"]
 )
 
 prediction_data <-
   with_missing_outcomes |>
-  select(-year_factor) |>
   left_join(
     present_significant_data |>
       # need to use the same factors for consistency
@@ -295,39 +232,25 @@ prediction_data <-
   mutate(fit_life_expectancy = life_expectancy)
 
 recent_predictions <-
-  with_missing_outcomes |>
-  select(-year_factor) |>
-  left_join(
-    present_significant_data |>
-      # need to use the same factors for consistency
-      select(year, year_factor) |>
-      distinct(),
-    by = "year"
+  prediction_data |>
+  mutate(
+    prediction = predict(significant_ivreg_model, newdata = prediction_data)
   ) |>
-  arrange(country, year) |>
-  mutate(fit_life_expectancy = life_expectancy) %>%
-  # fixest predictions are incorrect
-  # use ivreg predictions for the same model instead
-  mutate(prediction = predict(significant_ivreg_model, newdata = .)) |>
   filter(year == recent_year & !is.na(prediction)) |>
   mutate(price_of_life = exp(prediction)) |>
   arrange(desc(price_of_life)) |>
   mutate(rank = seq_len(n()))
 
-write_csv(
-  recent_predictions,
-  paste0(output_folder, "/recent_predictions.csv")
-)
+write_csv(recent_predictions, output_path("recent_predictions.csv"))
 
 example_prediction <-
   recent_predictions |>
   filter(country == example_country)
 
-best_prediction <- recent_predictions |> slice(1)
-worst_prediction <- recent_predictions %>% slice(nrow(.))
+best_prediction <- slice_head(recent_predictions, n = 1)
+worst_prediction <- slice_tail(recent_predictions, n = 1)
 
-model_coefficients <- coef(pooled_model)
-life_expectancy_coefficient <- model_coefficients[["fit_life_expectancy"]]
+life_expectancy_coefficient <- coef(pooled_model)[["fit_life_expectancy"]]
 
 intersection_data <-
   bind_rows(
@@ -350,25 +273,26 @@ intersection_data <-
   rename(
     `Life expectancy` = life_expectancy,
     `Price of life, in thousand International $ / QALY` =
-    price_of_life_in_thousands,
+      price_of_life_in_thousands,
     Side = side
   )
 
 rank_table <-
   bind_rows(
-    recent_predictions |> slice_head(n = head_tail_size),
-    recent_predictions |> slice_tail(n = head_tail_size)
+    slice_head(recent_predictions, n = head_tail_size),
+    slice_tail(recent_predictions, n = head_tail_size)
   ) |>
   mutate(
-    price_of_life =
-    signif(price_of_life, display_figures) |>
-    format(
-      big.mark = ",",
-      drop0trailing = TRUE,
-      scientific = FALSE,
-      trim = TRUE
-    ) %>%
-    paste0("$", .)
+    price_of_life = paste0(
+      "$",
+      signif(price_of_life, display_figures) |>
+        format(
+          big.mark = ",",
+          drop0trailing = TRUE,
+          scientific = FALSE,
+          trim = TRUE
+        )
+    )
   ) |>
   select(
     Rank = rank,
@@ -376,21 +300,19 @@ rank_table <-
     `Marginal cost of life` = price_of_life
   )
 
-pooled_summary <- summary(pooled_model)
+# from bayesian_code.R
+stan_fit <- readRDS(output_path("stan_fit.RDS"))
 
-stan_fit <- readRDS(paste0(output_folder, "/stan_fit.RDS"))
+stan_draws <- stan_fit$draws(format = "df")
 
-stan_draws = stan_fit$draws(
-  format = "df"
-)
-
+# undo the scaling in bayesian_code.R
 bayesian_coefficients <-
-  stan_draws$`endogenous_variable_coefficients[1]`  /
+  stan_draws$`endogenous_variable_coefficients[1]` /
   sd(indexed_country_years$life_expectancy) *
   sd(indexed_price_data$log_price_of_life)
 
 get_statistics <- function(model) {
-  regression_statistics <- fitstat(model, c("rmse", "ar2", "ar2", "ivf1", "wh"))
+  regression_statistics <- fitstat(model, c("rmse", "ar2", "ivf1", "wh"))
   weak_instruments_test <- regression_statistics$ivf1
   wu_hausman_test <- regression_statistics$wh
 
@@ -420,12 +342,6 @@ get_statistics <- function(model) {
   )
 }
 
-multicollinear_model <- feols(
-  make_feols_formula(estimable_controls),
-  data = present_data,
-  vcov = ~ country
-)
-
 regression_statistics_table <-
   bind_rows(
     get_statistics(pooled_model) |>
@@ -434,21 +350,17 @@ regression_statistics_table <-
       mutate(specification = "Multicollinear"),
     get_statistics(significant_model) |>
       mutate(specification = "Significant")
-  ) |> 
+  ) |>
   pivot_wider(
     names_from = specification,
     values_from = Value
   )
 
-get_coefficient_table = function(model) {
-  model |>
-  summary() %>%
-  .$coeftable |>
-  as_tibble(rownames = "regressor")
+get_coefficient_table <- function(model) {
+  summary(model)$coeftable |>
+    as_tibble(rownames = "regressor")
 }
 
-# multicollinear_model
-# significant_model
 coefficients_table <-
   bind_rows(
     get_coefficient_table(pooled_model) |>
@@ -462,7 +374,6 @@ coefficients_table <-
     `Standard error` = `Std. Error`,
     `p-value` = `Pr(>|t|)`
   ) |>
-  rowwise() |>
   mutate(
     Regressor = ifelse(
       regressor == "(Intercept)",
@@ -472,27 +383,20 @@ coefficients_table <-
       stri_replace_all_fixed("year_factor", "year=") |>
       format_regressors() |>
       stri_replace_all_fixed("%", "\\%"),
+    stars = case_when(
+      `p-value` < 0.01 ~ "***",
+      `p-value` < 0.05 ~ "**",
+      `p-value` < 0.1 ~ "*",
+      .default = ""
+    ),
     Coefficient = paste0(
-      signif(Estimate, display_figures) |> format(),
-      ifelse(
-        `p-value` < 0.1,
-        ifelse(
-          `p-value` < 0.05,
-          ifelse(
-            `p-value` < 0.01,
-            "***",
-            "**"
-          ),
-          "*"
-        ),
-        ""
-      ),
+      format_individually(Estimate),
+      stars,
       "\n(",
-      signif(`Standard error`, display_figures) |> format(),
+      format_individually(`Standard error`),
       ")"
     )
   ) |>
-  ungroup() |>
   select(specification, Regressor, Coefficient) |>
   pivot_wider(
     names_from = specification,
@@ -500,18 +404,13 @@ coefficients_table <-
     values_fill = ""
   )
 
-simple_formula <-
-  c(unique_controls, "life_expectancy") |>
-  paste0(collapse = " + ") %>%
+model_without_endogeneity <- feols(
   paste0(
     "log_price_of_life ~ ",
-    .,
+    paste_controls(c(unique_controls, "life_expectancy")),
     " | year"
   ) |>
-  as.formula()
-
-model_without_endogeneity <- feols(
-  simple_formula,
+    as.formula(),
   data = default_data,
   vcov = ~ country
 )
@@ -521,23 +420,6 @@ fixed_effects_model <- feols(
   data = present_data,
   vcov = ~ country
 )
-
-get_feols_interval <- function(model, parameter = "fit_life_expectancy") {
-  confidence_intervals <-
-    confint(model) |>
-    as_tibble(rownames = "regressor") |>
-    filter(regressor == parameter)
-
-  tibble(
-    `2.5%` =
-      confidence_intervals$`2.5 %` |>
-      signif(display_figures),
-    `50%` =  coef(model)[[parameter]] |> signif(display_figures),
-    `97.5%` =
-      confidence_intervals$`97.5 %` |>
-      signif(display_figures)
-  )
-}
 
 unique_hausman_p_value <- phtest(
   random_effects_model,
@@ -549,7 +431,7 @@ unique_hausman_p_value <- phtest(
 )$p.value
 
 # TODO: add to output
-pbgtest(plm(
+serial_correlation_test <- pbgtest(plm(
   make_plm_formula(significant_controls),
   data = make_panel(default_data),
   model = "random"
@@ -563,12 +445,9 @@ specification_robustness_table <-
       mutate(Specification = "random effects model"),
     tibble(
       Specification = "hierarchical bayesian",
-      `2.5%` = 
-        quantile(bayesian_coefficients, 0.025),
-      `50%` = 
-        quantile(bayesian_coefficients, 0.5),
-      `97.5%` =
-        quantile(bayesian_coefficients, 0.975)
+      `2.5%` = quantile(bayesian_coefficients, 0.025),
+      `50%` = quantile(bayesian_coefficients, 0.5),
+      `97.5%` = quantile(bayesian_coefficients, 0.975)
     ),
     get_feols_interval(fixed_effects_model) |>
       mutate(Specification = "fixed effects"),
@@ -583,30 +462,18 @@ specification_robustness_table <-
       mutate(Specification = "without endogeneity")
   )
 
+# NA if the model can't be estimated with this data
 get_data_coefficient <- function(data) {
+  missing_interval <- tibble(`2.5%` = NA, `50%` = NA, `97.5%` = NA)
   tryCatch(
-    {
-      feols(
-        make_feols_formula(unique_controls),
-        data = data,
-        vcov = ~ country
-      ) |>
-        get_feols_interval()
-    },
-    warning = function(w) {
-      tibble(
-        `2.5%` = NA,
-        `50%` = NA,
-        `97.5%` = NA
-      )
-    },
-    error = function(e) {
-      tibble(
-        `2.5%` = NA,
-        `50%` = NA,
-        `97.5%` = NA
-      )
-    }
+    feols(
+      make_feols_formula(unique_controls),
+      data = data,
+      vcov = ~ country
+    ) |>
+      get_feols_interval(),
+    warning = function(w) missing_interval,
+    error = function(e) missing_interval
   )
 }
 
@@ -625,6 +492,7 @@ plot_confidence_intervals <- function(table, variable) {
     guides(x = guide_axis(angle = 90))
 }
 
+# the life expectancy coefficient for every combination of data choices
 robustness_table <-
   full_data |>
   nest_by(
@@ -641,96 +509,46 @@ robustness_table <-
   unnest(data) |>
   ungroup()
 
-gdp_deflators_robustness_table <-
+robustness_defaults <- c(
+  price_kind = default_price_kind,
+  price_deflator_kind = default_price_deflator_kind,
+  price_exchange_kind = default_price_exchange_kind,
+  gdp_exchange_kind = default_gdp_exchange_kind,
+  gdp_deflator_kind = default_gdp_deflator_kind
+)
+
+# vary one data choice, holding the others at their defaults
+vary_data_choice <- function(choice, label) {
+  others <- setdiff(names(robustness_defaults), choice)
   robustness_table |>
-  filter(
-    price_kind == default_price_kind &
-      price_deflator_kind == default_price_deflator_kind &
-      price_exchange_kind == default_price_exchange_kind &
-      gdp_exchange_kind == default_gdp_exchange_kind
-  ) |>
-  select(
-    -price_kind,
-    -price_deflator_kind,
-    -price_exchange_kind,
-    -gdp_exchange_kind
-  ) |>
-  rename(`GDP deflators` = gdp_deflator_kind)
+    semi_join(as_tibble(as.list(robustness_defaults[others])), by = others) |>
+    select(-all_of(others)) |>
+    rename(!!label := all_of(choice))
+}
+
+gdp_deflators_robustness_table <-
+  vary_data_choice("gdp_deflator_kind", "GDP deflators")
 
 gdp_exchange_robustness_table <-
-  robustness_table |>
-  filter(
-    price_kind == default_price_kind &
-      price_deflator_kind == default_price_deflator_kind &
-      price_exchange_kind == default_price_exchange_kind &
-      gdp_deflator_kind == default_gdp_deflator_kind
-  ) |>
-  select(
-    -price_kind,
-    -price_deflator_kind,
-    -price_exchange_kind,
-    -gdp_deflator_kind
-  ) |>
-  rename(`GDP exchange rates` = gdp_exchange_kind)
+  vary_data_choice("gdp_exchange_kind", "GDP exchange rates")
 
 prices_robustness_table <-
-  robustness_table |>
-  filter(
-    price_deflator_kind == default_price_deflator_kind &
-      price_exchange_kind == default_price_exchange_kind &
-      gdp_exchange_kind == default_gdp_exchange_kind &
-      gdp_deflator_kind == default_gdp_deflator_kind
-  ) |>
-  select(
-    -price_deflator_kind,
-    -price_exchange_kind,
-    -gdp_deflator_kind,
-    -gdp_exchange_kind
-  ) |>
-  rename(Prices = price_kind)
+  vary_data_choice("price_kind", "Prices")
 
 price_deflators_table <-
-  robustness_table |>
-  filter(
-    price_kind == default_price_kind &
-      price_exchange_kind == default_price_exchange_kind &
-      gdp_exchange_kind == default_gdp_exchange_kind &
-      gdp_deflator_kind == default_gdp_deflator_kind
-  ) |>
-  select(
-    -price_kind,
-    -price_exchange_kind,
-    -gdp_deflator_kind,
-    -gdp_exchange_kind
-  ) |>
-  rename(`Price deflators` = price_deflator_kind)
+  vary_data_choice("price_deflator_kind", "Price deflators")
 
 price_exchange_table <-
-  robustness_table |>
-  filter(
-    price_kind == default_price_kind &
-      price_deflator_kind == default_price_deflator_kind &
-      gdp_exchange_kind == default_gdp_exchange_kind &
-      gdp_deflator_kind == default_gdp_deflator_kind
-  ) |>
-  select(
-    -price_kind,
-    -price_deflator_kind,
-    -gdp_deflator_kind,
-    -gdp_exchange_kind
-  ) |>
-  rename(`Price exchange rates` = price_exchange_kind)
+  vary_data_choice("price_exchange_kind", "Price exchange rates")
 
 map <-
-  raw_map_data %>%
-  select(-map_country, -country_code_2) %>%
-  # add in life expectancy in recent_year
+  raw_map_data |>
+  select(-map_country, -country_code_2) |>
+  # add in the predicted price of life in recent_year
   inner_join(
-    recent_predictions %>%
+    recent_predictions |>
       select(country, price_of_life),
     by = "country"
-  ) %>%
-  select(`Predicted marginal cost of life` = price_of_life) %>%
+  ) |>
+  select(`Predicted marginal cost of life` = price_of_life) |>
   st_transform(crs = "+proj=eqearth")
-
-# plot(map, border = NA, key.pos = 1, main = NULL, logz = TRUE)

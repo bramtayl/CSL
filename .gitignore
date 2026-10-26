@@ -1,6 +1,4 @@
-*.html
-CSL.docx
-code.R
+# LaTeX and pandoc build files
 *.aux
 *.bbl
 *.bbl-SAVE-ERROR
@@ -9,21 +7,22 @@ code.R
 *.blg
 *.fdb_latexmk
 *.fls
+*.html
 *.log
+*.out
 *.pdf
 *.run.xml
 *.synctex.gz
-*.xdv
 *.tex
-*.out
+*.xdv
+CSL.docx
 CSL.txt
-latex/cache/*
-figure/*
-data/ratios.csv
-data/methods.csv
-data/utilities.csv
-data/world_bank_data.csv
+figure/
 
-pooled
-fixed_effects
-random_effects
+# intermediate data and diagnostics
+output/
+
+# Tufts CEA Registry data, which can't be redistributed
+data/methods.csv
+data/ratios.csv
+data/utilities.csv

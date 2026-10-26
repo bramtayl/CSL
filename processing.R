@@ -1,19 +1,15 @@
-library(carData) # needed for car
-library(timechange) # needed for lubridate
+# Cleans and merges the raw data, then selects control variables.
+# Sourced by CSL.Rtex and bayesian_code.R.
 
 library(car)
 library(fixest)
-library(lubridate, warn.conflicts = FALSE)
-library(knitr)
 library(ivreg)
-library(plm)
-library(purrr, warn.conflicts = FALSE)
+library(lubridate, warn.conflicts = FALSE)
 library(readr)
 library(rex)
-library(rnaturalearth)
 suppressPackageStartupMessages(library(sf))
 library(stringi)
-library(tidyr, warn.conflicts = TRUE)
+library(tidyr)
 
 # load last for filter
 library(dplyr, warn.conflicts = FALSE)
@@ -26,10 +22,20 @@ default_price_kind <- "article prices"
 
 deflator_year <- 2024
 display_figures <- 3
-minimum_presence <- 0
-output_folder <- "~/Desktop"
 recent_year <- 2015
 year_regex <- rex(n_times(digit, 4))
+
+# intermediate data and diagnostics go here
+output_folder <- "output"
+dir.create(output_folder, showWarnings = FALSE)
+
+output_path <- function(file) {
+  file.path(output_folder, file)
+}
+
+read_data <- function(file, ...) {
+  read_csv(file.path("data", file), show_col_types = FALSE, na = "", ...)
+}
 
 filter_world_bank_data <- function(data,
   chosen_gdp_exchange_kind = default_gdp_exchange_kind,
@@ -64,15 +70,10 @@ filter_price_data <- function(data,
     )
 }
 
-variable_data <-
-  read_csv(
-    "data/selected_world_bank_variables.csv",
-    show_col_types = FALSE,
-    na = ""
-  )
+variable_data <- read_data("selected_world_bank_variables.csv")
 
 raw_long_world_bank_data <-
-  read_csv("data/world_bank_data.csv", show_col_types = FALSE, na = "") |>
+  read_data("world_bank_data.csv") |>
   select(
     # 2 digit country codes
     country_code_2 = iso2c,
@@ -91,8 +92,6 @@ na_log <- function(variable) {
   ifelse(is.infinite(logged), NA, logged)
 }
 
-# TODO: add to output
-
 logged_controls <- c(
   "alcohol_consumption_per_capita",
   "population_density",
@@ -101,10 +100,7 @@ logged_controls <- c(
 
 logged_world_bank_data <-
   raw_long_world_bank_data |>
-  semi_join(
-    tibble(variable = logged_controls),
-    by = c("variable")
-  ) |>
+  filter(variable %in% logged_controls) |>
   mutate(
     value = na_log(value),
     variable = paste0("log_", variable)
@@ -114,7 +110,7 @@ logged_world_bank_data <-
 # the World Bank data includes a "euro area" country
 # which I need currency data for
 raw_country_data <-
-  read_csv("data/countrycode_data.csv", show_col_types = FALSE, na = "") |>
+  read_data("countrycode_data.csv") |>
   select(
     package_country = country.name.en,
     country_code_2 = iso2c,
@@ -145,14 +141,11 @@ raw_country_data <-
   )
 
 # sanity checks
-if (nrow(
-  raw_country_data |>
-    filter(
-      !is.na(world_bank_country_code_3) &
-        !is.na(package_country_code_3) &
-        world_bank_country_code_3 != package_country_code_3
-    )
-) > 0) {
+if (any(
+  raw_country_data$world_bank_country_code_3 !=
+    raw_country_data$package_country_code_3,
+  na.rm = TRUE
+)) {
   stop("Country code 3 mismatch")
 }
 
@@ -173,11 +166,10 @@ country_data <-
     -world_bank_country_code_3
   )
 
-raw_hale_data <- read_csv(
-  "data/health_adjusted_life_expectancy.csv",
-  show_col_types = FALSE, 
-  na = ""
-) |>
+write_csv(country_data, output_path("country_data.csv"))
+
+raw_hale_data <-
+  read_data("health_adjusted_life_expectancy.csv") |>
   select(
     indicator = Indicator,
     country_code_3 = SpatialDimValueCode,
@@ -192,18 +184,14 @@ raw_hale_data <- read_csv(
   select(-indicator, -sex) |>
   left_join(
     country_data |>
-      select(country, country_code_3)
+      select(country, country_code_3),
+    by = "country_code_3"
   ) |>
   mutate(variable = "life_expectancy")
 
-if (nrow(
-  raw_hale_data |>
-    filter(is.na(country))
-) > 0) {
+if (any(is.na(raw_hale_data$country))) {
   stop("Missing HALE countries")
 }
-
-write_csv(country_data, paste0(output_folder, "/country_data.csv"))
 
 clean_health_ppps <- function(base_year, number_of_rows) {
   base_year_data <-
@@ -219,7 +207,7 @@ clean_health_ppps <- function(base_year, number_of_rows) {
       country_code_3 = `Country Code`,
       icp_country = `Country Name`
     )
-  
+
   old_names <- names(base_year_data)
   year_columns <- stri_detect_regex(old_names, year_regex)
 
@@ -274,7 +262,7 @@ raw_ppp_health_data <-
 # check to make sure we aren't losing important countries
 raw_ppp_health_data |>
   filter(is.na(country)) |>
-  write_csv(paste0(output_folder, "/missing_PPP_countries.csv"))
+  write_csv(output_path("missing_PPP_countries.csv"))
 
 world_bank_data <-
   bind_rows(
@@ -309,26 +297,26 @@ world_bank_data <-
     values_from = value
   )
 
+read_deflator <- function(file, deflator_kind) {
+  read_data(file) |>
+    select(date, deflator = value) |>
+    mutate(deflator_kind = deflator_kind)
+}
+
 deflator_data <-
   bind_rows(
-    read_csv("data/GDP_deflator.csv", na = "", show_col_types = FALSE) |>
-      select(date, deflator = value) |>
-      mutate(deflator_kind = "GDP deflator"),
-    read_csv("data/CPI.csv", na = "", show_col_types = FALSE) |>
-      select(date, deflator = value) |>
-      mutate(deflator_kind = "CPI"),
-    read_csv("data/CPI_medical.csv", na = "", show_col_types = FALSE) |>
-      select(date, deflator = value) |>
-      mutate(deflator_kind = "CPI medical")
+    read_deflator("GDP_deflator.csv", "GDP deflator"),
+    read_deflator("CPI.csv", "CPI"),
+    read_deflator("CPI_medical.csv", "CPI medical")
   ) |>
   # average by year
   mutate(year = year(date)) |>
   group_by(deflator_kind, year) |>
   summarize(deflator = mean(deflator), .groups = "drop") |>
   group_by(deflator_kind) |>
-  # USD in recent_year / basket
+  # USD in deflator_year / basket
   # * basket / historical USD
-  # = USD in recent_year / historical USD
+  # = USD in deflator_year / historical USD
   mutate(deflator_ratio = deflator[year == deflator_year] / deflator) |>
   ungroup() |>
   select(-deflator)
@@ -351,30 +339,22 @@ currency_ratios <-
   inner_join(deflator_data, by = "year", relationship = "many-to-many") |>
   mutate(
     # * historical USD / local historical currency
-    # * USD in recent_year / historical USD
-    # = USD in recent_year / local historical currency
+    # * USD in deflator_year / historical USD
+    # = USD in deflator_year / local historical currency
     currency_ratio = 1 / exchange_rate * deflator_ratio
   )
 
-country_replacements <- read_csv(
-  "data/country_replacements.csv",
-  show_col_types = FALSE,
-  na = ""
-)
+country_replacements <- read_data("country_replacements.csv")
 
-currency_country_replacements <- read_csv(
-  "data/currency_country_replacements.csv",
-  show_col_types = FALSE,
-  na = ""
-)
+currency_country_replacements <-
+  read_data("currency_country_replacements.csv")
 
 only_positive <- function(vector) {
-  vector |>
-    as.numeric() %>%
-    # must be positive
-    ifelse(. <= 0, NA, .)
+  numbers <- as.numeric(vector)
+  ifelse(numbers <= 0, NA, numbers)
 }
 
+# The Tufts CEA Registry data are licensed, so they are not in the repository
 raw_prices <-
   read_csv(
     "data/ratios.csv",
@@ -406,7 +386,7 @@ raw_prices <-
       local_price_of_life_daly
     ),
     # 0 means NA
-    year = as.numeric(year) %>% ifelse(. == 0, NA, .),
+    year = na_if(as.numeric(year), 0),
     ratio_id = seq_len(n())
   )
 
@@ -464,7 +444,7 @@ raw_methods |>
     country_data,
     by = "country"
   ) |>
-  write_csv(paste0(output_folder, "/unmatched_countries.csv"))
+  write_csv(output_path("unmatched_countries.csv"))
 
 # check to see if we should add more currency country replacements
 raw_methods |>
@@ -476,7 +456,7 @@ raw_methods |>
     country_data |> select(currency_country = country),
     by = "currency_country"
   ) |>
-  write_csv(paste0(output_folder, "/unmatched_currency_countries.csv"))
+  write_csv(output_path("unmatched_currency_countries.csv"))
 
 methods <-
   raw_methods |>
@@ -536,8 +516,8 @@ transformed_prices <-
   select(-article_id) |>
   mutate(
     # local historical currency
-    # * USD in recent_year / local historical currency
-    # = USD in recent_year
+    # * USD in deflator_year / local historical currency
+    # = USD in deflator_year
     log_price_of_life = log(local_price_of_life * price_currency_ratio)
   )
 
@@ -569,12 +549,9 @@ world_bank_data_transformed <-
     -nominal_exchange_rate,
     -PPP_GDP,
     -PPP_private_consumption,
-    -PPP_health
-  ) |>
-  select(
-    -alcohol_consumption_per_capita,
-    -population_density,
-    -precipitation
+    -PPP_health,
+    # replaced by logged versions
+    -all_of(logged_controls)
   ) |>
   inner_join(
     currency_ratios |>
@@ -589,8 +566,8 @@ world_bank_data_transformed <-
   ) |>
   mutate(
     # local historical currency
-    # * USD in recent_year / local historical currency
-    # = USD in recent_year
+    # * USD in deflator_year / local historical currency
+    # = USD in deflator_year
     log_gdp_per_capita = log(local_GDP_per_capita * gdp_currency_ratio)
   ) |>
   select(-gdp_currency_ratio) |>
@@ -601,16 +578,14 @@ with_missing_outcomes <-
   left_join(
     filter_price_data(summarized_prices),
     by = c("country", "year")
-  ) |>
-  mutate(year_factor = as.factor(year))
+  )
 
 default_data <-
   with_missing_outcomes |>
   filter(!is.na(log_price_of_life)) |>
   mutate(year_factor = as.factor(year))
 
-default_data |>
-  write_csv(paste0(output_folder, "/default_data.csv"))
+write_csv(default_data, output_path("default_data.csv"))
 
 all_controls <- c(
   "GDP_growth_rate",
@@ -635,57 +610,49 @@ if (length(setdiff(all_controls, names(default_data))) != 0) {
   stop("Controls mismatch")
 }
 
-make_feols_formula <- function(controls) {
+# "a + b", or default if there are no controls
+paste_controls <- function(controls, default = "1") {
   if (length(controls) == 0) {
-    controls_string <- "1"
+    default
   } else {
-    controls_string <-
-      paste0(controls, collapse = " + ")
+    paste0(controls, collapse = " + ")
   }
+}
 
+# fixest IV formula with year fixed effects
+make_feols_formula <- function(controls) {
   paste0(
     "log_price_of_life ~ ",
-    controls_string,
+    paste_controls(controls),
     " | year | life_expectancy ~ log_gdp_per_capita"
   ) |>
     as.formula()
 }
 
-make_plm_formula <- function(controls) {
-  if (length(controls) == 0) {
-    controls_string <- ""
-  } else {
-    controls_string <-
-      controls |>
-        paste0(collapse = " + ") %>%
-        paste0(" + ", .)
-  }
-  paste0(
-    "log_price_of_life ~ life_expectancy",
-    controls_string,
-    " + year_factor | log_gdp_per_capita",
-    controls_string,
-    " + year_factor"
-  ) |>
-    as.formula()
-}
-
+# fixest IV formula with country and year fixed effects
 make_fixed_effects_formula <- function(controls) {
-  if (length(controls) == 0) {
-    controls_string <- "1"
-  } else {
-    controls_string <-
-      paste0(controls, collapse = " + ")
-  }
-
   paste0(
     "log_price_of_life ~ ",
-    controls_string,
+    paste_controls(controls),
     " | country + year | life_expectancy ~ log_gdp_per_capita"
   ) |>
     as.formula()
 }
 
+# the same model as make_feols_formula, for ivreg and plm
+make_plm_formula <- function(controls) {
+  exogenous <- paste_controls(c(controls, "year_factor"))
+  paste0(
+    "log_price_of_life ~ life_expectancy + ",
+    exogenous,
+    " | log_gdp_per_capita + ",
+    exogenous
+  ) |>
+    as.formula()
+}
+
+# forward selection: repeatedly add the control that most improves
+# the adjusted R squared, until adding controls stops helping
 prioritize_most_useful <- function(controls, max_controls = length(controls)) {
   included_controls <- character(0)
   while (length(included_controls) < max_controls) {
@@ -696,8 +663,8 @@ prioritize_most_useful <- function(controls, max_controls = length(controls)) {
           make_plm_formula(c(control, included_controls)),
           data = default_data
         ) |>
-          summary() %>%
-          .[["adj.r.squared"]]
+          summary() |>
+          getElement("adj.r.squared")
       }, warning = function(w) {
         0.0
       }, error = function(e) {
@@ -718,6 +685,8 @@ prioritize_most_useful <- function(controls, max_controls = length(controls)) {
 
 estimable_controls <- prioritize_most_useful(all_controls)
 
+# repeatedly remove the control with the highest variance inflation factor
+# until no VIF is above the cutoff
 remove_max_vif <- function(controls, cutoff) {
   while (length(controls) > 0) {
     model <- ivreg(
@@ -725,25 +694,21 @@ remove_max_vif <- function(controls, cutoff) {
       data = default_data
     )
 
-    vifs <- vif(model)[,"GVIF^(1/(2*Df))"]
+    vifs <- vif(model)[, "GVIF^(1/(2*Df))"]
 
     vifs_table <-
       tibble(
         coefficient = names(vifs),
         value = vifs
       ) |>
-      left_join(
-        tibble(coefficient = controls, is_control = TRUE),
-        by = "coefficient"
-      ) |>
-      filter(is_control | coefficient == "life_expectancy") |>
+      filter(coefficient %in% c(controls, "life_expectancy")) |>
       arrange(desc(value))
 
     removed <-
       vifs_table |>
-      filter(is_control) %>%
-      .$coefficient %>%
-      .[1]
+      filter(coefficient %in% controls) |>
+      pull(coefficient) |>
+      first()
 
     if (vifs_table$value[1] > cutoff) {
       controls <- setdiff(controls, removed)
@@ -756,6 +721,8 @@ remove_max_vif <- function(controls, cutoff) {
 
 unique_controls <- remove_max_vif(estimable_controls, sqrt(5))
 
+# repeatedly remove the least significant control
+# until all controls are significant
 get_significant <- function(controls, cutoff) {
   while (length(controls) > 0) {
     model <- feols(
@@ -765,23 +732,13 @@ get_significant <- function(controls, cutoff) {
     )
 
     coefficients_table <-
-      tibble(
-        summary(model)$coeftable %>%
-        as_tibble(rownames = "coefficient")
-      ) |>
-      semi_join(
-        tibble(coefficient = controls),
-        by = "coefficient"
-      ) |>
+      summary(model)$coeftable |>
+      as_tibble(rownames = "coefficient") |>
+      filter(coefficient %in% controls) |>
       arrange(desc(`Pr(>|t|)`))
-    
-    removed <-
-      coefficients_table %>%
-      .$coefficient %>%
-      .[1]
-    
+
     if (coefficients_table$`Pr(>|t|)`[1] > cutoff) {
-      controls <- setdiff(controls, removed)
+      controls <- setdiff(controls, coefficients_table$coefficient[1])
     } else {
       break
     }
@@ -791,20 +748,21 @@ get_significant <- function(controls, cutoff) {
 
 significant_controls <- get_significant(unique_controls, 0.05)
 
+# keep only country-years where all variables are present
 reindex_data <- function(data, variables) {
   data[c(
     "country",
     "year",
     variables
-  )] %>%
-    filter(complete.cases(.)) |>
+  )] |>
+    filter(complete.cases(pick(everything()))) |>
     select(country, year) |>
     left_join(data, by = c("country", "year")) |>
     # only create year factors for years with fully present rows
-    # to main consinstency with predict
+    # to maintain consistency with predict
     mutate(year_factor = as.factor(year)) |>
     arrange(country, year) |>
-    mutate(country_year_index = 1:n())
+    mutate(country_year_index = seq_len(n()))
 }
 
 present_data <- reindex_data(default_data, c(
@@ -821,12 +779,12 @@ present_significant_data <- reindex_data(default_data, c(
   significant_controls
 ))
 
+# inputs for the Bayesian model in bayesian_code.R
 controls_frame <-
   bind_cols(
     present_data[unique_controls],
     # expand year into dummies
     present_data |>
-      select(year) |>
       mutate(year = as.factor(year)) |>
       model.matrix(~ year, data = _) |>
       as_tibble() |>
@@ -842,40 +800,20 @@ indexed_price_data <-
   ) |>
   arrange(country_year_index)
 
-if (sum(is.na(indexed_price_data$country_year_index)) > 0) {
-  stop("Missing countries")
-}
-
 indexed_countries <-
   present_data |>
-  select(-year_factor) |>
-  pivot_longer(
-    c(-country, -year),
-    names_to = "variable",
-    values_to = "value"
-  ) |>
-  group_by(country) |>
-  summarize(
-    value = mean(value),
-    .groups = "drop"
-  ) |>
+  distinct(country) |>
   arrange(country) |>
   mutate(country_index = seq_len(n()))
 
 indexed_country_years <-
   present_data |>
-  left_join(
-    indexed_countries |>
-      select(country, country_index),
-    by = "country"
-  )
+  left_join(indexed_countries, by = "country")
 
 life_expectancies <-
   world_bank_data |>
-  filter(year == recent_year) |>
-  select(life_expectancy) |>
-  filter(!is.na(life_expectancy)) %>%
-  .$life_expectancy
+  filter(year == recent_year & !is.na(life_expectancy)) |>
+  pull(life_expectancy)
 
 age_range <- tibble(
   life_expectancy =
@@ -891,7 +829,7 @@ raw_map_data <-
   # replace country names
   left_join(country_data, by = "country_code_2")
 
-if (nrow(raw_map_data |> filter(is.na(country))) > 0) {
+if (any(is.na(raw_map_data$country))) {
   stop("Missing map countries")
 }
 
@@ -902,7 +840,4 @@ full_data <-
     by = c("country", "year"),
     relationship = "many-to-many"
   ) |>
-  mutate(
-    year_factor = as.factor(year),
-    number_of_observations = coalesce(number_of_observations, 0)
-  )
+  mutate(year_factor = as.factor(year))

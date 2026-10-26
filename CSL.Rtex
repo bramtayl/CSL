@@ -27,7 +27,7 @@
 % library(kableExtra, warn.conflicts = FALSE)
 
 % source("processing.R")
-% # run bayesian_code.R once if not already run
+% # needs output/stan_fit.RDS: run bayesian_code.R first
 % source("analysis.R")
 
 % bold_header <- function(table) {
@@ -348,7 +348,7 @@ In \autoref{tab:coefficients}, I report the coefficients from three different mo
 % kable(
 %   coefficients_table |> 
 %     mutate_all(linebreak),
-%   caption = "Coefficients from three specifications: the base model, the model including multi-collinear controls, and the model excluding insignificant variables. Standard errors are in parentheses. * means $p < 0.1$, ** means $p < 0.05$, and *** means $p < 0.001$",
+%   caption = "Coefficients from three specifications: the base model, the model including multi-collinear controls, and the model excluding insignificant variables. Standard errors are in parentheses. * means $p < 0.1$, ** means $p < 0.05$, and *** means $p < 0.01$",
 %   digits = 64,
 %   escape = FALSE
 % ) %>%
@@ -634,13 +634,13 @@ Thus, standard errors should be robust to heteroskedasticity and within-country 
 
 The results for all the alternatives are in \autoref{fig:specification_robustness_figure}.
 
-%% begin.rcode specification_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient with different model specfications"
+%% begin.rcode specification_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient with different model specifications"
 % plot_confidence_intervals(specification_robustness_table, "Specification")
 %% end.rcode
 
 For visual clarity, in \autoref{fig:filtered_specification_robustness_figure}, I exclude the fixed-effects specification.
 
-%% begin.rcode filtered_specification_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient with different model specfications, excluding the fixed effects model"
+%% begin.rcode filtered_specification_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient with different model specifications, excluding the fixed effects model"
 % specification_robustness_table |>
 %   filter(Specification != "fixed effects") |>
 %   plot_confidence_intervals("Specification")

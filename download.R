@@ -1,57 +1,45 @@
+# Downloads the public data in data/. See README.md for the data that must be
+# downloaded by hand.
+# Needs a free FRED API key (https://fred.stlouisfed.org/docs/api/api_key.html)
+# in the FRED_API_KEY environment variable.
+
 library(countrycode)
 library(fredr)
 library(purrr)
 library(readr)
 library(rnaturalearth)
 library(sf)
-library(stringi)
-library(tibble)
-library(tidyr)
 library(wbstats)
-library(WDI)
 
-library(dplyr)
+# load last for filter
+library(dplyr, warn.conflicts = FALSE)
 
-output_folder <- "~/Desktop"
+fredr_set_key(Sys.getenv("FRED_API_KEY"))
 
-bulk_data <- WDIbulk()
+download_fred <- function(series_id, file) {
+  fredr(series_id) |>
+    write_csv(file.path("data", file), na = "")
+}
 
-write_csv(bulk_data$Country, "data/world_bank_countries_2.csv")
+download_fred("CPIAUCSL", "CPI.csv")
+download_fred("GDPDEF", "GDP_deflator.csv")
+download_fred("CPIMEDSL", "CPI_medical.csv")
 
-bulk_data |>
-  filter(!is.na(value)) |>
-  write_csv(paste0(output_folder, "/all_world_bank_data.csv"))
-
-fredr_set_key("859a3bf50a026ca281aaeaf9dd06e3de")
-
-fredr("CPIAUCSL") |>
-  write_csv("data/CPI.csv", na = "")
-
-fredr("GDPDEF")
-write_csv(GDP_deflator_data, "data/GDP_deflator.csv", na = "")
-
-fredr("CPIMEDSL") |>
-  write_csv("data/CPI_medical.csv", na = "")
-
-wb_cache()$countries %>%
-  write_csv("data/world_bank_countries.csv", na = "")
-
-# too much data to download at once
+# too much data to download at once, so download variables separately
 # might have to try a couple of times
-# alternatively, save variables separately
-read_csv("data/selected_world_bank_variables.csv") %>%
-  .$variyable_code |>
+read_csv("data/selected_world_bank_variables.csv", show_col_types = FALSE) |>
+  pull(variable_code) |>
   map(
     function(variable_code) {
-      print(variable_code)
+      message(variable_code)
       wb_data(variable_code, country = "all", return_wide = FALSE)
     }
   ) |>
   list_rbind() |>
-  dplyr::filter(!is.na(value) & !is.na(iso2c)) |>
+  filter(!is.na(value) & !is.na(iso2c)) |>
   write_csv("data/world_bank_data.csv", na = "")
 
 write_csv(codelist, "data/countrycode_data.csv", na = "")
 
 ne_countries(scale = "small", returnclass = "sf") |>
-  st_write(map_data, "data/map_data.gpkg")
+  st_write("data/map_data.gpkg", delete_dsn = TRUE)
