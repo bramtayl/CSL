@@ -600,7 +600,7 @@ price_exchange_table <-
   vary_data_choice("price_exchange_kind", "Price exchange rates")
 
 # the life expectancy coefficient, excluding some articles
-get_funding_coefficient <- function(excluded_articles) {
+get_coefficient_excluding <- function(excluded_articles) {
   transformed_prices |>
     filter_price_data() |>
     filter(!(article_id %in% excluded_articles)) |>
@@ -625,17 +625,27 @@ industry_funded_articles <-
 
 funding_robustness_table <-
   bind_rows(
-    get_funding_coefficient(character(0)) |>
+    get_coefficient_excluding(character(0)) |>
       mutate(Studies = "all studies"),
-    get_funding_coefficient(donor_funded_articles) |>
+    get_coefficient_excluding(donor_funded_articles) |>
       mutate(Studies = "excluding donor-funded"),
-    get_funding_coefficient(industry_funded_articles) |>
+    get_coefficient_excluding(industry_funded_articles) |>
       mutate(Studies = "excluding industry-funded"),
-    get_funding_coefficient(
+    get_coefficient_excluding(
       c(donor_funded_articles, industry_funded_articles)
     ) |>
       mutate(Studies = "excluding donor- and industry-funded")
   )
+
+# some prices are implausibly low, probably due to data entry errors
+implausible_prices <-
+  indexed_price_data |>
+  filter(exp(log_price_of_life) < 1)
+
+implausible_price_articles <- unique(implausible_prices$article_id)
+
+without_implausible_prices_interval <-
+  get_coefficient_excluding(implausible_price_articles)
 
 # split the coefficient into a shift between categories of treatments
 # and a change in prices within categories

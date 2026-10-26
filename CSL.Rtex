@@ -37,8 +37,6 @@
 % }
 %% end.rcode
 
-% TODO: add interpretations
-
 \section{Abstract}
 
 Due to the law of increasing marginal costs, the marginal cost of life should be lower in low-life-expectancy countries than in high-life-expectancy countries, all else being equal.
@@ -275,8 +273,6 @@ Therefore, within a country and year, some citizens should have a comparatively 
 However, a typical citizen will have roughly average income, and thus, roughly average life expectancy and a roughly average price of life.
 Thus, by considering averages within a country-year, I can ignore individual-level variation.
 
-% TODO: add citation for main model
-
 \section{Methods}
 
 The marginal cost of life curve and the marginal benefit of life curve mutually determine two variables: life expectancy and the price of life.
@@ -312,6 +308,8 @@ Such a low price would be close to the marginal price of life.
 I only used some prices.
 I excluded prices from studies of participants from more than one country.
 I also excluded zero or negative prices because a price must be positive by my definition.
+A few prices are implausibly low: \rinline{nrow(implausible_prices)} prices from \rinline{length(implausible_price_articles)} studies are below one international dollar per QALY, probably because of data entry errors in the registry, such as prices recorded in thousands or millions of units of currency.
+I kept these prices in the main regression, but excluding these studies barely changes the estimate: the life expectancy coefficient is \rinline{without_implausible_prices_interval$`50%`} (95\% confidence interval \rinline{without_implausible_prices_interval$`2.5%`} to \rinline{without_implausible_prices_interval$`97.5%`}).
 
 In \autoref{sec:prices_appendix}, I discuss further choices I made in processing prices, and test against alternatives for robustness.
 
