@@ -491,6 +491,36 @@ raw_methods |>
   ) |>
   write_csv(output_path("unmatched_currency_countries.csv"))
 
+# to check whether funders choose which treatments get studied
+article_funding <-
+  read_csv(
+    "data/methods.csv",
+    show_col_types = FALSE,
+    col_types = cols_only(
+      `Article ID` = col_character(),
+      `Funding Sources` = col_character()
+    ),
+    name_repair = "minimal"
+  ) |>
+  rename(
+    article_id = `Article ID`,
+    funding_sources = `Funding Sources`
+  ) |>
+  distinct() |> # remove identical rows
+  group_by(article_id) |> # use most recent entry for duplicated rows
+  slice_tail(n = 1) |>
+  ungroup() |>
+  mutate(
+    donor_funded = stri_detect_regex(
+      funding_sources,
+      "Foundation|Nonprofit|Intergovernmental"
+    ),
+    industry_funded = stri_detect_fixed(
+      funding_sources,
+      "Pharmaceutical / Medical Device Industry"
+    )
+  )
+
 methods <-
   raw_methods |>
   semi_join(
@@ -546,7 +576,6 @@ transformed_prices <-
     # duplicate for deflator/exchange rate/ratio kinds
     relationship = "many-to-many"
   ) |>
-  select(-article_id) |>
   mutate(
     # local historical currency
     # * USD in deflator_year / local historical currency

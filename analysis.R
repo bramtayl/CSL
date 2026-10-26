@@ -541,6 +541,44 @@ price_deflators_table <-
 price_exchange_table <-
   vary_data_choice("price_exchange_kind", "Price exchange rates")
 
+# the life expectancy coefficient, excluding some articles
+get_funding_coefficient <- function(excluded_articles) {
+  transformed_prices |>
+    filter_price_data() |>
+    filter(!(article_id %in% excluded_articles)) |>
+    group_by(country, year) |>
+    summarize(log_price_of_life = mean(log_price_of_life), .groups = "drop") |>
+    inner_join(
+      filter_world_bank_data(world_bank_data_transformed),
+      by = c("country", "year")
+    ) |>
+    get_data_coefficient()
+}
+
+donor_funded_articles <-
+  article_funding |>
+  filter(donor_funded) |>
+  pull(article_id)
+
+industry_funded_articles <-
+  article_funding |>
+  filter(industry_funded) |>
+  pull(article_id)
+
+funding_robustness_table <-
+  bind_rows(
+    get_funding_coefficient(character(0)) |>
+      mutate(Studies = "all studies"),
+    get_funding_coefficient(donor_funded_articles) |>
+      mutate(Studies = "excluding donor-funded"),
+    get_funding_coefficient(industry_funded_articles) |>
+      mutate(Studies = "excluding industry-funded"),
+    get_funding_coefficient(
+      c(donor_funded_articles, industry_funded_articles)
+    ) |>
+      mutate(Studies = "excluding donor- and industry-funded")
+  )
+
 # health PPPs exist only for benchmark years, which weakens the first stage
 benchmark_health_ppp_model <- feols(
   make_feols_formula(unique_controls),

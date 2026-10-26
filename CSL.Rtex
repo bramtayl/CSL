@@ -590,6 +590,18 @@ This suggests that readers are adjusting figures in such a way as to reduce vari
 The central estimate using reader-adjusted prices is still practically high, and the confidence interval fully overlaps my main estimate.
 Thus, I am not overly worried about this discrepancy.
 
+Funders might also influence which treatments researchers study.
+Foundations, nonprofits, and intergovernmental organizations might fund studies of particularly cost-effective treatments in developing countries, regardless of which treatments those countries actually pay for.
+Likewise, the pharmaceutical and medical device industry might fund studies of particularly expensive treatments in developed countries.
+Either kind of selection could exaggerate the differences in prices between countries.
+To check for such selection, I repeated my calculations excluding studies with each kind of funding.
+I report the results in \autoref{fig:funding_robustness_figure}.
+Excluding these studies has little effect on the estimate, so selection by funders does not seem to drive my results.
+
+%% begin.rcode funding_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient excluding studies by funding source"
+% plot_confidence_intervals(funding_robustness_table, "Studies")
+%% end.rcode
+
 \section{Specification robustness tests}
 \label{sec:specification_appendix}
 
