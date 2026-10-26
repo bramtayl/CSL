@@ -399,6 +399,8 @@ From these tests, I conclude that stationarity is not a problem in the random ef
 In \autoref{sec:hausman_appendix}, I report the results from a Hausman test to test for consistency between the fixed effects model and the random effects model.
 From these tests, I conclude that there is no evidence that the fixed effects model and the random effects model are inconsistent.
 These results apply equally to the random effects model and the pooled model, because the random effects model is simply a more efficient estimator of the pooled model.
+In \autoref{sec:composition_appendix}, I test whether countries with higher life expectancy shift between categories of treatments.
+I find no evidence of a shift between broad categories of treatments, though a shift within categories remains possible.
 
 \section{Discussion}
 
@@ -601,6 +603,46 @@ Excluding these studies has little effect on the estimate, so selection by funde
 %% begin.rcode funding_robustness_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient excluding studies by funding source"
 % plot_confidence_intervals(funding_robustness_table, "Studies")
 %% end.rcode
+
+\section{Composition of treatments}
+\label{sec:composition_appendix}
+
+In my model, moving along the marginal cost of life curve means shifting from more to less cost-effective treatments.
+If this shift happens between broad categories of treatments, then studies in countries with higher life expectancy should more often be of categories of treatments with high prices.
+
+To test this, I split the life expectancy coefficient into two parts.
+First, for each category of treatments, I calculated the average log price across all countries and years.
+Then, for each country-year, I calculated a composition index, the average of the category averages for the studies in that country-year, and a within-category price, the average difference between each log price and its category average.
+The log price of life in a country-year is the sum of these two parts.
+So, using the same regression as for my main estimate, the coefficients for the two parts add up to the life expectancy coefficient.
+
+I used two kinds of categories from the CEA registry: intervention types (for example, pharmaceutical, screening, or immunization), and disease categories from the Global Burden of Disease.
+The registry reports disease categories for only \rinline{disease_country_years} country-years, so I estimated the total coefficient separately for these country-years.
+I report the results in \autoref{tab:composition_table}.
+
+%% begin.rcode composition_table, echo = FALSE
+% kable(
+%   composition_table |>
+%     mutate_all(linebreak),
+%   caption = "The life expectancy coefficient, split into composition and within-category parts, with 95\\% confidence intervals in parentheses",
+%   escape = FALSE
+% ) %>%
+%   bold_header()
+%% end.rcode
+
+Across intervention types, composition explains almost none of the coefficient.
+Also, the share of studies of pharmaceuticals does not increase with life expectancy: the coefficient is
+\rinline{pharmaceutical_share_interval$`50%`}
+(95\% confidence interval
+\rinline{pharmaceutical_share_interval$`2.5%`} to
+\rinline{pharmaceutical_share_interval$`97.5%`}).
+Thus, I find no evidence that countries with higher life expectancy shift between broad categories of treatments.
+With finer categories, composition explains a larger share of the coefficient, but these estimates are imprecise and based on fewer country-years.
+
+There are two possible explanations.
+First, the shift might happen within the broad categories in the registry: for example, from screening high-risk patients to screening low-risk patients, or from generic drugs to newer brand-name drugs.
+Second, the same treatments might be more expensive per QALY in countries with higher life expectancy, for reasons outside my model.
+My data cannot distinguish between these explanations.
 
 \section{Specification robustness tests}
 \label{sec:specification_appendix}

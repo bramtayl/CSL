@@ -556,12 +556,12 @@ get_funding_coefficient <- function(excluded_articles) {
 }
 
 donor_funded_articles <-
-  article_funding |>
+  article_characteristics |>
   filter(donor_funded) |>
   pull(article_id)
 
 industry_funded_articles <-
-  article_funding |>
+  article_characteristics |>
   filter(industry_funded) |>
   pull(article_id)
 
@@ -578,6 +578,106 @@ funding_robustness_table <-
     ) |>
       mutate(Studies = "excluding donor- and industry-funded")
   )
+
+# split the coefficient into a shift between categories of treatments
+# and a change in prices within categories
+composition_prices <-
+  transformed_prices |>
+  filter_price_data() |>
+  left_join(article_characteristics, by = "article_id") |>
+  mutate(
+    # ratio-level types are often missing, so fall back on the article's
+    intervention_type = coalesce(
+      ratio_intervention_type,
+      article_intervention_type
+    )
+  )
+
+disease_prices <-
+  composition_prices |>
+  filter(!is.na(disease_tier_2))
+
+fit_country_years <- function(country_years, outcome) {
+  feols(
+    make_feols_formula(unique_controls, outcome),
+    data = inner_join(
+      filter_world_bank_data(world_bank_data_transformed),
+      country_years,
+      by = c("country", "year")
+    ),
+    vcov = ~ country
+  )
+}
+
+format_interval <- function(model) {
+  interval <- get_feols_interval(model)
+  paste0(
+    interval$`50%`,
+    "\n(",
+    interval$`2.5%`,
+    ", ",
+    interval$`97.5%`,
+    ")"
+  )
+}
+
+decompose_prices <- function(prices, categories, label) {
+  category_prices <-
+    prices |>
+    group_by(across(all_of(categories))) |>
+    summarize(category_log_price = mean(log_price_of_life), .groups = "drop")
+
+  # the total is the sum of the composition and within category parts
+  country_years <-
+    prices |>
+    left_join(category_prices, by = categories) |>
+    group_by(country, year) |>
+    summarize(
+      total = mean(log_price_of_life),
+      composition = mean(category_log_price),
+      within_category = mean(log_price_of_life - category_log_price),
+      .groups = "drop"
+    )
+
+  total_model <- fit_country_years(country_years, "total")
+
+  tibble(
+    Categories = label,
+    `Country-years` = nobs(total_model),
+    Total = format_interval(total_model),
+    Composition = format_interval(
+      fit_country_years(country_years, "composition")
+    ),
+    `Within category` = format_interval(
+      fit_country_years(country_years, "within_category")
+    )
+  )
+}
+
+composition_table <-
+  bind_rows(
+    decompose_prices(composition_prices, "intervention_type", "intervention type"),
+    decompose_prices(disease_prices, "disease_tier_1", "disease, broad"),
+    decompose_prices(disease_prices, "disease_tier_2", "disease, fine"),
+    decompose_prices(
+      disease_prices,
+      c("disease_tier_2", "intervention_type"),
+      "disease and intervention type"
+    )
+  )
+
+disease_country_years <- composition_table$`Country-years`[2]
+
+pharmaceutical_share_interval <-
+  composition_prices |>
+  group_by(country, year) |>
+  summarize(
+    pharmaceutical_share =
+      mean(stri_detect_fixed(intervention_type, "Pharmaceutical")),
+    .groups = "drop"
+  ) |>
+  fit_country_years("pharmaceutical_share") |>
+  get_feols_interval()
 
 # health PPPs exist only for benchmark years, which weakens the first stage
 benchmark_health_ppp_model <- feols(

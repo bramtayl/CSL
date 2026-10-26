@@ -398,7 +398,8 @@ raw_prices <-
       `$/QALY from Article` = col_character(),
       `$/DALY from Article` = col_character(),
       `$/QALY Final` = col_character(),
-      `$/QALY Final in Current USD` = col_character()
+      `$/QALY Final in Current USD` = col_character(),
+      `Intervention Types` = col_character()
     )
   ) |>
   rename(
@@ -406,7 +407,8 @@ raw_prices <-
     year = `Issue Year`,
     local_price_of_life_qaly = `$/QALY from Article`,
     local_price_of_life_daly = `$/DALY from Article`,
-    local_price_of_life_qaly_final = `$/QALY Final`
+    local_price_of_life_qaly_final = `$/QALY Final`,
+    ratio_intervention_type = `Intervention Types`
   ) |>
   mutate(
     local_price_of_life_qaly = only_positive(local_price_of_life_qaly),
@@ -491,20 +493,21 @@ raw_methods |>
   ) |>
   write_csv(output_path("unmatched_currency_countries.csv"))
 
-# to check whether funders choose which treatments get studied
-article_funding <-
+# funding, to check whether funders choose which treatments get studied,
+# and kinds of treatments, to check for shifts between kinds of treatments
+article_characteristics <-
   read_csv(
     "data/methods.csv",
     show_col_types = FALSE,
-    col_types = cols_only(
-      `Article ID` = col_character(),
-      `Funding Sources` = col_character()
+    col_select = c(
+      article_id = `Article ID`,
+      funding_sources = `Funding Sources`,
+      article_intervention_type = `Intervention Types`,
+      disease_tier_1 = `Primary Disease GBD Tiers 1`,
+      disease_tier_2 = `Primary Disease GBD Tiers 2`
     ),
+    col_types = cols(.default = col_character()),
     name_repair = "minimal"
-  ) |>
-  rename(
-    article_id = `Article ID`,
-    funding_sources = `Funding Sources`
   ) |>
   distinct() |> # remove identical rows
   group_by(article_id) |> # use most recent entry for duplicated rows
@@ -544,7 +547,7 @@ expanded_prices <-
     values_drop_na = TRUE
   ) |>
   left_join(
-    raw_prices |> select(article_id, ratio_id, year),
+    raw_prices |> select(article_id, ratio_id, year, ratio_intervention_type),
     by = "ratio_id"
   ) |>
   select(-ratio_id)
@@ -682,9 +685,10 @@ paste_controls <- function(controls, default = "1") {
 }
 
 # fixest IV formula with year fixed effects
-make_feols_formula <- function(controls) {
+make_feols_formula <- function(controls, outcome = "log_price_of_life") {
   paste0(
-    "log_price_of_life ~ ",
+    outcome,
+    " ~ ",
     paste_controls(controls),
     " | year | life_expectancy ~ log_gdp_per_capita"
   ) |>
