@@ -78,6 +78,37 @@ logged_variable_table <-
     `% positive` = formatted_percent_positive
   )
 
+number_of_countries <- n_distinct(present_data$country)
+number_of_country_years <- nrow(present_data)
+number_of_price_observations <- nrow(indexed_price_data)
+number_of_studies <- n_distinct(indexed_price_data$article_id)
+
+summary_variables <- c(
+  "log_price_of_life",
+  "life_expectancy",
+  "log_gdp_per_capita",
+  unique_controls
+)
+
+summary_statistics_table <-
+  present_data |>
+  select(all_of(summary_variables)) |>
+  pivot_longer(everything(), names_to = "variable", values_to = "value") |>
+  group_by(variable) |>
+  summarize(
+    Mean = mean(value),
+    `Standard deviation` = sd(value),
+    Minimum = min(value),
+    Maximum = max(value),
+    .groups = "drop"
+  ) |>
+  arrange(match(variable, summary_variables)) |>
+  mutate(
+    across(-variable, format_individually),
+    variable = format_regressors(variable)
+  ) |>
+  rename(Variable = variable)
+
 controls_table <-
   tibble(control = all_controls) |>
   mutate(
@@ -421,6 +452,29 @@ fixed_effects_model <- feols(
   vcov = ~ country
 )
 
+# give country-years with more studies more weight
+weighted_model <- feols(
+  make_feols_formula(unique_controls),
+  data = present_data,
+  weights = ~ number_of_observations,
+  vcov = ~ country
+)
+
+# life expectancy without adjusting for health
+unadjusted_model <- feols(
+  make_feols_formula(unique_controls),
+  data = default_data |>
+    mutate(life_expectancy = unadjusted_life_expectancy),
+  vcov = ~ country
+)
+
+# years of health-adjusted life expectancy per year of unadjusted
+health_adjustment_slope <-
+  lm(life_expectancy ~ unadjusted_life_expectancy, data = present_data) |>
+  coef() |>
+  getElement("unadjusted_life_expectancy") |>
+  signif(2)
+
 unique_hausman_p_value <- phtest(
   random_effects_model,
   plm(
@@ -455,6 +509,10 @@ specification_robustness_table <-
       mutate(Specification = "with multicollinear controls"),
     get_feols_interval(significant_model) |>
       mutate(Specification = "significant model"),
+    get_feols_interval(weighted_model) |>
+      mutate(Specification = "weighted by number of studies"),
+    get_feols_interval(unadjusted_model) |>
+      mutate(Specification = "unadjusted life expectancy"),
     get_feols_interval(
       model_without_endogeneity,
       parameter = "life_expectancy"

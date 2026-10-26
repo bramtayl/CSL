@@ -45,7 +45,7 @@ Due to the law of increasing marginal costs, the marginal cost of life should be
 To assess this, I estimated the marginal cost of life curve.
 I assume that a government would choose both life expectancy and the price of life in its country corresponding to the intersection of a marginal cost of life curve and a marginal benefit of life curve.
 To estimate the marginal cost of life curve, I used two-stage least squares.
-I downloaded data from three sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
+I downloaded data from four sources: the World Health Organization, the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
 I used Gross Domestic Product (GDP) per capita as an instrument because it should correlate with shifts in the marginal benefit of life curve but not the marginal cost of life curve.
 Also, I also controlled for several variables that could correlate with shifts in the marginal cost of life curve.
 The marginal cost of life is strongly increasing.
@@ -171,7 +171,8 @@ This is largely the same model proposed by Johannesson \autocite{Johannesson_199
 This measure is necessarily subjective.
 
 \textbf{Health-adjusted life expectancy}: traditional life expectancy is how many years which one predicts a baby born in a country will live for, on average.
-In this paper, I use health-adjusted life expectancy, which is life expectancy measured in QALYs rather than years.
+In this paper, I use health-adjusted life expectancy, which is the average number of years a newborn can expect to live in full health, counting years lived with illness or disability as less than a full year.
+This is similar to measuring life expectancy in QALYs rather than years, although the World Health Organization weights years lived with illness or disability using disability weights from the Global Burden of Disease rather than the utility weights used to calculate QALYs.
 
 \textbf{Treatment}: any good a citizen or government could purchase to increase a citizen's life expectancy.
 This is a broad definition that includes not only healthcare treatments, but also nutrition, water quality and sanitation, and much more. 
@@ -274,7 +275,6 @@ Therefore, within a country and year, some citizens should have a comparatively 
 However, a typical citizen will have roughly average income, and thus, roughly average life expectancy and a roughly average price of life.
 Thus, by considering averages within a country-year, I can ignore individual-level variation.
 
-% TODO: talk about the change to health-adjusted life expectancy
 % TODO: add citation for main model
 
 \section{Methods}
@@ -288,6 +288,8 @@ I discuss my reasoning for below.
 I downloaded data from four sources: the World Health Organization, the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
 
 I downloaded data on health-adjusted life expectancy from the World Health Organization \autocite{WHO}.
+I used health-adjusted life expectancy, rather than unadjusted life expectancy, because prices in the CEA registry are in units of currency per QALY, so health-adjusted life expectancy measures life in roughly the same units.
+Using unadjusted life expectancy from the World Bank instead yields a similar estimate; see \autoref{sec:specification_appendix}.
 
 To obtain price of life data, I downloaded data about the cost-effectiveness of healthcare treatments from the CEA Registry.
 This registry is a ``comprehensive database of greater than 10,000 cost-utility analyses on a wide variety of diseases and treatments published from 1976 to the present'' \autocite{CEA_registry}.
@@ -297,6 +299,7 @@ For each study, Tufts Medical reports the following variables: the publication y
 I logged both GDP per capita and prices because all values are positive, and the distributions are right-skewed.
 
 For each country and year (country-year), I used the average of log prices published in that country-year as a rough estimate of the log price of life.
+Most studies use data from a few years before publication, but life expectancy and GDP per capita change slowly within countries, so this mismatch should matter little.
 Of course, no author who published such a price intended to estimate the price of life in a country and year.
 In fact, each author was simply analyzing the cost-effectiveness of a treatment the author was interested in and could obtain data about.
 Still, the average of the log of published prices in each country and year might be close to the log price of life, for three reasons.
@@ -312,9 +315,12 @@ I also excluded zero or negative prices because a price must be positive by my d
 
 In \autoref{sec:prices_appendix}, I discuss further choices I made in processing prices, and test against alternatives for robustness.
 
-To obtain the main input variable, life expectancy, the instrumental variable, GDP per capita, and control variables, I downloaded data from the World Bank \autocite{World_Bank}.
+To obtain the instrumental variable, GDP per capita, and control variables, I downloaded data from the World Bank \autocite{World_Bank}.
 
 I report further details about these variables in \autoref{sec:WDI_variables}.
+
+My final sample includes \rinline{format(number_of_price_observations, big.mark = ",")} prices from \rinline{format(number_of_studies, big.mark = ",")} studies, in \rinline{number_of_country_years} country-years from \rinline{number_of_countries} countries.
+I report summary statistics in \autoref{sec:summary_statistics}.
 
 I used log GDP per capita as an instrumental variable because an exogenous change in GDP per capita would cause the marginal benefit of life curve, but not the marginal cost of life curve, to shift.
 An exogenous increase in GDP per capita would cause the marginal benefit curve to shift upwards, because, as I discussed above, countries with a higher GDP per capita have a higher ability to pay, and thus, willingness to pay, for life.
@@ -376,6 +382,9 @@ it was
 international dollars per QALY in
 \rinline{worst_prediction$country}.
 
+Because the prediction model includes only life expectancy and year fixed effects, these predictions rank countries in the same order as their life expectancy.
+Also, I predict the marginal cost of life for all \rinline{nrow(recent_predictions)} countries with data on life expectancy and GDP per capita in \rinline{recent_year}, including countries with no studies in the CEA registry.
+
 %% begin.rcode cost_of_life_table, echo=FALSE
 % kable(
 %   rank_table,
@@ -398,8 +407,8 @@ I also conducted analyses to check the validity of these results.
 In \autoref{sec:stationarity_tests}, I report the results from testing for stationarity in the random effects model.
 From these tests, I conclude that stationarity is not a problem in the random effects model.
 In \autoref{sec:hausman_appendix}, I report the results from a Hausman test to test for consistency between the fixed effects model and the random effects model.
-From these tests, I conclude that there is no evidence that the fixed effects model and the random effects model are inconsistent.
-These results apply equally to the random effects model and the pooled model, because the random effects model is simply a more efficient estimator of the pooled model.
+From these tests, I find no evidence that the fixed effects model and the random effects model are inconsistent, although, because the fixed effects estimates are very imprecise, this test has little power.
+Under the random effects assumptions, the pooled model estimates the same coefficients as the random effects model, so these results also apply to the pooled model.
 In \autoref{sec:composition_appendix}, I test whether countries with higher life expectancy shift between categories of treatments.
 I find no evidence of a shift between broad categories of treatments, though a shift within categories remains possible.
 
@@ -409,7 +418,7 @@ Due to the law of increasing marginal costs, the marginal cost of life should be
 To assess this, I estimated the marginal cost of life curve.
 I assume that a government would choose both life expectancy and the price of life in its country corresponding to the intersection of a marginal cost of life curve and a marginal benefit of life curve.
 To estimate the marginal cost of life curve, I used two-stage least squares.
-I downloaded data from three sources: the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
+I downloaded data from four sources: the World Health Organization, the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry, the World Bank, and the US Federal Reserve.
 I used Gross Domestic Product (GDP) per capita as an instrument because it should correlate with shifts in the marginal benefit of life curve but not the marginal cost of life curve.
 Also, I also controlled for several variables that could correlate with shifts in the marginal cost of life curve.
 The marginal cost of life is strongly increasing.
@@ -457,6 +466,19 @@ Finally, the average of published prices is only a rough estimate of the underly
 \section{Appendices}
 
 \begin{appendices}
+
+\section{Summary statistics}
+\label{sec:summary_statistics}
+
+In \autoref{tab:summary_statistics_table}, I report summary statistics for the country-years in my main regression.
+
+%% begin.rcode summary_statistics_table, echo = FALSE
+% kable(
+%   summary_statistics_table,
+%   caption = "Summary statistics for the country-years in the main regression"
+% ) %>%
+%   bold_header()
+%% end.rcode
 
 \section{Details about World Bank variables}
 \label{sec:WDI_variables}
@@ -546,6 +568,7 @@ More specifically, I can conclude that the marginal benefit of life curve must h
 I conducted a Hausman test to check for inconsistency between the random effects model and the fixed effects model.
 The Hausman test had a p-value of \rinline{signif(unique_hausman_p_value, display_figures)}.
 Thus, there is no evidence that the fixed effects model and the random effects model are inconsistent.
+However, because the fixed effects estimates are very imprecise, this test has little power, so this is only weak evidence that the random effects model is consistent.
 
 \section{Stationarity}
 \label{sec:stationarity_tests}
@@ -558,6 +581,7 @@ years of data.
 I considered only a lag of one, and did not allow for different intercepts between countries or consistent time trends within countries.
 I report these results in \autoref{tab:stationarity_tests_table}.
 From the low p-value for all tests, I conclude that the residuals are stationary.
+However, with as few as \rinline{minimum_years} years of data for some countries, these tests have limited power.
 
 %% begin.rcode stationarity_tests_table, echo = FALSE
 % kable(stationarity_table, caption = "Stationarity test results") %>%
@@ -677,12 +701,22 @@ For the ``with multicollinear controls'' model, I included the control variables
 This results in a wider confidence interval; see \autoref{fig:filtered_specification_robustness_figure}.
 For the ``significant'' controls, I only included statistically significant controls.
 This results in a narrower confidence interval; see \autoref{fig:filtered_specification_robustness_figure}.
-Neither set yields a significantly different central estimate, suggesting that none of the control variables considered are confounding the effect of life expectancy.
+Neither set yields a significantly different central estimate, suggesting that the estimate is not sensitive to which of these controls I include.
+However, this cannot rule out confounding by variables I did not observe.
 
 Finally, I considered ignoring endogeneity by using observed life expectancy directly as a regressor.
 To do so means assuming that the slope of the marginal benefit of life curve is zero.
 This results in a lower, but still statistically and practically significant, estimate; see \autoref{fig:filtered_specification_robustness_figure}.
 This suggests that the slope of the marginal benefit of curve is negative, but not negative enough to outweigh the strongly positive slope of the marginal cost curve.
+
+In the main model, I weighted all country-years equally, because my model describes country-years, not individual studies.
+However, some country-years have many more studies than others, so their average prices should be more precise.
+For the ``weighted by number of studies'' model, I weighted each country-year by its number of studies.
+This results in a higher central estimate with a wider confidence interval; see \autoref{fig:filtered_specification_robustness_figure}.
+
+For the ``unadjusted life expectancy'' model, I used unadjusted life expectancy from the World Bank instead of health-adjusted life expectancy.
+This results in a slightly lower central estimate; see \autoref{fig:filtered_specification_robustness_figure}.
+This is expected, because in my sample, one more year of unadjusted life expectancy corresponds to only about \rinline{health_adjustment_slope} more years of health-adjusted life expectancy.
 
 I clustered standard errors for all models except for the hierarchical Bayesian model by country.
 Thus, standard errors should be robust to heteroskedasticity and within-country autocorrelation.
