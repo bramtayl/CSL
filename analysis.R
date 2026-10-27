@@ -396,6 +396,22 @@ example_prediction <-
   recent_predictions |>
   filter(country == example_country)
 
+# a low-life-expectancy country whose prediction matches published estimates
+contrast_country <- "Kenya"
+
+contrast_prediction <-
+  recent_predictions |>
+  filter(country == contrast_country)
+
+# country names as they appear in a sentence
+display_country <- function(country) {
+  ifelse(
+    stri_detect_regex(country, "^United "),
+    paste("the", country),
+    country
+  )
+}
+
 best_prediction <- slice_head(recent_predictions, n = 1)
 worst_prediction <- slice_tail(recent_predictions, n = 1)
 

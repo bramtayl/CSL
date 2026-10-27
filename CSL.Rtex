@@ -54,13 +54,14 @@ The marginal cost of life is far lower in some countries than others.
 For example, I predict that, in 
 \rinline{recent_year},
 while the marginal cost of life was
-\rinline{best_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")} 
-international dollars per QALY in
-\rinline{best_prediction$country},
-it was
-\rinline{worst_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
-international dollars per QALY in
-\rinline{worst_prediction$country}.
+\$\rinline{example_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+per QALY in
+\rinline{display_country(example_country)},
+it was only
+\$\rinline{contrast_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+per QALY in
+\rinline{display_country(contrast_country)}
+(in \rinline{deflator_year} international dollars).
 
 \section{Introduction}
 
@@ -402,13 +403,14 @@ In \autoref{tab:cost_of_life_table} and \autoref{fig:cost_of_life_map}, I show t
 For example, I predict that, in 
 \rinline{recent_year},
 while the marginal cost of life was
-\rinline{best_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")} 
-international dollars per QALY in
-\rinline{best_prediction$country},
-it was
-\rinline{worst_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
-international dollars per QALY in
-\rinline{worst_prediction$country}.
+\$\rinline{example_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+per QALY in
+\rinline{display_country(example_country)},
+it was only
+\$\rinline{contrast_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+per QALY in
+\rinline{display_country(contrast_country)}
+(in \rinline{deflator_year} international dollars).
 
 Because the prediction model includes only life expectancy and year fixed effects, these predictions rank countries in the same order as their life expectancy.
 Also, I predict the marginal cost of life for all \rinline{nrow(recent_predictions)} countries with data on life expectancy and GDP per capita in \rinline{recent_year}, including countries with no studies in the CEA registry.
@@ -470,13 +472,14 @@ The marginal cost of life is far lower in some countries than others.
 For example, I predict that, in 
 \rinline{recent_year},
 while the marginal cost of life was
-\rinline{best_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")} 
-international dollars per QALY in
-\rinline{best_prediction$country},
-it was
-\rinline{worst_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
-international dollars per QALY in
-\rinline{worst_prediction$country}.
+\$\rinline{example_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+per QALY in
+\rinline{display_country(example_country)},
+it was only
+\$\rinline{contrast_prediction$price_of_life %>% signif(display_figures) %>% format(big.mark = ",")}
+per QALY in
+\rinline{display_country(contrast_country)}
+(in \rinline{deflator_year} international dollars).
 
 There are several caveats to these results, all of which I discuss in more detail above or in the appendices.
 I have summarized these caveats below, ordering them roughly from the most severe to least severe.
