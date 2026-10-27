@@ -419,6 +419,9 @@ In my data, a 1\% increase in GDP per capita is associated with a \rinline{signi
 The predictions differ much more because life expectancy in \rinline{worst_prediction$country} is far lower than its income alone would suggest.
 Applying a single marginal cost of life curve to all countries treats such differences as movements along the curve, so it may exaggerate differences in the marginal cost of life between countries with unusual disease burdens.
 
+To check my predictions, I compared them to estimates of the cost of health in low- and middle-income countries from Ochalek et al. \autocite*{Ochalek_2018}, which use different data and methods.
+My predictions are highly correlated with theirs, and are similar on average; see \autoref{sec:validation_appendix}.
+
 %% begin.rcode cost_of_life_table, echo=FALSE
 % kable(
 %   rank_table,
@@ -714,6 +717,28 @@ There are two possible explanations.
 First, the shift might happen within the broad categories in the registry: for example, from screening high-risk patients to screening low-risk patients, or from generic drugs to newer brand-name drugs.
 Second, the same treatments might be more expensive per QALY in countries with higher life expectancy, for reasons outside my model.
 My data cannot distinguish between these explanations.
+
+\section{Comparison with published estimates}
+\label{sec:validation_appendix}
+
+Ochalek et al. \autocite*{Ochalek_2018} estimated the cost per DALY averted by health spending in \rinline{nrow(ochalek_raw_estimates)} low- and middle-income countries in \rinline{ochalek_year}, using four methods.
+Rather than using prices from cost-effectiveness studies, they estimated the effect of health spending on mortality and morbidity across countries.
+So, their estimates provide an independent check on my predictions.
+They report costs in \rinline{ochalek_year} US dollars, so I converted them to \rinline{deflator_year} international dollars using the same exchange rates and deflators I used for prices.
+DALYs and QALYs are not identical, but both measure years of healthy life, so the two sets of estimates should be roughly comparable.
+
+In \autoref{fig:ochalek_figure}, I compare my predictions for the \rinline{nrow(ochalek_comparison)} countries in both datasets to the geometric mean of their four estimates.
+The correlation between the logs of the two is \rinline{signif(ochalek_correlation, 2)}.
+On average, my predictions are \rinline{signif(ochalek_ratio, 2)} times theirs.
+For \rinline{ochalek_overlaps} of these countries, the range of their four estimates overlaps the 95\% confidence interval for my prediction.
+
+%% begin.rcode ochalek_figure, echo = FALSE, fig.asp = 1, fig.cap = paste0("My predicted marginal cost of life compared to the cost per DALY averted estimated by Ochalek et al., in ", ochalek_year, ". Vertical bars are 95\\% confidence intervals for my predictions, horizontal bars are the range of their four estimates, and the dashed line marks equal values.")
+% ochalek_figure
+%% end.rcode
+
+The largest disagreements are for \rinline{knitr::combine_words(ochalek_disagreements)}, where my predictions are far lower than theirs.
+All of these countries are in southern Africa, and have very high rates of HIV/AIDS, so their life expectancy is far lower than their income would suggest.
+This supports my caution above: a single marginal cost of life curve may exaggerate differences in the marginal cost of life between countries with unusual disease burdens.
 
 \section{Specification robustness tests}
 \label{sec:specification_appendix}

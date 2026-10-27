@@ -15,6 +15,8 @@ Most of the data are in `data/`:
 | `health_2005.csv`, `health_2011.csv`, `health_2017.csv`, `health_2021.csv` | World Bank International Comparison Program, series `9080000:ACTUAL HEALTH`, for each ICP base year | downloaded by hand from DataBank |
 | `health_adjusted_life_expectancy.csv` | World Health Organization Global Health Observatory, indicator `WHOSIS_000002` | downloaded by hand |
 | `country_replacements.csv`, `currency_country_replacements.csv` | written by hand, to match country names in the CEA Registry to other sources | |
+| `control_reasons.csv` | written by hand: why each control might shift the marginal cost of life curve | |
+| `ochalek_2018_cost_per_daly.csv` | Ochalek, Lomas and Claxton (2018), BMJ Global Health 3:e000964, online supplementary file 1: cost per DALY averted by country, 2015 US$, for four methods (CC BY) | copied by hand from the supplementary file |
 
 The price data come from the Tufts Medical Cost-Effectiveness Analysis (CEA) Registry.
 They are licensed, so they aren't in this repository.

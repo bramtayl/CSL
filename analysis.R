@@ -374,6 +374,139 @@ intersection_data <-
     Side = side
   )
 
+# compare predictions to published estimates of the cost of health in low-
+# and middle-income countries, in 2015 US$ per DALY averted, using four methods
+ochalek_year <- 2015
+
+if (recent_year != ochalek_year) {
+  stop("Predictions and published estimates are from different years")
+}
+
+ochalek_deflator_ratio <-
+  deflator_data |>
+  filter(
+    deflator_kind == default_gdp_deflator_kind &
+      year == ochalek_year
+  ) |>
+  pull(deflator_ratio)
+
+ochalek_raw_estimates <- read_data("ochalek_2018_cost_per_daly.csv")
+
+ochalek_estimates <-
+  ochalek_raw_estimates |>
+  mutate(
+    country_code_3 = countrycode::countrycode(
+      ochalek_country,
+      "country.name",
+      "iso3c"
+    )
+  ) |>
+  inner_join(
+    country_data |> select(country, country_code_3),
+    by = "country_code_3"
+  ) |>
+  pivot_longer(
+    starts_with("daly"),
+    names_to = "method",
+    values_to = "usd_cost"
+  ) |>
+  inner_join(
+    world_bank_data |>
+      filter(year == ochalek_year) |>
+      select(country, nominal_exchange_rate, PPP_GDP),
+    by = "country"
+  ) |>
+  mutate(
+    # US$ in 2015
+    # * local currency in 2015 / US$ in 2015
+    # * international $ in 2015 / local currency in 2015
+    # * international $ in deflator_year / international $ in 2015
+    cost = usd_cost * nominal_exchange_rate / PPP_GDP * ochalek_deflator_ratio
+  ) |>
+  group_by(country) |>
+  summarize(
+    lower_cost = min(cost),
+    upper_cost = max(cost),
+    # geometric mean across methods
+    cost = exp(mean(log(cost))),
+    .groups = "drop"
+  ) |>
+  filter(!is.na(cost))
+
+ochalek_comparison <-
+  inner_join(
+    ochalek_estimates,
+    recent_predictions |>
+      select(
+        country,
+        price_of_life,
+        lower_price_of_life,
+        upper_price_of_life
+      ),
+    by = "country"
+  )
+
+ochalek_correlation <-
+  cor(log(ochalek_comparison$cost), log(ochalek_comparison$price_of_life))
+
+ochalek_ratio <-
+  exp(mean(log(ochalek_comparison$price_of_life / ochalek_comparison$cost)))
+
+ochalek_overlaps <- sum(
+  ochalek_comparison$upper_cost >= ochalek_comparison$lower_price_of_life &
+    ochalek_comparison$lower_cost <= ochalek_comparison$upper_price_of_life
+)
+
+ochalek_disagreements <-
+  ochalek_comparison |>
+  arrange(price_of_life / cost) |>
+  slice_head(n = 5) |>
+  pull(country)
+
+ochalek_figure <-
+  ggplot(ochalek_comparison) +
+  aes(x = cost, y = price_of_life) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbar(
+    aes(ymin = lower_price_of_life, ymax = upper_price_of_life),
+    color = "gray75",
+    linewidth = 0.3,
+    width = 0
+  ) +
+  geom_errorbar(
+    aes(xmin = lower_cost, xmax = upper_cost),
+    orientation = "y",
+    color = "gray75",
+    linewidth = 0.3,
+    width = 0
+  ) +
+  geom_point(size = 1.5) +
+  annotate(
+    "text",
+    x = max(ochalek_comparison$upper_cost),
+    y = max(ochalek_comparison$upper_cost),
+    label = "equal",
+    hjust = 1.1,
+    vjust = -0.5,
+    color = "gray40",
+    size = 3
+  ) +
+  scale_x_log10(labels = scales::label_dollar()) +
+  scale_y_log10(labels = scales::label_dollar()) +
+  labs(
+    x = paste0(
+      "Ochalek et al. cost per DALY averted, ",
+      deflator_year,
+      " international $"
+    ),
+    y = paste0(
+      "My predicted marginal cost of life, ",
+      deflator_year,
+      " international $"
+    )
+  ) +
+  theme_bw()
+
 format_dollars <- function(values) {
   sapply(values, function(value) {
     paste0(
