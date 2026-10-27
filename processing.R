@@ -685,12 +685,16 @@ paste_controls <- function(controls, default = "1") {
 }
 
 # fixest IV formula with year fixed effects
-make_feols_formula <- function(controls, outcome = "log_price_of_life") {
+make_feols_formula <- function(controls,
+  outcome = "log_price_of_life",
+  instrument = "log_gdp_per_capita"
+) {
   paste0(
     outcome,
     " ~ ",
     paste_controls(controls),
-    " | year | life_expectancy ~ log_gdp_per_capita"
+    " | year | life_expectancy ~ ",
+    instrument
   ) |>
     as.formula()
 }

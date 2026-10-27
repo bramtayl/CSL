@@ -649,6 +649,38 @@ funding_robustness_table <-
       mutate(Studies = "excluding donor- and industry-funded")
   )
 
+# GDP from earlier years can't respond to recent shifts in the marginal cost
+# of life curve, so use it as an instrument to check for reverse causality
+gdp_by_year <-
+  filter_world_bank_data(world_bank_data_transformed) |>
+  filter(!is.na(log_gdp_per_capita)) |>
+  select(country, year, log_gdp_per_capita)
+
+get_lagged_gdp_interval <- function(lag) {
+  lagged_gdp <-
+    gdp_by_year |>
+    mutate(year = year + lag) |>
+    rename(lagged_log_gdp_per_capita = log_gdp_per_capita)
+
+  feols(
+    make_feols_formula(
+      unique_controls,
+      instrument = "lagged_log_gdp_per_capita"
+    ),
+    data = left_join(present_data, lagged_gdp, by = c("country", "year")),
+    vcov = ~ country
+  ) |>
+    get_feols_interval()
+}
+
+lagged_gdp_table <-
+  c(0, 5, 10, 15) |>
+  lapply(function(lag) {
+    get_lagged_gdp_interval(lag) |>
+      mutate(`GDP lag (years)` = as.character(lag))
+  }) |>
+  bind_rows()
+
 # some prices are implausibly low, probably due to data entry errors
 implausible_prices <-
   indexed_price_data |>

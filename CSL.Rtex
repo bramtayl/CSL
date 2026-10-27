@@ -134,7 +134,8 @@ On the demand side, the Preston curve is the relationship between GDP per capita
 Preston found that the relationship was non-linear, with a lower slope for high-income countries.
 Also, Preston found that the curve has shifted over time, as life expectancy increases at all income levels.
 The causality of this relationship is debated.
-While the demand for health is higher at higher incomes, it is also possible that better health causes increases in GDP \autocite{Acemoglu_2007}.
+While the demand for health is higher at higher incomes, it is also possible that health affects GDP.
+However, Acemoglu and Johnson find that increases in life expectancy increased population, and find no evidence that they increased GDP per capita \autocite*{Acemoglu_2007}.
 
 Governments value their citizen's lives in at least three conflicting ways.
 In addition to cost-effectiveness thresholds, which I discuss above, governments also use a value of a statistical life (VSL) and individual foregone earnings.
@@ -328,6 +329,18 @@ The only possible exception I can imagine is that countries with higher GDP per 
 However, I considered controlling for levels of education, and many other variables possibly related to the marginal cost of life.
 Moreover, any relationship that exists between GDP per capita and the marginal cost of life would be negligible compared to the very strong relationship between GDP per capita and the marginal benefit of life.
 
+Another possible concern is reverse causality: health might itself affect GDP per capita.
+This would only bias my estimate if shifts in the marginal cost of life curve changed life expectancy, which then changed GDP per capita.
+Changes in life expectancy caused by shifts in the marginal benefit of life curve would not bias my estimate, because they are not part of the error in the marginal cost of life curve.
+Suppose that treatments became more expensive, shifting the marginal cost of life curve upwards, and lowering life expectancy.
+If better health raised GDP per capita, then GDP per capita would fall, so GDP per capita would be negatively correlated with shifts in the marginal cost of life curve, biasing my estimate towards zero.
+On the other hand, if better health lowered GDP per capita, by increasing population more than output, then my estimate would be biased upwards.
+However, this effect would work through population growth, which I control for.
+Acemoglu and Johnson find no evidence that increases in life expectancy increased GDP per capita \autocite*{Acemoglu_2007}.
+To further check for reverse causality, I used GDP per capita from previous years as an instrument, because GDP per capita from previous years cannot respond to more recent shifts in the marginal cost of life curve.
+This yields similar estimates; see \autoref{sec:specification_appendix}.
+However, GDP per capita from previous years would still be correlated with persistent differences in the marginal cost of life curve between countries.
+
 I controlled for several variables that could be correlated with shifts of the marginal cost of life curve.
 I discuss this further in \autoref{sec:control_variables}.
 I also included year fixed effects as a control variable.
@@ -451,6 +464,7 @@ Still, including these collinear controls does not affect the central estimate f
 
 Fourth, the exclusion restriction, that GDP per capita is uncorrelated with the marginal cost of life, is not unassailable.
 Still, any relationship that exists on the marginal-cost side would be negligible compared to the very strong relationship between GDP per capita and the marginal benefit of life.
+Also, using GDP per capita from previous years as an instrument, to check for reverse causality from health to GDP per capita, yields similar estimates.
 
 Fifth, I could not precisely tailor the exchange rates I used to the equalize the real costs of any given treatment between countries.
 However, the results are still robust to sets of exchange rates for which there is sufficient data.
@@ -724,6 +738,14 @@ This results in a higher central estimate with a wider confidence interval; see 
 For the ``unadjusted life expectancy'' model, I used unadjusted life expectancy from the World Bank instead of health-adjusted life expectancy.
 This results in a slightly lower central estimate; see \autoref{fig:filtered_specification_robustness_figure}.
 This is expected, because in my sample, one more year of unadjusted life expectancy corresponds to only about \rinline{health_adjustment_slope} more years of health-adjusted life expectancy.
+
+To check for reverse causality from health to GDP per capita, I also used GDP per capita from previous years as an instrument.
+Because PPP exchange rates start in \rinline{min(gdp_by_year$year)}, the longest lag excludes some early country-years.
+Using GDP per capita from previous years yields similar or slightly higher estimates; see \autoref{fig:lagged_gdp_figure}.
+
+%% begin.rcode lagged_gdp_figure, echo = FALSE, fig.cap = "95\\% confidence intervals for the life expectancy coefficient using GDP per capita from previous years as the instrument"
+% plot_confidence_intervals(lagged_gdp_table, "GDP lag (years)")
+%% end.rcode
 
 I clustered standard errors for all models except for the hierarchical Bayesian model by country.
 Thus, standard errors should be robust to heteroskedasticity and within-country autocorrelation.
