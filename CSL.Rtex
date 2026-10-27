@@ -362,6 +362,7 @@ I discuss this further in \autoref{sec:control_variables}.
 I also included year fixed effects as a control variable.
 
 To compare prices between different countries, I used PPPs for GDP, and to deflate prices, I used GDP deflators.
+I report all prices in \rinline{deflator_year} international dollars.
 I downloaded deflator data from the US Federal Reserve \autocite{FRED}.
 To check for robustness, I repeated my calculations using different sets of exchange rates and deflators, and report the results in \autoref{sec:price_adjustments_appendix}.
 
@@ -411,6 +412,12 @@ international dollars per QALY in
 
 Because the prediction model includes only life expectancy and year fixed effects, these predictions rank countries in the same order as their life expectancy.
 Also, I predict the marginal cost of life for all \rinline{nrow(recent_predictions)} countries with data on life expectancy and GDP per capita in \rinline{recent_year}, including countries with no studies in the CEA registry.
+These predictions are imprecise; in \autoref{tab:cost_of_life_table}, I report 95\% confidence intervals, with standard errors clustered by country.
+The most extreme predictions should also be interpreted with caution.
+I predict that the marginal cost of life in \rinline{best_prediction$country} was \rinline{format(round(extreme_prediction_ratio), big.mark = ",")} times that in \rinline{worst_prediction$country}, even though GDP per capita in \rinline{best_prediction$country} was only \rinline{signif(extreme_income_ratio, 2)} times that in \rinline{worst_prediction$country}.
+In my data, a 1\% increase in GDP per capita is associated with a \rinline{signif(income_elasticity, 2)}\% increase in the price of life, which would imply a ratio of only about \rinline{round(extreme_income_ratio^income_elasticity)}.
+The predictions differ much more because life expectancy in \rinline{worst_prediction$country} is far lower than its income alone would suggest.
+Applying a single marginal cost of life curve to all countries treats such differences as movements along the curve, so it may exaggerate differences in the marginal cost of life between countries with unusual disease burdens.
 
 %% begin.rcode cost_of_life_table, echo=FALSE
 % kable(
@@ -420,13 +427,15 @@ Also, I predict the marginal cost of life for all \rinline{nrow(recent_predictio
 %     head_tail_size,
 %     " countries by marginal cost of life in ",
 %     recent_year,
-%     " international \\$"
+%     ", in ",
+%     deflator_year,
+%     " international \\$ per QALY, with 95\\% confidence intervals"
 %   )
 % ) %>%
 % bold_header()
 %% end.rcode
 
-%% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life in ", recent_year, ", in ", recent_year, " international \\$ / QALY, by country")
+%% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life in ", recent_year, ", in ", deflator_year, " international \\$ / QALY, by country")
 % plot(map, border = NA, key.pos = 1, main = NULL, logz = TRUE)
 %% end.rcode
 

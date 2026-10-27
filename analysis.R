@@ -274,15 +274,69 @@ prediction_data <-
   arrange(country, year) |>
   mutate(fit_life_expectancy = life_expectancy)
 
+# standard errors of predictions, clustered by country like the other models
+get_prediction_standard_errors <- function(model, newdata, clusters) {
+  regressor_terms <- delete.response(terms(model, component = "regressors"))
+  regressors <- model.matrix(
+    regressor_terms,
+    model.frame(
+      regressor_terms,
+      newdata,
+      na.action = na.pass,
+      xlev = model$levels
+    ),
+    contrasts.arg = model$contrasts$regressors
+  )
+  covariance <- sandwich::vcovCL(model, cluster = clusters)
+  sqrt(rowSums((regressors %*% covariance) * regressors))
+}
+
+critical_z <- qnorm(0.975)
+
 recent_predictions <-
   prediction_data |>
   mutate(
-    prediction = predict(significant_ivreg_model, newdata = prediction_data)
+    prediction = predict(significant_ivreg_model, newdata = prediction_data),
+    prediction_standard_error = get_prediction_standard_errors(
+      significant_ivreg_model,
+      prediction_data,
+      present_significant_data$country
+    )
   ) |>
   filter(year == recent_year & !is.na(prediction)) |>
-  mutate(price_of_life = exp(prediction)) |>
+  mutate(
+    price_of_life = exp(prediction),
+    lower_price_of_life =
+      exp(prediction - critical_z * prediction_standard_error),
+    upper_price_of_life =
+      exp(prediction + critical_z * prediction_standard_error)
+  ) |>
   arrange(desc(price_of_life)) |>
   mutate(rank = seq_len(n()))
+
+# compare the most extreme predictions to what income alone would suggest
+reduced_form_model <- feols(
+  paste0(
+    "log_price_of_life ~ log_gdp_per_capita + ",
+    paste_controls(unique_controls),
+    " | year"
+  ) |>
+    as.formula(),
+  data = present_data,
+  vcov = ~ country
+)
+
+income_elasticity <- coef(reduced_form_model)[["log_gdp_per_capita"]]
+
+extreme_income_ratio <-
+  exp(
+    first(recent_predictions$log_gdp_per_capita) -
+      last(recent_predictions$log_gdp_per_capita)
+  )
+
+extreme_prediction_ratio <-
+  first(recent_predictions$price_of_life) /
+  last(recent_predictions$price_of_life)
 
 write_csv(recent_predictions, output_path("recent_predictions.csv"))
 
@@ -320,15 +374,11 @@ intersection_data <-
     Side = side
   )
 
-rank_table <-
-  bind_rows(
-    slice_head(recent_predictions, n = head_tail_size),
-    slice_tail(recent_predictions, n = head_tail_size)
-  ) |>
-  mutate(
-    price_of_life = paste0(
+format_dollars <- function(values) {
+  sapply(values, function(value) {
+    paste0(
       "$",
-      signif(price_of_life, display_figures) |>
+      signif(value, display_figures) |>
         format(
           big.mark = ",",
           drop0trailing = TRUE,
@@ -336,11 +386,27 @@ rank_table <-
           trim = TRUE
         )
     )
+  })
+}
+
+rank_table <-
+  bind_rows(
+    slice_head(recent_predictions, n = head_tail_size),
+    slice_tail(recent_predictions, n = head_tail_size)
+  ) |>
+  mutate(
+    interval = paste(
+      format_dollars(lower_price_of_life),
+      "to",
+      format_dollars(upper_price_of_life)
+    ),
+    price_of_life = format_dollars(price_of_life)
   ) |>
   select(
     Rank = rank,
     Country = country,
-    `Marginal cost of life` = price_of_life
+    `Marginal cost of life` = price_of_life,
+    `95% confidence interval` = interval
   )
 
 # from bayesian_code.R
