@@ -30,10 +30,10 @@
 % # needs output/stan_fit.RDS: run bayesian_code.R first
 % source("analysis.R")
 
-% bold_header <- function(table) {
+% bold_header <- function(table, ...) {
 %   table %>%
 %     row_spec(0, bold = TRUE) %>%
-%     kable_styling()
+%     kable_styling(...)
 % }
 %% end.rcode
 
@@ -475,7 +475,8 @@ In \autoref{tab:summary_statistics_table}, I report summary statistics for the c
 %   summary_statistics_table,
 %   caption = "Summary statistics for the country-years in the main regression"
 % ) %>%
-%   bold_header()
+%   column_spec(1, width = "4cm") %>%
+%   bold_header(font_size = 9)
 %% end.rcode
 
 \section{Details about World Bank variables}
@@ -494,10 +495,14 @@ In \autoref{tab:WDI_variables_table}, for each variable I downloaded from the Wo
 \section{Details about control variables}
 \label{sec:control_variables}
 
-Through theory, but informed by automated searching through variables in the WDI, I chose a broad set of control variables.
-I list these variables in \autoref{tab:control_variables_table}. I excluded control variable that represent treatments, because treatments mediate the marginal-cost relationship between life expectancy and the marginal cost of life.
+I chose control variables in two steps.
+First, I made a list of candidate variables, both from theory and from automated searches through variables in the WDI.
+Then, I excluded candidates for two reasons.
+First, I excluded variables that represent treatments, because treatments mediate the marginal-cost relationship between life expectancy and the price of life.
 This includes variables such as healthcare spending, nutrition, and water quality/sanitation.
 I discuss why this is necessary in more detail above.
+Second, I excluded variables for which I had no reason to expect a relationship with the cost-effectiveness of treatments.
+I list the remaining variables, with my reason for including each, in \autoref{tab:control_variables_table}.
 
 I logged a few variables that are right skewed and represent positive (or almost always positive) quantities.
 I list these variables in \autoref{tab:logged_variables_table}.
@@ -519,24 +524,27 @@ In the \autoref{tab:control_variables_table}, I list variables I excluded for es
 
 Next, I removed several variables due to multicollinearity.
 To check for robustness, I report the results with all estimable control variables in \autoref{sec:specification_appendix}.
-With all these variables, the modeled life expectancy coefficient is significant at the 10\%, but not 5\%, level.
+With all these variables, the modeled life expectancy coefficient is not statistically significant ($p = \rinline{multicollinear_p_value}$).
 However, many of these control variables are highly correlated with modeled life expectancy, leading to imprecise coefficient estimates.
-To address this problem, I iteratively excluded the control variable with the highest second-stage $GVIF^{\frac{1}{2 * df}}$ until the $GVIF^{\frac{1}{2 * df}}$ values for all control variables and modeled life expectancy were below $\sqrt{10}$.
-This a relatively conservative cut-off.
+To address this problem, I iteratively excluded the control variable with the highest second-stage $GVIF^{\frac{1}{2 * df}}$ until the $GVIF^{\frac{1}{2 * df}}$ values for all control variables and modeled life expectancy were below $\sqrt{\rinline{vif_cutoff^2}}$.
+This is a relatively conservative cut-off.
 In the \autoref{tab:control_variables_table}, I list variables I excluded due to multicollinearity as ``multicollinear''.
 Unfortunately, this leaves open the unlikely possibility that the effect I observed was not due to modeled life expectancy, but one of the many variables collinear with modeled life expectancy instead.
 
 Although several control variables were statistically insignificant in the main regression, I still used these variables as controls for the main regression.
-However, for the purposes of model I used to predict life expectancy, I did exclude insignificant controls to prevent overfitting.
-To do so, I iteratively the most statistically insignificant control until all control coefficients were statistically significant at the 5\% level.
+However, for the model I used to predict the marginal cost of life, I excluded insignificant controls to prevent overfitting.
+To do so, I iteratively removed the most statistically insignificant control until all control coefficients were statistically significant at the 5\% level.
+In the end, no controls were significant, so the prediction model includes only life expectancy and year fixed effects.
 In the \autoref{tab:control_variables_table}, I list the controls I removed for the prediction model as ``insignificant''.
 
 %% begin.rcode control_variables_table, echo = FALSE
 % kable(
 %   controls_table,
-%   caption = "Control variables"
+%   caption = "Control variables, with my reason for including each"
 % ) %>%
-%   bold_header()
+%   column_spec(1, width = "3.2cm") %>%
+%   column_spec(3, width = "5.5cm") %>%
+%   bold_header(font_size = 9)
 %% end.rcode
 
 \section{Regression statistics}
@@ -647,10 +655,11 @@ I report the results in \autoref{tab:composition_table}.
 % kable(
 %   composition_table |>
 %     mutate_all(linebreak),
-%   caption = "The life expectancy coefficient, split into composition and within-category parts, with 95\\% confidence intervals in parentheses",
+%   caption = "The life expectancy coefficient, split into composition and within-category parts, with 95\\% confidence intervals in parentheses. $N$ is the number of country-years.",
 %   escape = FALSE
 % ) %>%
-%   bold_header()
+%   column_spec(1, width = "2.5cm") %>%
+%   bold_header(font_size = 8)
 %% end.rcode
 
 Across intervention types, composition explains almost none of the coefficient.

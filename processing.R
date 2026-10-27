@@ -785,7 +785,9 @@ remove_max_vif <- function(controls, cutoff) {
   sort(controls)
 }
 
-unique_controls <- remove_max_vif(estimable_controls, sqrt(5))
+vif_cutoff <- sqrt(5)
+
+unique_controls <- remove_max_vif(estimable_controls, vif_cutoff)
 
 # repeatedly remove the least significant control
 # until all controls are significant

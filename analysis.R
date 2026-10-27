@@ -97,7 +97,7 @@ summary_statistics_table <-
   group_by(variable) |>
   summarize(
     Mean = mean(value),
-    `Standard deviation` = sd(value),
+    `Std. dev.` = sd(value),
     Minimum = min(value),
     Maximum = max(value),
     .groups = "drop"
@@ -109,8 +109,16 @@ summary_statistics_table <-
   ) |>
   rename(Variable = variable)
 
+# why each control might shift the marginal cost of life curve
+control_reasons <- read_data("control_reasons.csv")
+
+if (!setequal(control_reasons$control, all_controls)) {
+  stop("Control reasons mismatch")
+}
+
 controls_table <-
   tibble(control = all_controls) |>
+  left_join(control_reasons, by = "control") |>
   mutate(
     status = case_when(
       !(control %in% estimable_controls) ~ "unestimable",
@@ -120,7 +128,7 @@ controls_table <-
     )
   ) |>
   arrange(status, control) |>
-  select(Control = control, Status = status) |>
+  select(Control = control, Status = status, Reason = reason) |>
   mutate(Control = format_regressors(Control))
 
 make_panel <- function(data) {
@@ -222,6 +230,10 @@ multicollinear_model <- feols(
   data = present_data,
   vcov = ~ country
 )
+
+multicollinear_p_value <-
+  pvalue(multicollinear_model)[["fit_life_expectancy"]] |>
+  signif(display_figures)
 
 significant_model <- feols(
   make_feols_formula(significant_controls),
@@ -711,7 +723,7 @@ decompose_prices <- function(prices, categories, label) {
 
   tibble(
     Categories = label,
-    `Country-years` = nobs(total_model),
+    N = nobs(total_model),
     Total = format_interval(total_model),
     Composition = format_interval(
       fit_country_years(country_years, "composition")
@@ -734,7 +746,7 @@ composition_table <-
     )
   )
 
-disease_country_years <- composition_table$`Country-years`[2]
+disease_country_years <- composition_table$N[2]
 
 pharmaceutical_share_interval <-
   composition_prices |>

@@ -1,0 +1,17 @@
+control,reason
+GDP_growth_rate,"In fast-growing economies, labor costs may rise faster than health systems can adapt."
+Gini_index,"Inequality may concentrate treatments among the rich, changing which treatments remain unfunded."
+log_alcohol_consumption_per_capita,"Alcohol use changes the burden of disease, and so which treatments people need."
+log_population_density,Treatments may be cheaper to deliver where people live close together.
+log_precipitation,"Climate affects the burden of infectious diseases, such as malaria."
+percent_child_obesity,Obesity changes the burden of chronic disease.
+percent_college_enrollment,A more educated population might manage some aspects of its health without professionals.
+percent_electricity_access,"Many treatments, such as refrigerated vaccines and medical equipment, require electricity."
+percent_female_to_male_employment_ratio,Women's employment affects the availability of informal care at home.
+percent_GDP_from_farming,"Agricultural economies tend to be rural, so treatments may be harder to deliver."
+percent_GDP_from_industry,Industrial economies have different occupational hazards and pollution.
+percent_health_spending_external,Donors may pay for different treatments than domestic governments would.
+percent_health_spending_public,Public and private health systems may provide treatments at different costs.
+percent_primary_school_completion,Basic education may make health information and treatments more effective.
+population_growth_rate,"Fast-growing populations are younger, with a different burden of disease."
+unemployment_rate,Unemployment affects health insurance coverage and labor costs.
