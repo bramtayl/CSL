@@ -435,7 +435,9 @@ My predictions are highly correlated with theirs, and are similar on average; se
 %     " international \\$ per QALY, with 95\\% confidence intervals"
 %   )
 % ) %>%
-% bold_header()
+%   column_spec(2, width = "3cm") %>%
+%   column_spec(3:4, width = "2.6cm") %>%
+%   bold_header(font_size = 9)
 %% end.rcode
 
 %% begin.rcode cost_of_life_map, echo=FALSE, fig.asp = 0.6, fig.cap = paste0("Predicted marginal cost of life in ", recent_year, ", in ", deflator_year, " international \\$ / QALY, by country")
@@ -740,6 +742,18 @@ The largest disagreements are for \rinline{knitr::combine_words(ochalek_disagree
 All of these countries are in southern Africa, and have very high rates of HIV/AIDS, so their life expectancy is far lower than their income would suggest.
 This supports my caution above: a single marginal cost of life curve may exaggerate differences in the marginal cost of life between countries with unusual disease burdens.
 
+To check whether HIV explains these disagreements, I added baseline HIV prevalence (see \autoref{sec:specification_appendix}) to my prediction model.
+With this control, the correlation between the logs of my predictions and their estimates rises from \rinline{signif(ochalek_correlation, 2)} to \rinline{signif(hiv_ochalek_correlation, 2)}, and my predictions for these countries move much closer to theirs; see \autoref{tab:hiv_disagreements_table}.
+
+%% begin.rcode hiv_disagreements_table, echo = FALSE
+% kable(
+%   hiv_disagreements_table,
+%   caption = paste0("The countries where my predictions disagree most with the estimates of Ochalek et al., in ", deflator_year, " international \\$ per QALY or DALY, with and without controlling for baseline HIV prevalence")
+% ) %>%
+%   column_spec(2:4, width = "2.6cm") %>%
+%   bold_header(font_size = 9)
+%% end.rcode
+
 \section{Specification robustness tests}
 \label{sec:specification_appendix}
 
@@ -788,6 +802,16 @@ This results in a higher central estimate with a wider confidence interval; see 
 For the ``unadjusted life expectancy'' model, I used unadjusted life expectancy from the World Bank instead of health-adjusted life expectancy.
 This results in a slightly lower central estimate; see \autoref{fig:filtered_specification_robustness_figure}.
 This is expected, because in my sample, one more year of unadjusted life expectancy corresponds to only about \rinline{health_adjustment_slope} more years of health-adjusted life expectancy.
+
+I also considered two controls for differences in disease burden between countries.
+For the ``with Sub-Saharan Africa dummy'' model, I included a dummy variable for countries in Sub-Saharan Africa.
+For the ``with baseline HIV prevalence'' model, I included the prevalence of HIV among adults aged 15 to 49 in \rinline{hiv_baseline_year}, before antiretroviral treatment became widely available in low- and middle-income countries.
+The World Bank does not report HIV prevalence in \rinline{hiv_baseline_year} for some countries with low prevalence, so I set HIV prevalence to zero for \rinline{knitr::combine_words(missing_HIV_countries)}.
+Both models result in higher central estimates, with wider confidence intervals; see \autoref{fig:filtered_specification_robustness_figure}.
+I did not include these controls in my main model for two reasons.
+First, neither control is statistically significant ($p = \rinline{disease_control_p_values[1]}$ and $p = \rinline{disease_control_p_values[2]}$, respectively).
+Second, HIV prevalence partly reflects how much countries spent on prevention, which is itself a movement along the marginal cost of life curve.
+However, within Sub-Saharan Africa, HIV prevalence in \rinline{hiv_baseline_year} was, if anything, higher in richer countries (the correlation between HIV prevalence and log GDP per capita was \rinline{signif(african_hiv_income_correlation, 2)}), so differences in HIV prevalence there mostly reflect differences in the epidemic rather than differences in ability to pay.
 
 To check for reverse causality from health to GDP per capita, I also used GDP per capita from previous years as an instrument.
 Because PPP exchange rates start in \rinline{min(gdp_by_year$year)}, the longest lag excludes some early country-years.

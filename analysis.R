@@ -25,6 +25,58 @@ format_individually <- function(values) {
   })
 }
 
+format_dollars <- function(values) {
+  sapply(values, function(value) {
+    paste0(
+      "$",
+      signif(value, display_figures) |>
+        format(
+          big.mark = ",",
+          drop0trailing = TRUE,
+          scientific = FALSE,
+          trim = TRUE
+        )
+    )
+  })
+}
+
+# controls for differences in disease burden between countries
+hiv_baseline_year <- 2000
+
+country_characteristics <-
+  read_data("countrycode_data.csv") |>
+  select(country_code_3 = iso3c, region) |>
+  filter(!is.na(country_code_3)) |>
+  inner_join(
+    country_data |> select(country, country_code_3),
+    by = "country_code_3"
+  ) |>
+  left_join(
+    world_bank_data |>
+      filter(year == hiv_baseline_year) |>
+      select(country, baseline_HIV_prevalence = HIV_prevalence),
+    by = "country"
+  ) |>
+  transmute(
+    country,
+    sub_saharan_africa = as.numeric(region == "Sub-Saharan Africa"),
+    # the World Bank doesn't report HIV prevalence for some countries with
+    # low prevalence
+    missing_HIV_prevalence = is.na(baseline_HIV_prevalence),
+    baseline_HIV_prevalence = coalesce(baseline_HIV_prevalence, 0)
+  )
+
+add_country_characteristics <- function(data) {
+  left_join(data, country_characteristics, by = "country")
+}
+
+missing_HIV_countries <-
+  present_data |>
+  add_country_characteristics() |>
+  filter(missing_HIV_prevalence) |>
+  distinct(country) |>
+  pull(country)
+
 all_variables_table <-
   summarized_prices |>
   filter_price_data() |>
@@ -463,6 +515,41 @@ ochalek_disagreements <-
   slice_head(n = 5) |>
   pull(country)
 
+# does HIV explain the largest disagreements?
+hiv_prediction_model <- ivreg(
+  make_plm_formula(c(significant_controls, "baseline_HIV_prevalence")),
+  data = add_country_characteristics(present_significant_data)
+)
+
+hiv_ochalek_comparison <-
+  ochalek_comparison |>
+  inner_join(
+    prediction_data |>
+      add_country_characteristics() |>
+      filter(year == recent_year) |>
+      mutate(
+        hiv_price_of_life = exp(predict(hiv_prediction_model, newdata = pick(everything())))
+      ) |>
+      select(country, hiv_price_of_life),
+    by = "country"
+  )
+
+hiv_ochalek_correlation <- cor(
+  log(hiv_ochalek_comparison$cost),
+  log(hiv_ochalek_comparison$hiv_price_of_life)
+)
+
+hiv_disagreements_table <-
+  hiv_ochalek_comparison |>
+  filter(country %in% ochalek_disagreements) |>
+  arrange(match(country, ochalek_disagreements)) |>
+  transmute(
+    Country = country,
+    `Ochalek et al.` = format_dollars(cost),
+    `My prediction` = format_dollars(price_of_life),
+    `With baseline HIV prevalence` = format_dollars(hiv_price_of_life)
+  )
+
 ochalek_figure <-
   ggplot(ochalek_comparison) +
   aes(x = cost, y = price_of_life) +
@@ -506,21 +593,6 @@ ochalek_figure <-
     )
   ) +
   theme_bw()
-
-format_dollars <- function(values) {
-  sapply(values, function(value) {
-    paste0(
-      "$",
-      signif(value, display_figures) |>
-        format(
-          big.mark = ",",
-          drop0trailing = TRUE,
-          scientific = FALSE,
-          trim = TRUE
-        )
-    )
-  })
-}
 
 rank_table <-
   bind_rows(
@@ -671,6 +743,39 @@ weighted_model <- feols(
   vcov = ~ country
 )
 
+sub_saharan_africa_model <- feols(
+  make_feols_formula(c(unique_controls, "sub_saharan_africa")),
+  data = add_country_characteristics(present_data),
+  vcov = ~ country
+)
+
+hiv_model <- feols(
+  make_feols_formula(c(unique_controls, "baseline_HIV_prevalence")),
+  data = add_country_characteristics(present_data),
+  vcov = ~ country
+)
+
+disease_control_p_values <- c(
+  pvalue(sub_saharan_africa_model)[["sub_saharan_africa"]],
+  pvalue(hiv_model)[["baseline_HIV_prevalence"]]
+) |>
+  signif(2)
+
+# is HIV prevalence lower where countries could afford prevention?
+african_hiv_income_correlation <-
+  country_characteristics |>
+  filter(sub_saharan_africa == 1 & !missing_HIV_prevalence) |>
+  inner_join(
+    filter_world_bank_data(world_bank_data_transformed) |>
+      filter(year == hiv_baseline_year & !is.na(log_gdp_per_capita)) |>
+      select(country, log_gdp_per_capita),
+    by = "country"
+  ) |>
+  summarize(
+    correlation = cor(baseline_HIV_prevalence, log_gdp_per_capita)
+  ) |>
+  pull(correlation)
+
 # life expectancy without adjusting for health
 unadjusted_model <- feols(
   make_feols_formula(unique_controls),
@@ -724,6 +829,10 @@ specification_robustness_table <-
       mutate(Specification = "weighted by number of studies"),
     get_feols_interval(unadjusted_model) |>
       mutate(Specification = "unadjusted life expectancy"),
+    get_feols_interval(sub_saharan_africa_model) |>
+      mutate(Specification = "with Sub-Saharan Africa dummy"),
+    get_feols_interval(hiv_model) |>
+      mutate(Specification = "with baseline HIV prevalence"),
     get_feols_interval(
       model_without_endogeneity,
       parameter = "life_expectancy"
