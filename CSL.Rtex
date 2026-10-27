@@ -96,8 +96,8 @@ Why should addressing inequality in the quantity of life take precedence over ad
 One possible justification is that one's quantity of life is perhaps the most important good, in that living is a requirement for the enjoyment of any other good.
 In other words, one's quantity of life is the most fundamental capability, to use the terminology of Amartya Sen \autocite{Sen_2008}.
 
-My results contribute to the literature because, to my knowledge, no researcher has estimated the MCL curve.
-Instead, researchers have focused on either predicting the price of life, or estimating the relationship between life expectancy and individual categories of treatments.
+My results contribute to the literature because, to my knowledge, no researcher has estimated the MCL curve across countries, or using prices of life reported directly in cost-effectiveness studies.
+Instead, researchers have focused on predicting the price of life, estimating the relationship between life expectancy and individual categories of treatments, or inferring the marginal cost of life from aggregate health spending in a single country.
 Several authors have estimated the price of life in individual countries \autocites{Claxton_2015,Edney_2022}, and some have compared the price of life across different countries \autocites{Ochalek_2018,Woods_2016}.
 However, these authors do not directly estimate the marginal-cost relationship between the price of life and life expectancy (I discuss this difference in more detail below).
 Other authors have estimated the relationship between life expectancy and individual categories of treatments, e.g. healthcare spending, water quality/sanitation, nutrition, etc. \autocite{Alsan_2019,Fogel_2004,Gallet_2017}.
@@ -120,6 +120,16 @@ First, based on the budget constraints of the government, the government should 
 Then, governments should find the price of life at which the marginal-benefit-of-life curve intersects the marginal-cost-of-life curve.
 Then, the government should set its cost-effectiveness threshold equal to this price of life.
 
+The closest analysis to mine is that of Hall and Jones \autocite*{Hall_2007}.
+Their model mirrors mine: as income grows, the diminishing marginal utility of other consumption and a rising value of life move a nation up the marginal cost schedule of life extension.
+Using an estimated relationship between health spending and mortality in the United States from 1950 to 2000, they infer the marginal cost of saving a life for each age group.
+For example, they estimate that the marginal cost of saving the life of a 40-to-44-year-old rose from \$160,000 in 1950 to \$1.9 million in 2000, in 2000 dollars.
+My analysis differs in three ways.
+First, rather than inferring the marginal cost of life from aggregate health spending and mortality, I use prices of life reported directly in cost-effectiveness studies.
+Second, I estimate the marginal cost of life curve across countries, rather than over time in one country, using differences in GDP per capita between countries to separate the marginal cost of life curve from the marginal benefit of life curve.
+Third, like Ochalek et al., Hall and Jones consider only healthcare spending, whereas I consider all categories of treatments.
+Still, our results are consistent: both suggest that the marginal cost of life rises steeply as life expectancy increases.
+
 \section{Literature}
 
 I will organize the literature review around three topics.
@@ -134,6 +144,9 @@ On the demand side, the Preston curve is the relationship between GDP per capita
 Preston found that the relationship was non-linear, with a lower slope for high-income countries.
 Also, Preston found that the curve has shifted over time, as life expectancy increases at all income levels.
 The causality of this relationship is debated.
+Murphy and Topel show that willingness to pay for improvements in health is proportional to income, so willingness to pay for health rises with wealth \autocite*{Murphy_2006}.
+Similarly, Viscusi and Aldy's review of estimates from many countries suggests that the value of a statistical life rises with income \autocite*{Viscusi_2003}.
+This supports my assumption that increases in GDP per capita shift the marginal benefit of life curve upwards.
 While the demand for health is higher at higher incomes, it is also possible that health affects GDP.
 However, Acemoglu and Johnson find that increases in life expectancy increased population, and find no evidence that they increased GDP per capita \autocite*{Acemoglu_2007}.
 
@@ -231,6 +244,9 @@ Although most citizens would desire additional life as much as before, some elde
 In response, the government might slightly decrease its cost-effective threshold, which represents the marginal benefit of life. 
 Thus, there might be a slightly negative relationship between life expectancy (the ``quantity'' of life) and the marginal benefit of life (the ``price'' of life).
 This aligns with the law of decreasing marginal benefits.
+However, Murphy and Topel argue that improvements in health are more valuable when existing health is better, because people are more likely to be alive to enjoy them \autocite*{Murphy_2006}.
+This would make the marginal benefit of life curve increasing instead.
+My method does not depend on the slope of the marginal benefit of life curve, as long as it is less steep than the marginal cost of life curve, so that the curves intersect at a stable equilibrium.
 
 The government's ability to pay for life would determine the government's marginal benefit of life curve.
 Two effects can cause a marginal benefits curve to shift: the ``income effect'' and the ``substitution effect'', but in this case, only the income effect is relevant.
